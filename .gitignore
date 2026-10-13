@@ -63,3 +63,11 @@ android/key.properties
 **/migration_backup*.json
 **/fixture_backup*.json
 **/migration-private/
+
+# Local Admin Portal (Private, strictly never pushed to GitHub)
+tools/local_admin/
+local_admin/
+launch_admin.bat
+launch_admin.ps1
+*.device_secret*
+*.local_admin*
