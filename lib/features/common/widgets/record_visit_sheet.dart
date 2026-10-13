@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:efteqad/core/localization/app_formatters.dart';
 import 'package:efteqad/core/errors/app_failure.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +32,24 @@ class RecordVisitSheet extends StatefulWidget {
     required MakhdomModel makhdom,
     String? khademName,
   }) {
+    if (kIsWeb && MediaQuery.sizeOf(context).width >= 600) {
+      return showDialog(
+        context: context,
+        builder: (_) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 580),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: SingleChildScrollView(
+                child: RecordVisitSheet(makhdom: makhdom, khademName: khademName),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -241,7 +260,9 @@ class _RecordVisitSheetState extends State<RecordVisitSheet> {
     return Container(
       decoration: BoxDecoration(
         color: isDark ? AppConstants.surfaceDark : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: (kIsWeb && MediaQuery.sizeOf(context).width >= 600)
+            ? BorderRadius.circular(24)
+            : const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border.all(
           color: isDark
               ? AppConstants.cardBorderDark

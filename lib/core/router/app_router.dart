@@ -49,6 +49,7 @@ import '../../features/common/widgets/notifications_sheet.dart';
 import '../../features/khadem/presentation/screens/khadem_profile_screen.dart';
 import '../../features/khadem/presentation/widgets/my_analytics_tab.dart';
 import '../../features/khadem/presentation/widgets/my_makhdomeen_tab.dart';
+import '../../features/khadem/presentation/web/my_makhdomeen_web_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/tasks/presentation/screens/task_details_screen.dart';
 import '../../features/tasks/presentation/widgets/tasks_tab.dart';
@@ -1280,6 +1281,14 @@ class _MyMakhdomeenWrapper extends StatelessWidget {
           ),
           builder: (context, sessionsSnap) {
             final sessions = sessionsSnap;
+            if (kIsWeb) {
+              return MyMakhdomeenWebScreen(
+                myMakhdomeen: makhdomeen,
+                sessions: sessions,
+                onSwitchToAnalytics: () =>
+                    context.go(AppRoutes.myAnalyticsPath),
+              );
+            }
             return MyMakhdomeenTab(
               myMakhdomeen: makhdomeen,
               sessions: sessions,
