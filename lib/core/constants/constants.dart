@@ -6,7 +6,7 @@ class AppConstants {
   static const String appTagline = '«أَنَا هُوَ الرَّاعِي الصَّالِحُ»';
   static const String appVersion = '1.0.0';
   static const String appDownloadPageUrl =
-      'https://kerolos77.github.io/efteqad/';
+      'https://kerolos77.github.io/efteqad-App/';
   static const String docAppVersion = 'app_version';
 
   // مسار شعار التطبيق وخلفية الاسبلاش

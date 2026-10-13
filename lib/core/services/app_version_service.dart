@@ -44,8 +44,9 @@ class AppVersionInfo {
     final minRequiredVersion = rawMin.isNotEmpty ? rawMin : latestVersion;
 
     final rawUrl = (data['downloadUrl'] ?? data['url'] ?? '').toString().trim();
-    final downloadUrl =
-        rawUrl.isNotEmpty ? rawUrl : AppConstants.appDownloadPageUrl;
+    final downloadUrl = (rawUrl.isNotEmpty && !rawUrl.endsWith('/efteqad/'))
+        ? rawUrl
+        : AppConstants.appDownloadPageUrl;
 
     final rawNotes = (data['releaseNotes'] ?? data['notes'] ?? '')
         .toString()
