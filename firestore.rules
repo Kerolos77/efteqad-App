@@ -125,8 +125,10 @@ service cloud.firestore {
     }
     match /settings/{docId} {
       allow read: if true;
-      allow create: if !exists(/databases/$(database)/documents/settings/$(docId));
-      allow update, delete: if false;
+      allow create: if !exists(/databases/$(database)/documents/settings/$(docId))
+        || (request.auth != null && request.auth.token.email == 'admin@admin.com');
+      allow update: if request.auth != null && request.auth.token.email == 'admin@admin.com';
+      allow delete: if false;
     }
     match /{document=**} {
       allow read, write: if false;
