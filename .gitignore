@@ -46,6 +46,9 @@ functions/node_modules/
 firebase-debug.log
 
 
+# Firebase cache
+.firebase/
+
 # Superpowers task workspace
 .superpowers/
 
