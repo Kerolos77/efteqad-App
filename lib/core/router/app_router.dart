@@ -36,6 +36,8 @@ import '../../features/admin/presentation/widgets/grade_makhdomeen_tab.dart';
 import '../../features/admin/presentation/widgets/stage_people_tab.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/pending_assignment_screen.dart';
+import '../../features/auth/presentation/web/login_web_screen.dart';
+import '../../features/auth/presentation/web/pending_assignment_web_screen.dart';
 import '../../features/attendance/presentation/screens/attendance_hub_tab.dart';
 import '../../features/attendance/presentation/screens/attendance_screen.dart';
 import '../../features/common/presentation/screens/notifications_screen.dart';
@@ -210,14 +212,17 @@ GoRouter createAppRouter({
     GoRoute(
       path: AppRoutes.loginPath,
       name: AppRoutes.loginName,
-      builder: (context, state) => const LoginScreen(),
+      builder: (context, state) =>
+          kIsWeb ? const LoginWebScreen() : const LoginScreen(),
     ),
     GoRoute(
       path: AppRoutes.pendingPath,
       name: AppRoutes.pendingName,
       builder: (context, state) => BlocProvider.value(
         value: sessionCubit,
-        child: const PendingAssignmentScreen(),
+        child: kIsWeb
+            ? const PendingAssignmentWebScreen()
+            : const PendingAssignmentScreen(),
       ),
     ),
 
