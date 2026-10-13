@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/constants/constants.dart';
 import '../../../core/services/app_version_service.dart';
+import '../../../core/services/shorebird_updater_service.dart';
 
 class AppUpdateDialog extends StatelessWidget {
   final AppVersionInfo versionInfo;
@@ -293,6 +294,25 @@ class _AppVersionUpdateGuardState extends State<AppVersionUpdateGuard> {
           await AppUpdateDialog.show(context, versionInfo: info);
           _isDialogShowing = false;
         });
+      }
+    });
+    // فحص وتنزيل أي تحديث لحظي من Shorebird في الخلفية
+    Future.microtask(() async {
+      final shorebirdService = ShorebirdUpdaterService();
+      if (shorebirdService.isAvailable) {
+        final downloaded = await shorebirdService.checkAndDownloadPatch();
+        if (downloaded && mounted) {
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+            const SnackBar(
+              content: Text(
+                'تم تنزيل تحديث لحظي جديد بنجاح! سيتم تطبيقه عند إعادة فتح التطبيق.',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              backgroundColor: AppConstants.primaryNavy,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
       }
     });
   }

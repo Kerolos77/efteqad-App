@@ -12,6 +12,7 @@ import '../../../../core/router/app_routes.dart';
 import '../../../../core/session/session_cubit.dart';
 import '../../../../core/services/app_version_service.dart';
 import '../../../common/widgets/app_update_dialog.dart';
+import '../../../../core/services/shorebird_updater_service.dart';
 
 abstract class AccountDeletionActions {
   String? get currentUserId;
@@ -69,10 +70,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (info.isUpdateAvailable()) {
         await AppUpdateDialog.show(context, versionInfo: info);
       } else {
+        // فحص التحديث اللحظي عبر Shorebird
+        final shorebirdService = ShorebirdUpdaterService();
+        String extraPatchText = '';
+        if (shorebirdService.isAvailable) {
+          final downloaded = await shorebirdService.checkAndDownloadPatch();
+          if (downloaded) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'تم تنزيل تحديث لحظي جديد بنجاح! سيتم تطبيقه تلقائياً عند إعادة فتح التطبيق.',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                backgroundColor: AppConstants.primaryNavy,
+                duration: Duration(seconds: 5),
+              ),
+            );
+            return;
+          }
+          final patchNum = await shorebirdService.getCurrentPatchNumber();
+          if (patchNum != null) {
+            extraPatchText = ' (تحديث لحظي #$patchNum)';
+          }
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'أنت تستخدم أحدث إصدار من التطبيق (v${AppConstants.appVersion}) ✓',
+              'أنت تستخدم أحدث إصدار من التطبيق (v${AppConstants.appVersion}$extraPatchText) ✓',
             ),
             backgroundColor: AppConstants.successColor,
             action: SnackBarAction(
