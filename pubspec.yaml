@@ -58,6 +58,7 @@ dependencies:
   url_launcher: ^6.3.1
   shared_preferences: ^2.3.2
   cached_network_image: ^3.4.1
+  web: ^1.0.0
 
   # Charts & Icons
   fl_chart: ^0.69.0

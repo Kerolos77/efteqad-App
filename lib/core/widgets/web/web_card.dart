@@ -32,10 +32,11 @@ class _WebCardState extends State<WebCard> {
     final isDark = theme.brightness == Brightness.dark;
 
     final baseBorderColor = isDark
-        ? Colors.white.withOpacity(0.08)
-        : Colors.black.withOpacity(0.06);
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.black.withValues(alpha: 0.06);
 
-    final hoveredBorderColor = theme.colorScheme.primary.withOpacity(0.35);
+    final hoveredBorderColor =
+        theme.colorScheme.primary.withValues(alpha: 0.35);
 
     return MouseRegion(
       cursor: widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
@@ -57,8 +58,8 @@ class _WebCardState extends State<WebCard> {
           boxShadow: [
             BoxShadow(
               color: isDark
-                  ? Colors.black.withOpacity(_isHovered ? 0.35 : 0.15)
-                  : Colors.black.withOpacity(_isHovered ? 0.08 : 0.02),
+                  ? Colors.black.withValues(alpha: _isHovered ? 0.35 : 0.15)
+                  : Colors.black.withValues(alpha: _isHovered ? 0.08 : 0.02),
               blurRadius: _isHovered ? 16 : 8,
               offset: Offset(0, _isHovered ? 6 : 2),
             ),

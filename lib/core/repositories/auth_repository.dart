@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -58,10 +59,14 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {
-    await Future.wait([
-      _firebaseAuth.signOut(),
-      _googleSignIn.signOut(),
-    ]);
+    if (kIsWeb) {
+      await _firebaseAuth.signOut();
+    } else {
+      await Future.wait([
+        _firebaseAuth.signOut(),
+        _googleSignIn.signOut(),
+      ]);
+    }
   }
 
   static AuthIdentity? _mapUser(User? user) {

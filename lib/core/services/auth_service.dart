@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -53,15 +54,21 @@ class AuthService {
   }
 
   Future<UserCredential?> signInWithGoogle() async {
-    final googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) return null;
-    final googleAuth = await googleUser.authentication;
-    final result = await _auth.signInWithCredential(
-      GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      ),
-    );
+    final UserCredential result;
+    if (kIsWeb) {
+      final googleProvider = GoogleAuthProvider();
+      result = await _auth.signInWithPopup(googleProvider);
+    } else {
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return null;
+      final googleAuth = await googleUser.authentication;
+      result = await _auth.signInWithCredential(
+        GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        ),
+      );
+    }
     final user = result.user;
     if (user != null) {
       await _firestoreService.saveOrUpdateKhadem(
@@ -86,7 +93,9 @@ class AuthService {
     try {
       await _devices.unbindUser();
       _clearNotificationIntents();
-      await _googleSignIn.signOut();
+      if (!kIsWeb) {
+        await _googleSignIn.signOut();
+      }
       await _auth.signOut();
       _loadedProfile = null;
     } catch (e, st) {

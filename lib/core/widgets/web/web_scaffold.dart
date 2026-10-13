@@ -255,7 +255,7 @@ class _WebSidebar extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: AppConstants.primaryLight.withOpacity(0.25),
+                          color: AppConstants.primaryLight.withValues(alpha: 0.25),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
@@ -305,15 +305,15 @@ class _WebSidebar extends StatelessWidget {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isDark
-                        ? Colors.white.withOpacity(0.04)
-                        : Colors.grey.withOpacity(0.06),
+                        ? Colors.white.withValues(alpha: 0.04)
+                        : Colors.grey.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     children: [
                       CircleAvatar(
                         radius: 18,
-                        backgroundColor: primaryColor.withOpacity(0.15),
+                        backgroundColor: primaryColor.withValues(alpha: 0.15),
                         child: Text(
                           userProfile.name.isNotEmpty
                               ? userProfile.name[0]
@@ -477,16 +477,19 @@ class _WebNavItem extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(10),
-        hoverColor: primaryColor.withOpacity(0.06),
+        hoverColor: primaryColor.withValues(alpha: 0.06),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
           decoration: BoxDecoration(
             color: isSelected
-                ? primaryColor.withOpacity(0.12)
+                ? primaryColor.withValues(alpha: 0.12)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             border: isSelected
-                ? Border.all(color: primaryColor.withOpacity(0.3), width: 1)
+                ? Border.all(
+                    color: primaryColor.withValues(alpha: 0.3),
+                    width: 1,
+                  )
                 : null,
           ),
           child: Row(
@@ -496,7 +499,9 @@ class _WebNavItem extends StatelessWidget {
                     ? (destination.selectedIcon ?? destination.icon)
                     : destination.icon,
                 size: 20,
-                color: isSelected ? primaryColor : theme.iconTheme.color?.withOpacity(0.7),
+                color: isSelected
+                    ? primaryColor
+                    : theme.iconTheme.color?.withValues(alpha: 0.7),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -507,7 +512,8 @@ class _WebNavItem extends StatelessWidget {
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                     color: isSelected
                         ? primaryColor
-                        : theme.textTheme.bodyMedium?.color?.withOpacity(0.85),
+                        : theme.textTheme.bodyMedium?.color
+                            ?.withValues(alpha: 0.85),
                   ),
                 ),
               ),

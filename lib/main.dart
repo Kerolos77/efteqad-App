@@ -64,7 +64,9 @@ void main() async {
   sessionCubit = SessionCubit(
     authRepository: authRepository,
     profileRepository: profileRepository,
-    minimumSplashDuration: const Duration(milliseconds: 8000),
+    minimumSplashDuration: kIsWeb
+        ? const Duration(milliseconds: 300)
+        : const Duration(milliseconds: 8000),
   );
 
   // تهيئة الإشعارات و FCM مع منسق نوايا الإشعارات دون تعطيل ظهور الاسبلاش اسكرين

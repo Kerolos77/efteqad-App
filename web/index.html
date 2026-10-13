@@ -29,10 +29,60 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>efteqad</title>
+  <title>الراعي - إدارة الافتقاد والخدمة</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0A192F;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Cairo", sans-serif;
+      overflow: hidden;
+    }
+    #loading-indicator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, #132338 0%, #0A192F 70%, #060B12 100%);
+      color: #FFFFFF;
+      z-index: 9999;
+      transition: opacity 0.4s ease;
+    }
+    .loading-title {
+      font-size: 32px;
+      font-weight: 800;
+      color: #D4AF37;
+      text-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    .loading-subtitle {
+      font-size: 13px;
+      color: #94A3B8;
+      margin-bottom: 24px;
+    }
+    .loading-spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(212, 175, 55, 0.2);
+      border-top-color: #D4AF37;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
+  <div id="loading-indicator">
+    <div class="loading-title">الراعي</div>
+    <div class="loading-subtitle">جاري التحميل...</div>
+    <div class="loading-spinner"></div>
+  </div>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
