@@ -69,15 +69,17 @@ void main() async {
         : const Duration(milliseconds: 8000),
   );
 
-  // تهيئة الإشعارات و FCM مع منسق نوايا الإشعارات دون تعطيل ظهور الاسبلاش اسكرين
-  final coordinator = NotificationIntentCoordinator();
-  NotificationService().setIntentCoordinator(coordinator);
-  unawaited(
-    NotificationService().initialize(
-      intentCoordinator: coordinator,
-      locale: settingsCubit.state.locale,
-    ),
-  );
+  // تهيئة الإشعارات و FCM مع منسق نوايا الإشعارات دون تعطيل ظهور الاسبلاش اسكرين (على الموبايل فقط)
+  if (!kIsWeb) {
+    final coordinator = NotificationIntentCoordinator();
+    NotificationService().setIntentCoordinator(coordinator);
+    unawaited(
+      NotificationService().initialize(
+        intentCoordinator: coordinator,
+        locale: settingsCubit.state.locale,
+      ),
+    );
+  }
 
   runApp(
     MultiBlocProvider(

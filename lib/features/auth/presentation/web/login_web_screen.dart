@@ -119,14 +119,16 @@ class _LoginWebScreenState extends State<LoginWebScreen> {
               ),
               clipBehavior: Clip.antiAlias,
               child: isDesktop
-                  ? Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Left/Branding Side (Desktop Hero)
-                        Expanded(child: _buildBrandingPanel(context)),
-                        // Right/Form Side
-                        Expanded(child: _buildFormPanel(context)),
-                      ],
+                  ? IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Left/Branding Side (Desktop Hero)
+                          Expanded(child: _buildBrandingPanel(context)),
+                          // Right/Form Side
+                          Expanded(child: _buildFormPanel(context)),
+                        ],
+                      ),
                     )
                   : Column(
                       mainAxisSize: MainAxisSize.min,

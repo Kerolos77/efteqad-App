@@ -18,7 +18,8 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="تطبيق الراعي لإدارة الافتقاد والخدمة">
+  <meta name="google-signin-client_id" content="882251802958-d052icjb1rkgp6556n2cvme5k5rneava.apps.googleusercontent.com">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -28,6 +29,11 @@
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <title>الراعي - إدارة الافتقاد والخدمة</title>
   <link rel="manifest" href="manifest.json">
@@ -78,11 +84,48 @@
   </style>
 </head>
 <body>
+  <span style="font-family: 'Cairo', sans-serif; position: absolute; left: -9999px; top: -9999px; visibility: hidden;" aria-hidden="true">
+    الراعي مرحباً بكم في تطبيق الافتقاد تسجيل الدخول خدمة الخادم المشرف مخدومين مهام تقارير
+  </span>
   <div id="loading-indicator">
     <div class="loading-title">الراعي</div>
     <div class="loading-subtitle">جاري التحميل...</div>
     <div class="loading-spinner"></div>
   </div>
+  <script>
+    function removeLoader() {
+      const loader = document.getElementById("loading-indicator");
+      if (loader && !loader.dataset.hiding) {
+        loader.dataset.hiding = "true";
+        loader.style.opacity = "0";
+        loader.style.pointerEvents = "none";
+        setTimeout(() => {
+          if (loader.parentNode) loader.parentNode.removeChild(loader);
+        }, 400);
+      }
+    }
+
+    // 1. Observe when Flutter engine injects its view or glass-pane
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        for (const node of m.addedNodes) {
+          if (node.tagName && (
+              node.tagName.toLowerCase().includes("flt") ||
+              node.tagName.toLowerCase().includes("flutter") ||
+              node.tagName.toLowerCase() === "canvas"
+          )) {
+            removeLoader();
+            observer.disconnect();
+            return;
+          }
+        }
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // 2. Safety timeout fallback: remove after 4 seconds max
+    setTimeout(removeLoader, 4000);
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

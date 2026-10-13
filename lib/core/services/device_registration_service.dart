@@ -101,11 +101,20 @@ class DeviceRegistrationService {
   }) : _store = store ?? FirestoreDeviceRegistrationStore(),
        _prefsFuture = prefsFuture ?? SharedPreferences.getInstance(),
        _tokenGetter =
-           tokenGetter ?? (() => FirebaseMessaging.instance.getToken()),
+           tokenGetter ??
+           (kIsWeb
+               ? (() => Future<String?>.value(null))
+               : (() => FirebaseMessaging.instance.getToken())),
        _tokenDeleter =
-           tokenDeleter ?? (() => FirebaseMessaging.instance.deleteToken()),
+           tokenDeleter ??
+           (kIsWeb
+               ? (() => Future<void>.value())
+               : (() => FirebaseMessaging.instance.deleteToken())),
        _tokenRefreshStream =
-           tokenRefreshStream ?? FirebaseMessaging.instance.onTokenRefresh;
+           tokenRefreshStream ??
+           (kIsWeb
+               ? const Stream.empty()
+               : FirebaseMessaging.instance.onTokenRefresh);
   Future<void> _serialize(Future<void> Function() action) {
     final operation = _queue.then((_) => action());
     _queue = operation.then((_) {}, onError: (Object e, StackTrace st) {});
@@ -157,7 +166,7 @@ class DeviceRegistrationService {
   }
 
   Future<void> bindUser(String uid, {String? locale}) {
-    if (uid.isEmpty) return Future.value();
+    if (uid.isEmpty || kIsWeb) return Future.value();
     final generation = ++_generation;
     return _serialize(() async {
       if (generation != _generation) return;
@@ -219,6 +228,7 @@ class DeviceRegistrationService {
   }
 
   Future<void> unbindUser() {
+    if (kIsWeb) return Future.value();
     final generation = ++_generation;
     return _serialize(() async {
       if (generation != _generation) return;

@@ -90,6 +90,10 @@ class NotificationService {
     }
 
     if (_isInitialized) return;
+    if (kIsWeb) {
+      _isInitialized = true;
+      return;
+    }
 
     try {
       // 1. طلب الصلاحيات من المستخدم
@@ -211,7 +215,7 @@ class NotificationService {
 
   /// مزامنة وحفظ توكن FCM الخاص بالمستخدم في قاعدة البيانات تحت أجهزته المسجلة
   Future<void> syncUserToken(String userId, {String? locale}) async {
-    if (userId.isEmpty) return;
+    if (userId.isEmpty || kIsWeb) return;
     await _devices.bindUser(userId, locale: locale);
   }
 

@@ -47,7 +47,14 @@ class FirebaseAuthRepository implements AuthRepository {
     FirebaseAuth? firebaseAuth,
     GoogleSignIn? googleSignIn,
   })  : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
-        _googleSignIn = googleSignIn ?? GoogleSignIn();
+        _googleSignIn =
+            googleSignIn ??
+            (kIsWeb
+                ? GoogleSignIn(
+                    clientId:
+                        '882251802958-d052icjb1rkgp6556n2cvme5k5rneava.apps.googleusercontent.com',
+                  )
+                : GoogleSignIn());
 
   @override
   Stream<AuthIdentity?> watchAuth() {

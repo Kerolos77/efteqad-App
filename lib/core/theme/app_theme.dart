@@ -4,6 +4,7 @@ import '../constants/constants.dart';
 class AppTheme {
   static final ThemeData lightTheme = ThemeData(
       useMaterial3: true,
+      fontFamily: 'Cairo',
       brightness: Brightness.light,
       primaryColor: AppConstants.primaryLight,
       scaffoldBackgroundColor: AppConstants.backgroundLight,
@@ -94,6 +95,7 @@ class AppTheme {
 
   static final ThemeData darkTheme = ThemeData(
       useMaterial3: true,
+      fontFamily: 'Cairo',
       brightness: Brightness.dark,
       primaryColor: AppConstants.primaryLight,
       scaffoldBackgroundColor: AppConstants.backgroundDark,

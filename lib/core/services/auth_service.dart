@@ -25,7 +25,14 @@ class AuthService {
     DeviceRegistrationService? devices,
     void Function()? clearNotificationIntents,
   }) : _auth = auth ?? FirebaseAuth.instance,
-       _googleSignIn = googleSignIn ?? GoogleSignIn(),
+       _googleSignIn =
+           googleSignIn ??
+           (kIsWeb
+               ? GoogleSignIn(
+                   clientId:
+                       '882251802958-d052icjb1rkgp6556n2cvme5k5rneava.apps.googleusercontent.com',
+                 )
+               : GoogleSignIn()),
        _firestoreService = firestoreService ?? FirestoreService(),
        _devices = devices ?? DeviceRegistrationService.shared,
        _clearNotificationIntents =
