@@ -103,47 +103,49 @@ class NotificationService {
         sound: true,
       );
 
-      // 2. إعداد الإشعارات المحلية
-      const AndroidInitializationSettings androidSettings =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
-      const DarwinInitializationSettings darwinSettings =
-          DarwinInitializationSettings(
-            requestAlertPermission: true,
-            requestBadgePermission: true,
-            requestSoundPermission: true,
-          );
+      // 2. إعداد الإشعارات المحلية على المنصات المدعومة
+      if (!kIsWeb) {
+        const AndroidInitializationSettings androidSettings =
+            AndroidInitializationSettings('@mipmap/ic_launcher');
+        const DarwinInitializationSettings darwinSettings =
+            DarwinInitializationSettings(
+              requestAlertPermission: true,
+              requestBadgePermission: true,
+              requestSoundPermission: true,
+            );
 
-      const InitializationSettings initSettings = InitializationSettings(
-        android: androidSettings,
-        iOS: darwinSettings,
-        macOS: darwinSettings,
-      );
+        const InitializationSettings initSettings = InitializationSettings(
+          android: androidSettings,
+          iOS: darwinSettings,
+          macOS: darwinSettings,
+        );
 
-      await _localNotifications.initialize(
-        settings: initSettings,
-        onDidReceiveNotificationResponse: (NotificationResponse response) {
-          if (kDebugMode) {
-            print('Notification tapped: ${response.payload}');
-          }
-          _handlePayloadString(response.payload);
-        },
-      );
+        await _localNotifications.initialize(
+          settings: initSettings,
+          onDidReceiveNotificationResponse: (NotificationResponse response) {
+            if (kDebugMode) {
+              print('Notification tapped: ${response.payload}');
+            }
+            _handlePayloadString(response.payload);
+          },
+        );
 
-      // Check cold launch via local notification
-      final launchDetails = await _localNotifications
-          .getNotificationAppLaunchDetails();
-      if (launchDetails?.didNotificationLaunchApp == true &&
-          launchDetails?.notificationResponse?.payload != null) {
-        _handlePayloadString(launchDetails!.notificationResponse!.payload);
-      }
+        // Check cold launch via local notification
+        final launchDetails = await _localNotifications
+            .getNotificationAppLaunchDetails();
+        if (launchDetails?.didNotificationLaunchApp == true &&
+            launchDetails?.notificationResponse?.payload != null) {
+          _handlePayloadString(launchDetails!.notificationResponse!.payload);
+        }
 
-      // إنشاء القناة في نظام أندرويد
-      final androidPlatform = _localNotifications
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >();
-      if (androidPlatform != null) {
-        await androidPlatform.createNotificationChannel(_channel);
+        // إنشاء القناة في نظام أندرويد
+        final androidPlatform = _localNotifications
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
+        if (androidPlatform != null) {
+          await androidPlatform.createNotificationChannel(_channel);
+        }
       }
 
       // 3. ضبط سلوك الإشعارات في المقدمة (Foreground)
@@ -154,7 +156,9 @@ class NotificationService {
       );
 
       // 4. تسجيل معالج الخلفية
-      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+      if (!kIsWeb) {
+        FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+      }
 
       // 5. الاستماع لرسائل المقدمة
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -197,7 +201,7 @@ class NotificationService {
 
   Future<void> updateLocale(Locale locale) async {
     _locale = locale;
-    if (!_isInitialized) return;
+    if (!_isInitialized || kIsWeb) return;
     await _localNotifications
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
@@ -218,6 +222,7 @@ class NotificationService {
     required String body,
     String? payload,
   }) async {
+    if (kIsWeb) return;
     final androidDetails = AndroidNotificationDetails(
       _channel.id,
       _channel.name,

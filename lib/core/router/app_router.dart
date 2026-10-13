@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
+import '../widgets/web/web_widgets.dart';
 import '../utils/calendar_dates.dart';
 import '../widgets/query_content.dart';
 import '../models/visit_model.dart';
@@ -636,6 +638,39 @@ class _StageShellScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (kIsWeb) {
+      return WebScaffold(
+        title: context.tr.stageDashboardTitle,
+        subtitle: 'لوحة تحكم أمين المرحلة',
+        selectedIndex: navigationShell.currentIndex,
+        onDestinationSelected: (idx) =>
+            navigationShell.goBranch(idx, initialLocation: false),
+        destinations: [
+          WebNavDestination(
+            icon: Icons.manage_accounts_outlined,
+            selectedIcon: Icons.manage_accounts,
+            label: context.tr.tabGradesAndServants,
+          ),
+          WebNavDestination(
+            icon: Icons.insights_outlined,
+            selectedIcon: Icons.insights,
+            label: context.tr.tabStageAnalytics,
+          ),
+          WebNavDestination(
+            icon: Icons.assignment_outlined,
+            selectedIcon: Icons.assignment,
+            label: context.tr.tabStageTasks,
+          ),
+          const WebNavDestination(
+            icon: Icons.how_to_reg_outlined,
+            selectedIcon: Icons.how_to_reg,
+            label: 'الحضور والغياب',
+          ),
+        ],
+        body: AppVersionUpdateGuard(child: navigationShell),
+      );
+    }
+
     return Scaffold(
       drawer: const AppDrawer(isAdmin: true),
       appBar: AppBar(
@@ -758,6 +793,60 @@ class _GradeShellScaffoldState extends State<_GradeShellScaffold> {
       queryKey: '${RouterServices.of(context).session.state.scopeKey}/shell',
       query: () => firestoreService.getKhodamByGradeStream(grade),
       builder: (context, khodamList) {
+        if (kIsWeb) {
+          return WebScaffold(
+            title: context.tr.gradeDashboardTitle(gradeLabel),
+            subtitle: 'لوحة تحكم $gradeLabel',
+            selectedIndex: navigationShell.currentIndex,
+            onDestinationSelected: (idx) => _select(context, idx),
+            floatingActionButton: navigationShell.currentIndex == 0
+                ? FloatingActionButton.extended(
+                    onPressed: () => _openAddMakhdomDialog(context, khodamList),
+                    backgroundColor: AppConstants.primaryLight,
+                    icon: const Icon(
+                      Icons.person_add_rounded,
+                      color: Colors.white,
+                    ),
+                    label: Text(
+                      context.tr.addMakhdomBtn,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )
+                : null,
+            destinations: [
+              WebNavDestination(
+                icon: Icons.groups_outlined,
+                selectedIcon: Icons.groups,
+                label: context.tr.messageMakhdomeen,
+              ),
+              WebNavDestination(
+                icon: Icons.insights_outlined,
+                selectedIcon: Icons.insights,
+                label: context.tr.tabAnalytics,
+              ),
+              WebNavDestination(
+                icon: Icons.badge_outlined,
+                selectedIcon: Icons.badge,
+                label: context.tr.tabKhodam(khodamList.length),
+              ),
+              WebNavDestination(
+                icon: Icons.task_alt_outlined,
+                selectedIcon: Icons.task_alt,
+                label: context.tr.tabGradeTasks,
+              ),
+              const WebNavDestination(
+                icon: Icons.how_to_reg_outlined,
+                selectedIcon: Icons.how_to_reg,
+                label: 'الحضور والغياب',
+              ),
+            ],
+            body: AppVersionUpdateGuard(child: navigationShell),
+          );
+        }
+
         return Scaffold(
           drawer: AppDrawer(
             isAdmin: true,
@@ -857,6 +946,39 @@ class _ServantShellScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (kIsWeb) {
+      return WebScaffold(
+        title: context.tr.appName,
+        subtitle: 'لوحة الخادم',
+        selectedIndex: navigationShell.currentIndex,
+        onDestinationSelected: (idx) =>
+            navigationShell.goBranch(idx, initialLocation: false),
+        destinations: [
+          WebNavDestination(
+            icon: Icons.people_alt_outlined,
+            selectedIcon: Icons.people_alt,
+            label: context.tr.messageMyStudents,
+          ),
+          WebNavDestination(
+            icon: Icons.task_alt_outlined,
+            selectedIcon: Icons.task_alt,
+            label: context.tr.messageMyTasks,
+          ),
+          WebNavDestination(
+            icon: Icons.insights_outlined,
+            selectedIcon: Icons.insights,
+            label: context.tr.tabAnalytics,
+          ),
+          const WebNavDestination(
+            icon: Icons.how_to_reg_outlined,
+            selectedIcon: Icons.how_to_reg,
+            label: 'الحضور والغياب',
+          ),
+        ],
+        body: AppVersionUpdateGuard(child: navigationShell),
+      );
+    }
+
     return Scaffold(
       drawer: const AppDrawer(isAdmin: false),
       appBar: AppBar(

@@ -1,6 +1,5 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import '../localization/app_localizations.dart';
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Represents a standardized application failure across network, database,
@@ -132,7 +131,7 @@ class AppFailure implements Exception {
       }
     }
 
-    if (error is SocketException) {
+    if (error.runtimeType.toString() == 'SocketException') {
       return AppFailure.network(
         message: 'Application diagnostic',
         cause: error,

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -17,7 +18,6 @@ import 'core/settings/settings_cubit.dart';
 import 'core/settings/settings_repository.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/notification_intent_coordinator.dart';
-import 'core/services/app_version_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/device_registration_service.dart';
 
@@ -27,11 +27,13 @@ void main() async {
   // تهيئة فايربيس
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // تفعيل التخزين المؤقت في وضع عدم الاتصال (Offline Persistence) بحجم محدد ومضبوط (100 MB)
-  FirebaseFirestore.instance.settings = const Settings(
-    persistenceEnabled: true,
-    cacheSizeBytes: 104857600, // 100 MB bounded cache
-  );
+  // تفعيل التخزين المؤقت في وضع عدم الاتصال على الموبايل
+  if (!kIsWeb) {
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: 104857600, // 100 MB bounded cache
+    );
+  }
 
   // [تُشغّل مرة واحدة فقط] لإنشاء مستند الإصدار (settings/app_version) في Firestore
   // بعد تشغيل التطبيق أول مرة وحفظ المستند، يمكنك مسح هذا السطر أو عمل كومنت له.

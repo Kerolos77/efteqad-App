@@ -1,13 +1,10 @@
 import '../errors/app_failure.dart';
-import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'package:excel/excel.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:open_filex/open_filex.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
+import '../utils/platform_file_saver/platform_file_saver.dart';
 import '../localization/excel_column_labels.dart';
 import '../localization/domain_labels.dart';
 import '../models/excel_import_result.dart';
@@ -94,19 +91,16 @@ class ExcelService {
   }) async {
     final effectiveLabels = labels ?? const ExcelColumnLabels(Locale('ar'));
     final bytes = generateTemplateBytes(labels: effectiveLabels);
-
-    final tempDir = await getTemporaryDirectory();
     final fileName = effectiveLabels.tr.messageStudentsImportTemplateXlsx;
-    final file = File('${tempDir.path}/$fileName');
-    await file.writeAsBytes(bytes);
 
-    await Share.shareXFiles(
-      [XFile(file.path)],
-      text:
+    final path = await PlatformFileSaver.saveAndShareFile(
+      bytes: bytes,
+      fileName: fileName,
+      shareText:
           effectiveLabels.tr.messageExcelTemplateForImportingStudentsInEfteqad,
     );
 
-    return file.path;
+    return path ?? fileName;
   }
 
   /// 2. معالجة البايتات واستخراج المخدومين مع إلزامية السنة (Strict Grade Parsing)
@@ -540,10 +534,7 @@ class ExcelService {
     }
 
     final Uint8List? bytes =
-        result.files.first.bytes ??
-        (result.files.first.path != null
-            ? await File(result.files.first.path!).readAsBytes()
-            : null);
+        await PlatformFileSaver.readPickedFileBytes(result.files.first);
 
     if (bytes == null) {
       throw AppFailure(
@@ -631,17 +622,14 @@ class ExcelService {
     String? title,
   }) async {
     final bytes = exportMakhdomeenBytes(list, labels: labels);
-    final fileName = title ?? labels.sheetName;
+    final fileName =
+        '${title ?? labels.sheetName}_${DateTime.now().millisecondsSinceEpoch}.xlsx';
 
-    final tempDir = await getTemporaryDirectory();
-    final file = File(
-      '${tempDir.path}/${fileName}_${DateTime.now().millisecondsSinceEpoch}.xlsx',
+    await PlatformFileSaver.saveAndShareFile(
+      bytes: bytes,
+      fileName: fileName,
+      shareText: labels.tr.messageStudentsReportEfteqad,
+      openFile: true,
     );
-    await file.writeAsBytes(bytes);
-
-    await OpenFilex.open(file.path);
-    await Share.shareXFiles([
-      XFile(file.path),
-    ], text: labels.tr.messageStudentsReportEfteqad);
   }
 }
