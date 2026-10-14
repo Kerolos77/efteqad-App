@@ -75,6 +75,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         String extraPatchText = '';
         if (shorebirdService.isAvailable) {
           final downloaded = await shorebirdService.checkAndDownloadPatch();
+          if (!mounted) return;
           if (downloaded) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -94,6 +95,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           }
         }
 
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(

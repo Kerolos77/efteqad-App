@@ -116,7 +116,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
       type: _sessionType,
       khademId: session.userId ?? '',
       khademName: khademName,
-      taskId: widget.isDirectSession ? _sessionId : widget.task.id,
+      taskId: widget.isDirectSession ? null : widget.task.id,
       userId: () => sessionCubit.state.userId ?? '',
     );
 
@@ -147,26 +147,63 @@ class _AttendanceScreenState extends State<AttendanceScreen>
     if (widget.loadRoster != null) {
       return widget.loadRoster!(taskId);
     }
-    try {
-      final all = await AttendanceRosterRepository().load(taskId);
-      if (_sessionGrade == 'all') return all;
-      return all.where((r) => r.grade == _sessionGrade).toList();
-    } catch (_) {
-      final list = _sessionGrade == 'all'
-          ? await FirestoreService().getMakhdomeenStream().first
-          : await FirestoreService().getMakhdomeenByGrade(_sessionGrade);
-      return list
-          .where((m) => m.active)
-          .map(
-            (m) => AttendanceRosterRow(
-              id: m.id,
-              fullName: m.fullName,
-              grade: m.grade,
-              active: m.active,
-            ),
-          )
-          .toList();
+    final session = context.read<SessionCubit>().state;
+
+    // 1. If it's a real assigned task, try loading through AttendanceRosterRepository:
+    if (!widget.isDirectSession &&
+        taskId.isNotEmpty &&
+        !taskId.startsWith('direct_')) {
+      try {
+        final all = await AttendanceRosterRepository().load(taskId);
+        if (_sessionGrade == 'all') return all;
+        return all.where((r) => r.grade == _sessionGrade).toList();
+      } catch (_) {
+        // Fall back below if roster callable fails or is offline
+      }
     }
+
+    // 2. Direct session or fallback loading based on role:
+    try {
+      if (session.isStageAdmin ||
+          (session.isGradeAdmin &&
+              (session.grade == _sessionGrade || _sessionGrade == 'all'))) {
+        final list = _sessionGrade == 'all'
+            ? await FirestoreService().getMakhdomeenStream().first
+            : await FirestoreService().getMakhdomeenByGrade(_sessionGrade);
+        return list
+            .where((m) => m.active)
+            .map(
+              (m) => AttendanceRosterRow(
+                id: m.id,
+                fullName: m.fullName,
+                grade: m.grade,
+                active: m.active,
+              ),
+            )
+            .toList();
+      } else if (session.userId != null) {
+        // Normal servant: load their assigned students for this grade
+        final list = await FirestoreService()
+            .getMakhdomeenForKhademStream(session.userId!)
+            .first;
+        return list
+            .where((m) =>
+                m.active &&
+                (_sessionGrade == 'all' || m.grade == _sessionGrade))
+            .map(
+              (m) => AttendanceRosterRow(
+                id: m.id,
+                fullName: m.fullName,
+                grade: m.grade,
+                active: m.active,
+              ),
+            )
+            .toList();
+      }
+    } catch (_) {
+      return [];
+    }
+    return [];
   }
 
   Stream<List<AttendanceRosterRow>> _rosterForCurrentTask() {
@@ -866,8 +903,11 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                   return true;
                 }).toList();
 
-                return Column(
-                  children: [
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1000),
+                    child: Column(
+                      children: [
                     // شريط القفل الذكي إذا كان هناك خادم آخر يرصد حالياً
                     if (isLockedByOther)
                       Container(
@@ -1128,7 +1168,9 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                             ),
                     ),
                   ],
-                );
+                ),
+              ),
+            );
               },
             ),
           );

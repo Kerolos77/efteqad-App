@@ -5,7 +5,9 @@ import '../../../../core/constants/constants.dart';
 import '../../../../core/localization/app_formatters.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/attendance_session_model.dart';
+import '../../../../core/models/task_model.dart';
 import '../../../../core/repositories/attendance_repository.dart';
+import '../../../../core/services/firestore_service.dart';
 import '../../../../core/session/session_cubit.dart';
 import 'attendance_screen.dart';
 
@@ -22,12 +24,35 @@ class AttendanceHubTab extends StatefulWidget {
 class _AttendanceHubTabState extends State<AttendanceHubTab> {
   late final AttendanceRepository _repository =
       widget.repository ?? FirestoreAttendanceRepository();
-  late String _selectedGrade = widget.fixedGrade ?? AppConstants.grade1st;
+  late String _selectedGrade;
   late DateTime _selectedDate = _defaultSessionDate();
+  bool _initializedGrade = false;
 
   static DateTime _defaultSessionDate() {
     final now = DateTime.now();
     return DateTime(now.year, now.month, now.day);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedGrade = widget.fixedGrade ?? AppConstants.grade1st;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initializedGrade) {
+      final session = context.read<SessionCubit>().state;
+      if (widget.fixedGrade != null) {
+        _selectedGrade = widget.fixedGrade!;
+      } else if (!session.isStageAdmin &&
+          session.grade != null &&
+          session.grade!.isNotEmpty) {
+        _selectedGrade = session.grade!;
+      }
+      _initializedGrade = true;
+    }
   }
 
   @override
@@ -69,7 +94,10 @@ class _AttendanceHubTabState extends State<AttendanceHubTab> {
     }
   }
 
-  void _openSession({required DateTime date, required String sessionType}) {
+  Future<void> _openSession({
+    required DateTime date,
+    required String sessionType,
+  }) async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final targetDay = DateTime(date.year, date.month, date.day);
@@ -83,19 +111,61 @@ class _AttendanceHubTabState extends State<AttendanceHubTab> {
       return;
     }
     final sessionCubit = context.read<SessionCubit>();
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => BlocProvider.value(
-          value: sessionCubit,
-          child: AttendanceScreen.direct(
-            grade: _selectedGrade,
-            date: targetDay,
-            sessionType: sessionType,
-            repository: _repository,
+    final session = sessionCubit.state;
+    final dayStr = DateFormat('yyyy-MM-dd').format(targetDay);
+    final expectedTaskType =
+        sessionType == 'qoddas' ? 'attendance_qoddas' : 'attendance_khedma';
+
+    TaskModel? matchingTask;
+    try {
+      final tasks = await FirestoreService()
+          .getTasksForGradeStream(_selectedGrade)
+          .first
+          .timeout(const Duration(seconds: 2));
+      matchingTask = tasks.where((t) {
+        if (t.isCompleted || t.status != 'active') return false;
+        if (t.type != expectedTaskType) return false;
+        final tDay = t.attendanceDay ??
+            (t.dueDate != null
+                ? DateFormat('yyyy-MM-dd').format(t.dueDate!)
+                : null);
+        if (tDay != dayStr) return false;
+        if (session.isServant && t.assignedKhademId != session.userId) {
+          return false;
+        }
+        return true;
+      }).firstOrNull;
+    } catch (_) {}
+
+    if (!mounted) return;
+
+    if (matchingTask != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => BlocProvider.value(
+            value: sessionCubit,
+            child: AttendanceScreen(
+              task: matchingTask!,
+              repository: _repository,
+            ),
           ),
         ),
-      ),
-    );
+      );
+    } else {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => BlocProvider.value(
+            value: sessionCubit,
+            child: AttendanceScreen.direct(
+              grade: _selectedGrade,
+              date: targetDay,
+              sessionType: sessionType,
+              repository: _repository,
+            ),
+          ),
+        ),
+      );
+    }
   }
 
   @override
