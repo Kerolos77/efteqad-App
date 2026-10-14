@@ -122,7 +122,8 @@ class WebScaffold extends StatelessWidget {
         ),
         actions: [
           ...?actions,
-          const NotificationBellButton(),
+          if (!(actions?.any((w) => w is NotificationBellButton) ?? false))
+            const NotificationBellButton(),
         ],
       ),
       drawer: Drawer(
@@ -196,8 +197,10 @@ class _WebHeader extends StatelessWidget {
           ),
           // Actions
           if (actions != null) ...actions!,
-          const SizedBox(width: 8),
-          const NotificationBellButton(),
+          if (!(actions?.any((w) => w is NotificationBellButton) ?? false)) ...[
+            const SizedBox(width: 8),
+            const NotificationBellButton(),
+          ],
         ],
       ),
     );

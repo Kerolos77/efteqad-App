@@ -701,7 +701,6 @@ class _StageShellScaffold extends StatelessWidget {
                     firestoreService: firestore,
                   ),
                 ),
-              const NotificationBellButton(),
             ],
             body: navigationShell,
           );
@@ -923,7 +922,6 @@ class _GradeShellScaffoldState extends State<_GradeShellScaffold> {
                   );
                 },
               ),
-              const NotificationBellButton(),
             ],
             body: navigationShell,
           );
