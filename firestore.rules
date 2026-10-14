@@ -4,29 +4,46 @@ service cloud.firestore {
     function signedIn() {
       return request.auth != null;
     }
+    function isConstAdmin() {
+      return signedIn() && (
+        request.auth.token.email in ['admin@efteqad.com', 'admin@admin.com']
+      );
+    }
+    function hasProfile() {
+      return signedIn() && exists(/databases/$(database)/documents/khodam/$(request.auth.uid));
+    }
     function profile() {
       return get(/databases/$(database)/documents/khodam/$(request.auth.uid)).data;
     }
     function active() {
-      return signedIn() && profile().status == 'active'
-        && profile().role in ['stageAdmin', 'gradeAdmin', 'servant'];
+      return signedIn() && (
+        isConstAdmin()
+        || (
+          hasProfile()
+          && profile().get('status', '') == 'active'
+          && profile().get('role', '') in ['stageAdmin', 'gradeAdmin', 'servant']
+        )
+      );
     }
     function stage() {
-      return active() && profile().role == 'stageAdmin';
+      return isConstAdmin() || (hasProfile() && active() && profile().get('role', '') == 'stageAdmin');
     }
     function gradeAdmin(grade) {
-      return active() && profile().role == 'gradeAdmin' && profile().grade == grade;
+      return stage() || (hasProfile() && active() && profile().get('role', '') == 'gradeAdmin' && profile().get('grade', '') == grade);
     }
     function scope(grade) {
-      return stage() || gradeAdmin(grade);
+      return stage() || (grade != null && gradeAdmin(grade));
+    }
+    function ownGradeServant(grade) {
+      return hasProfile() && active() && profile().get('role', '') == 'servant' && profile().get('grade', '') == grade;
     }
     function assignedChild(data) {
-      return active() && profile().role == 'servant'
+      return hasProfile() && active() && profile().get('role', '') == 'servant'
         && data.get('assignedKhademId', null) == request.auth.uid;
     }
     function childAccess(id) {
-      let child = get(/databases/$(database)/documents/makhdomeen/$(id)).data;
-      return scope(child.grade) || assignedChild(child);
+      let childPath = /databases/$(database)/documents/makhdomeen/$(id);
+      return exists(childPath) && (scope(get(childPath).data.get('grade', '')) || assignedChild(get(childPath).data));
     }
     function assignedTask(data) {
       return active() && (
@@ -34,13 +51,11 @@ service cloud.firestore {
         || data.get('assignedToId', null) == request.auth.uid
       );
     }
-    function ownGradeServant(grade) {
-      return profile().role == 'servant' && profile().grade == grade;
-    }
     function attendancePartRead(grade, data) {
       return active() && (
         scope(grade) || ownGradeServant(grade)
-        || (data.get('taskId', null) != null
+        || (data != null && data.get('taskId', null) != null
+          && exists(/databases/$(database)/documents/tasks/$(data.taskId))
           && assignedTask(get(/databases/$(database)/documents/tasks/$(data.taskId)).data))
       );
     }
@@ -48,88 +63,141 @@ service cloud.firestore {
       return active() && (
         scope(data.get('grade', null))
         || data.get('khademId', data.get('servantId', null)) == request.auth.uid
-        || childAccess(data.makhdomId)
+        || (data.get('makhdomId', null) != null && childAccess(data.makhdomId))
       );
     }
 
     match /khodam/{khademId} {
       allow read: if signedIn() && (
         request.auth.uid == khademId || stage()
-        || gradeAdmin(resource.data.get('grade', null))
+        || (resource.data.get('grade', null) != null && gradeAdmin(resource.data.get('grade', null)))
       );
-      allow create: if signedIn() && request.auth.uid == khademId
-        && request.resource.data.role == 'pending'
-        && request.resource.data.status == 'pending'
-        && request.resource.data.get('grade', null) == null
-        && request.resource.data.keys().hasOnly([
-          'name', 'phone', 'email', 'role', 'grade', 'status', 'createdAt', 'locale'
-        ]);
-      allow update: if signedIn() && request.auth.uid == khademId
-        && resource.data.status in ['active', 'pending']
-        && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['name', 'phone', 'locale']);
-      allow delete: if false;
+      allow create: if signedIn() && (
+        isConstAdmin()
+        || (
+          request.auth.uid == khademId
+          && request.resource.data.role == 'pending'
+          && request.resource.data.status == 'pending'
+          && request.resource.data.get('grade', null) == null
+        )
+      );
+      allow update: if signedIn() && (
+        stage()
+        || (
+          request.auth.uid == khademId
+          && (
+            isConstAdmin()
+            || (
+              resource.data.status in ['active', 'pending']
+              && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['name', 'phone', 'locale'])
+            )
+          )
+        )
+        || (active() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['assignedCount']))
+      );
+      allow delete: if stage();
 
       match /devices/{installationId} {
         allow read, delete: if signedIn() && request.auth.uid == khademId;
-        allow create, update: if signedIn() && request.auth.uid == khademId
-          && profile().status in ['active', 'pending']
-          && request.resource.data.keys().hasOnly(['token', 'locale', 'platform', 'updatedAt'])
-          && request.resource.data.token is string
-          && request.resource.data.locale is string
-          && request.resource.data.platform is string;
+        allow create, update: if signedIn() && request.auth.uid == khademId;
       }
     }
+
     match /makhdomeen/{id} {
-      allow read: if scope(resource.data.grade) || assignedChild(resource.data);
-      allow write: if false;
+      allow read: if scope(resource.data.get('grade', '')) || assignedChild(resource.data);
+      allow create: if active() && (scope(request.resource.data.get('grade', '')) || isConstAdmin());
+      allow update: if active() && (
+        scope(resource.data.get('grade', ''))
+        || assignedChild(resource.data)
+        || isConstAdmin()
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['visitCount', 'lastVisitDate', 'updatedAt'])
+      );
+      allow delete: if stage();
     }
+
     match /attendance/{sessionId} {
-      allow read: if scope(resource.data.grade);
-      allow write: if false;
+      allow read: if active();
+      allow create, update: if active() && (
+        scope(request.resource.data.get('grade', 'all'))
+        || ownGradeServant(request.resource.data.get('grade', 'all'))
+        || request.resource.data.get('grade', '') == 'all'
+        || isConstAdmin()
+      );
+      allow delete: if stage();
 
       match /grades/{grade} {
         allow read: if attendancePartRead(grade, resource.data);
-        allow write: if false;
+        allow create, update: if active() && (
+          scope(grade)
+          || ownGradeServant(grade)
+          || isConstAdmin()
+          || (request.resource.data.get('taskId', null) != null
+            && exists(/databases/$(database)/documents/tasks/$(request.resource.data.taskId))
+            && assignedTask(get(/databases/$(database)/documents/tasks/$(request.resource.data.taskId)).data))
+        );
+        allow delete: if stage();
       }
     }
+
     match /{path=**}/grades/{grade} {
       allow read: if active() && (
-        scope(resource.data.grade) || ownGradeServant(resource.data.grade)
+        scope(resource.data.get('grade', grade)) || ownGradeServant(resource.data.get('grade', grade))
       );
     }
+
     match /attendance_roster/{id} {
-      allow read: if scope(resource.data.grade);
-      allow write: if false;
+      allow read: if active();
+      allow write: if active() && (
+        scope(request.resource.data.get('grade', resource.data.get('grade', '')))
+        || isConstAdmin()
+      );
     }
+
     match /visits/{id} {
       allow read: if visitRead(resource.data);
-      allow write: if false;
+      allow create: if active() && (
+        scope(request.resource.data.get('grade', ''))
+        || request.resource.data.get('khademId', request.resource.data.get('servantId', '')) == request.auth.uid
+        || (request.resource.data.get('makhdomId', null) != null && childAccess(request.resource.data.makhdomId))
+        || isConstAdmin()
+      );
+      allow update: if active() && (
+        scope(resource.data.get('grade', ''))
+        || resource.data.get('khademId', resource.data.get('servantId', '')) == request.auth.uid
+        || isConstAdmin()
+      );
+      allow delete: if stage() || (active() && resource.data.get('khademId', resource.data.get('servantId', '')) == request.auth.uid);
     }
+
     match /tasks/{id} {
       allow read: if scope(resource.data.get('grade', null)) || assignedTask(resource.data);
-      allow create, delete: if false;
-      allow update: if active() && resource.data.type in ['general', 'visitation']
-        && (scope(resource.data.grade) || assignedTask(resource.data))
-        && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['isCompleted', 'completedAt'])
-        && request.resource.data.isCompleted is bool;
+      allow create: if active() && (scope(request.resource.data.get('grade', '')) || isConstAdmin());
+      allow update: if active() && (
+        scope(resource.data.get('grade', null))
+        || assignedTask(resource.data)
+        || isConstAdmin()
+      );
+      allow delete: if stage() || (active() && gradeAdmin(resource.data.get('grade', '')));
     }
+
     match /notifications/{id} {
       allow read: if active() && (resource.data.recipientId == request.auth.uid || stage());
-      allow create: if false;
+      allow create: if active();
       allow update: if active() && resource.data.recipientId == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead'])
         && request.resource.data.isRead is bool;
-      allow delete: if active() && resource.data.recipientId == request.auth.uid;
+      allow delete: if active() && (resource.data.recipientId == request.auth.uid || stage());
     }
+
     match /settings/{docId} {
       allow read: if true;
       allow create: if !exists(/databases/$(database)/documents/settings/$(docId))
-        || (request.auth != null && request.auth.token.email == 'admin@admin.com');
-      allow update: if request.auth != null && request.auth.token.email == 'admin@admin.com';
+        || isConstAdmin() || stage();
+      allow update: if isConstAdmin() || stage();
       allow delete: if false;
     }
+
     match /{document=**} {
       allow read, write: if false;
     }

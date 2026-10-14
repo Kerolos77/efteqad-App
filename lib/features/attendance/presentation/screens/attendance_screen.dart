@@ -360,6 +360,19 @@ class _AttendanceScreenState extends State<AttendanceScreen>
         makhdomId: makhdom.id,
         isPresent: isPresent,
       );
+      if (mounted && _attendanceCubit.state.saveErrors.containsKey(makhdom.id)) {
+        final err = _attendanceCubit.state.saveErrors[makhdom.id];
+        if (err != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppFailure.fromException(err).localizedMessage(context.tr),
+              ),
+              backgroundColor: AppConstants.errorColor,
+            ),
+          );
+        }
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -693,36 +706,52 @@ class _AttendanceScreenState extends State<AttendanceScreen>
     }
 
     if (state.status == 'error' || state.saveErrors.isNotEmpty) {
-      return Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: AppConstants.errorColor.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: AppConstants.errorColor.withValues(alpha: 0.4),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 10,
-              color: AppConstants.errorColor,
+      return InkWell(
+        onTap: () {
+          final firstError = state.saveErrors.values.firstOrNull;
+          if (firstError != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  AppFailure.fromException(firstError).localizedMessage(context.tr),
+                ),
+                backgroundColor: AppConstants.errorColor,
+              ),
+            );
+          }
+        },
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppConstants.errorColor.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: AppConstants.errorColor.withValues(alpha: 0.4),
             ),
-            const SizedBox(width: 4),
-            Flexible(
-              child: Text(
-                context.tr.messageSaveError,
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: AppConstants.errorColor,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 10,
+                color: AppConstants.errorColor,
+              ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  context.tr.messageSaveError,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: AppConstants.errorColor,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     }
@@ -1540,12 +1569,27 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                         ),
                       ),
                       if (hasError)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 4),
-                          child: Icon(
-                            Icons.error_outline,
-                            size: 16,
-                            color: AppConstants.errorColor,
+                        InkWell(
+                          onTap: () {
+                            final err = _attendanceCubit.state.saveErrors[makhdom.id];
+                            if (err != null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    AppFailure.fromException(err).localizedMessage(context.tr),
+                                  ),
+                                  backgroundColor: AppConstants.errorColor,
+                                ),
+                              );
+                            }
+                          },
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 4),
+                            child: Icon(
+                              Icons.error_outline,
+                              size: 16,
+                              color: AppConstants.errorColor,
+                            ),
                           ),
                         ),
                     ],
