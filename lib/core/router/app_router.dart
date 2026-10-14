@@ -50,9 +50,11 @@ import '../../features/khadem/presentation/screens/khadem_profile_screen.dart';
 import '../../features/khadem/presentation/widgets/my_analytics_tab.dart';
 import '../../features/khadem/presentation/widgets/my_makhdomeen_tab.dart';
 import '../../features/khadem/presentation/web/my_makhdomeen_web_screen.dart';
+import '../../features/khadem/presentation/web/my_analytics_web_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/tasks/presentation/screens/task_details_screen.dart';
 import '../../features/tasks/presentation/widgets/tasks_tab.dart';
+import '../../features/tasks/presentation/web/my_tasks_web_screen.dart';
 
 /// Intent ownership belongs to this router, never to another login/router.
 class RouterIntentState {
@@ -1307,6 +1309,14 @@ class _MyTasksWrapper extends StatelessWidget {
     final firestore = RouterServices.of(context).firestore;
     final uid = RouterServices.of(context).session.state.userId ?? '';
 
+    if (kIsWeb) {
+      return QueryContent<List<TaskModel>>(
+        queryKey: '${RouterServices.of(context).session.state.scopeKey}/tasks',
+        query: () => firestore.getTasksForKhademStream(uid),
+        builder: (context, tasks) => MyTasksWebScreen(tasks: tasks),
+      );
+    }
+
     return TasksTab(
       tasksStream: firestore.getTasksForKhademStream(uid),
       tasksQuery: () => firestore.getTasksForKhademStream(uid),
@@ -1355,28 +1365,40 @@ class _MyAnalyticsWrapperState extends State<_MyAnalyticsWrapper> {
                   from: from,
                   to: asOf,
                 ),
-                builder: (context, sessions) => Column(
-                  children: [
-                    Align(
-                      alignment: AlignmentDirectional.centerEnd,
-                      child: IconButton(
-                        tooltip: context.tr.retryAction,
-                        onPressed: () => setState(() => _revision++),
-                        icon: const Icon(Icons.refresh),
+                builder: (context, sessions) {
+                  if (kIsWeb) {
+                    return MyAnalyticsWebScreen(
+                      myMakhdomeen: children,
+                      sessions: sessions,
+                      visits: visits,
+                      from: from,
+                      asOf: asOf,
+                      onVisitRecorded: () => setState(() => _revision++),
+                    );
+                  }
+                  return Column(
+                    children: [
+                      Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: IconButton(
+                          tooltip: context.tr.retryAction,
+                          onPressed: () => setState(() => _revision++),
+                          icon: const Icon(Icons.refresh),
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: MyAnalyticsTab(
-                        myMakhdomeen: children,
-                        sessions: sessions,
-                        visits: visits,
-                        from: from,
-                        asOf: asOf,
-                        onVisitRecorded: () => setState(() => _revision++),
+                      Expanded(
+                        child: MyAnalyticsTab(
+                          myMakhdomeen: children,
+                          sessions: sessions,
+                          visits: visits,
+                          from: from,
+                          asOf: asOf,
+                          onVisitRecorded: () => setState(() => _revision++),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  );
+                },
               ),
         );
       },

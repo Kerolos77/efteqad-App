@@ -130,9 +130,12 @@ class _KhademProfileScreenState extends State<KhademProfileScreen> {
           : SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               physics: const BouncingScrollPhysics(),
-              child: Form(
-                key: _formKey,
-                child: Column(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 620),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
                   children: [
                     // بطاقة الأفاتار الفخمة
                     Center(
@@ -397,6 +400,8 @@ class _KhademProfileScreenState extends State<KhademProfileScreen> {
                 ),
               ),
             ),
+          ),
+        ),
     );
   }
 }

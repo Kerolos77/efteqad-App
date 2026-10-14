@@ -25,6 +25,8 @@ class AppConstants {
   static const String colTasks = 'tasks';
   static const String colAttendance = 'attendance';
   static const String colNotifications = 'notifications';
+  static const String colServices = 'services';
+  static const String colClasses = 'classes';
 
   // المراحل الدراسية (Grades)
   static const String grade1st = '1st'; // أولى ثانوي

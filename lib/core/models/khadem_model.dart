@@ -13,6 +13,8 @@ class KhademModel {
   final String status; // 'active', 'pending'
   final String? locale;
   final String? fcmToken; // FCM push token for device
+  final String? serviceId; // Service ID (e.g. ebtedai, thanawy)
+  final List<String> serviceIds; // All services the khadem belongs to
   final DateTime createdAt;
 
   const KhademModel({
@@ -27,6 +29,8 @@ class KhademModel {
     this.status = AppConstants.rolePending,
     this.locale,
     this.fcmToken,
+    this.serviceId,
+    this.serviceIds = const [],
     required this.createdAt,
   });
 
@@ -50,6 +54,8 @@ class KhademModel {
     String? status,
     String? locale,
     String? fcmToken,
+    String? serviceId,
+    List<String>? serviceIds,
     DateTime? createdAt,
   }) {
     return KhademModel(
@@ -64,6 +70,8 @@ class KhademModel {
       status: status ?? this.status,
       locale: locale ?? this.locale,
       fcmToken: fcmToken ?? this.fcmToken,
+      serviceId: serviceId ?? this.serviceId,
+      serviceIds: serviceIds ?? this.serviceIds,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -80,6 +88,8 @@ class KhademModel {
       'status': status,
       'locale': locale,
       'fcmToken': fcmToken,
+      if (serviceId != null) 'serviceId': serviceId,
+      if (serviceIds.isNotEmpty) 'serviceIds': serviceIds,
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }
@@ -92,6 +102,14 @@ class KhademModel {
     }
 
     final role = map['role'] ?? AppConstants.rolePending;
+    final parsedServiceId = map['serviceId'] as String?;
+    final rawServiceIds = map['serviceIds'];
+    List<String> parsedServiceIds = [];
+    if (rawServiceIds is List) {
+      parsedServiceIds = rawServiceIds.map((e) => e.toString()).toList();
+    } else if (parsedServiceId != null && parsedServiceId.isNotEmpty) {
+      parsedServiceIds = [parsedServiceId];
+    }
 
     return KhademModel(
       id: docId,
@@ -111,6 +129,8 @@ class KhademModel {
               : AppConstants.rolePending),
       locale: map['locale'] is String ? map['locale'] as String : null,
       fcmToken: map['fcmToken'],
+      serviceId: parsedServiceId,
+      serviceIds: parsedServiceIds,
       createdAt: parseDate(map['createdAt']),
     );
   }

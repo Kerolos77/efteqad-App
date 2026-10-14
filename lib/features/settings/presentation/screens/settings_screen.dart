@@ -414,9 +414,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           body: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             physics: const BouncingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 720),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                 // 1. قطاع المظهر (Appearance)
                 _buildSectionTitle(
                   context.tr.appearanceSection,
@@ -970,7 +973,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
-        );
+        ),
+      ),
+    );
       },
     );
   }
