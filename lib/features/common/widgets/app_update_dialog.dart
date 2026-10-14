@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../../../core/constants/constants.dart';
 import '../../../core/services/app_version_service.dart';
@@ -19,6 +20,7 @@ class AppUpdateDialog extends StatelessWidget {
     required AppVersionInfo versionInfo,
     String currentVersion = AppConstants.appVersion,
   }) {
+    if (kIsWeb) return Future.value();
     final isMandatory = versionInfo.isForceUpdateRequired(
       currentVersion: currentVersion,
     );
@@ -278,6 +280,7 @@ class _AppVersionUpdateGuardState extends State<AppVersionUpdateGuard> {
   @override
   void initState() {
     super.initState();
+    if (kIsWeb) return;
     _subscription = AppVersionService.shared.watchVersion().listen((info) {
       if (!mounted) return;
       setState(() => _versionInfo = info);
@@ -325,6 +328,7 @@ class _AppVersionUpdateGuardState extends State<AppVersionUpdateGuard> {
 
   @override
   Widget build(BuildContext context) {
+    if (kIsWeb) return widget.child;
     final hasUpdate = _versionInfo.isUpdateAvailable();
     if (!hasUpdate) return widget.child;
 

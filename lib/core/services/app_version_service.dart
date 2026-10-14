@@ -71,12 +71,14 @@ class AppVersionInfo {
   }
 
   bool isUpdateAvailable({String currentVersion = AppConstants.appVersion}) {
+    if (kIsWeb) return false;
     return AppVersionService.compareVersions(latestVersion, currentVersion) > 0;
   }
 
   bool isForceUpdateRequired({
     String currentVersion = AppConstants.appVersion,
   }) {
+    if (kIsWeb) return false;
     if (!isUpdateAvailable(currentVersion: currentVersion)) return false;
     if (forceUpdate) return true;
     return AppVersionService.compareVersions(

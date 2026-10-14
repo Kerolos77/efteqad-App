@@ -673,7 +673,7 @@ class _StageShellScaffold extends StatelessWidget {
             label: 'الحضور والغياب',
           ),
         ],
-        body: AppVersionUpdateGuard(child: navigationShell),
+        body: navigationShell,
       );
     }
 
@@ -849,7 +849,7 @@ class _GradeShellScaffoldState extends State<_GradeShellScaffold> {
                 label: 'الحضور والغياب',
               ),
             ],
-            body: AppVersionUpdateGuard(child: navigationShell),
+            body: navigationShell,
           );
         }
 
@@ -981,7 +981,7 @@ class _ServantShellScaffold extends StatelessWidget {
             label: 'الحضور والغياب',
           ),
         ],
-        body: AppVersionUpdateGuard(child: navigationShell),
+        body: navigationShell,
       );
     }
 
