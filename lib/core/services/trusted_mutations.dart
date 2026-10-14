@@ -236,6 +236,7 @@ class TrustedMutations {
         final type = (taskData['type'] ?? AppConstants.taskTypeGeneral)
             .toString();
         final grade = (taskData['grade'] ?? 'all').toString();
+        final serviceId = (taskData['serviceId'] ?? 'thanawy').toString();
 
         await taskRef.set({
           'title': title,
@@ -243,6 +244,7 @@ class TrustedMutations {
           'assignedKhademId': assignedKhademId,
           'assignedKhademName': assignedKhademName,
           'grade': grade,
+          'serviceId': serviceId,
           'createdById': uid,
           'createdByName': createdByName,
           'type': type,
@@ -372,6 +374,7 @@ class TrustedMutations {
         final mData = mSnap.data() ?? {};
         final makhdomName = (mData['fullName'] ?? '').toString();
         final grade = (mData['grade'] ?? AppConstants.grade1st).toString();
+        final serviceId = (payload['serviceId'] ?? mData['serviceId'] ?? 'thanawy').toString();
 
         var khademName = FirebaseAuth.instance.currentUser?.displayName ?? '';
         if (uid.isNotEmpty) {
@@ -407,6 +410,7 @@ class TrustedMutations {
           'makhdomId': makhdomId,
           'makhdomName': makhdomName,
           'grade': grade,
+          'serviceId': serviceId,
           'khademId': uid,
           'khademName': khademName,
           'visitDate': Timestamp.fromDate(visitDate),
@@ -777,7 +781,7 @@ class TrustedMutations {
     }
   }
 
-  Future<String> createTask(TaskModel task, String operationId) async =>
+    Future<String> createTask(TaskModel task, String operationId) async =>
       (await call('createTask', {
             'operationId': operationId,
             'taskData': {
@@ -786,6 +790,8 @@ class TrustedMutations {
               'assignedKhademId': task.assignedKhademId,
               'grade': task.grade,
               'type': task.type,
+              if (task.serviceId.isNotEmpty && task.serviceId != 'thanawy')
+                'serviceId': task.serviceId,
               if (task.dueDate != null)
                 'dueDate': task.dueDate!.toIso8601String(),
             },
@@ -802,6 +808,9 @@ class TrustedMutations {
     'secondaryType': m.secondaryType,
     'secondaryTypeCustomLabel': m.secondaryTypeCustomLabel,
     'grade': m.grade,
+    'serviceId': m.serviceId,
+    if (m.classId != null) 'classId': m.classId,
+    if (m.className != null) 'className': m.className,
     'homeLocationUrl': m.homeLocationUrl,
     'isBrethrenOfLord': m.isBrethrenOfLord,
     'photoUrl': m.photoUrl,

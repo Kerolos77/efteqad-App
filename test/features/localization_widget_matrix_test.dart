@@ -78,13 +78,15 @@ class HistoryBoundary extends FirestoreService {
   Stream<List<AttendanceSessionModel>> getAllAttendanceSessionsStream({
     DateTime? from,
     DateTime? to,
+    String? serviceId,
   }) => Stream.value([]);
   @override
   Stream<List<AttendanceSessionModel>> getAttendanceSessionsForGradeStream(
     String grade, {
     DateTime? from,
     DateTime? to,
-  }) => getAllAttendanceSessionsStream(from: from, to: to);
+    String? serviceId,
+  }) => getAllAttendanceSessionsStream(from: from, to: to, serviceId: serviceId);
 }
 
 Future<void> frames(WidgetTester t) async {

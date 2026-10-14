@@ -19,6 +19,7 @@ abstract class AttendanceRepository {
     required String grade,
     DateTime? from,
     DateTime? to,
+    String? serviceId,
   });
   Future<void> setPresence({
     required String sessionId,
@@ -192,6 +193,7 @@ class FirestoreAttendanceRepository implements AttendanceRepository {
     required String grade,
     DateTime? from,
     DateTime? to,
+    String? serviceId,
   }) {
     Query<Map<String, dynamic>> query = _firestore
         .collectionGroup('grades')
@@ -216,19 +218,41 @@ class FirestoreAttendanceRepository implements AttendanceRepository {
         .orderBy('date', descending: true)
         .snapshots(includeMetadataChanges: true)
         .map<List<AttendanceSessionModel>>(
-          (snap) => SnapshotList<AttendanceSessionModel>.fromSnapshot(
-            snap,
-            (doc) => AttendanceSessionModel.fromMap(
-              doc.data(),
-              doc.data()['sessionId'] as String? ??
-                  doc.reference.parent.parent?.id ??
-                  doc.id,
-            ),
-          ),
+          (snap) {
+            final items = snap.docs
+                .map(
+                  (doc) => AttendanceSessionModel.fromMap(
+                    doc.data(),
+                    doc.data()['sessionId'] as String? ??
+                        doc.reference.parent.parent?.id ??
+                        doc.id,
+                  ),
+                )
+                .where((s) {
+                  if (serviceId != null) {
+                    if (serviceId == 'thanawy') {
+                      return s.serviceId == 'thanawy' || s.serviceId.isEmpty;
+                    }
+                    return s.serviceId == serviceId;
+                  }
+                  return true;
+                })
+                .toList();
+            return SnapshotList<AttendanceSessionModel>(
+              items,
+              isFromCache: snap.metadata.isFromCache,
+              hasPendingWrites: snap.metadata.hasPendingWrites,
+            );
+          },
         );
     return _withAttendanceFallback(
       primary,
-      () => _fallbackGradeAttendanceStream(grade: grade, from: from, to: to),
+      () => _fallbackGradeAttendanceStream(
+        grade: grade,
+        from: from,
+        to: to,
+        serviceId: serviceId,
+      ),
     );
   }
 
@@ -236,6 +260,7 @@ class FirestoreAttendanceRepository implements AttendanceRepository {
     required String grade,
     DateTime? from,
     DateTime? to,
+    String? serviceId,
   }) {
     final fromDay = from != null
         ? DateTime.utc(from.year, from.month, from.day)
@@ -251,6 +276,15 @@ class FirestoreAttendanceRepository implements AttendanceRepository {
               .map((doc) => AttendanceSessionModel.fromMap(doc.data(), doc.id))
               .where((s) {
                 if (s.grade != grade && s.grade != 'all') return false;
+                if (serviceId != null) {
+                  if (serviceId == 'thanawy') {
+                    if (s.serviceId != 'thanawy' && s.serviceId.isNotEmpty) {
+                      return false;
+                    }
+                  } else {
+                    if (s.serviceId != serviceId) return false;
+                  }
+                }
                 final parsed = DateTime.tryParse(s.date);
                 if (parsed == null) return true;
                 final utcDay = DateTime.utc(

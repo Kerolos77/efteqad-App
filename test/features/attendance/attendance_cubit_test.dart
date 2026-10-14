@@ -39,6 +39,7 @@ class FakeAttendanceRepository implements AttendanceRepository {
     required String grade,
     DateTime? from,
     DateTime? to,
+    String? serviceId,
   }) => Stream.value(currentSession != null ? [currentSession!] : []);
 
   @override

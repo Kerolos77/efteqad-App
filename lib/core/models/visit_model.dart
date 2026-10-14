@@ -10,6 +10,8 @@ class VisitModel {
   final String
   visitType; // 'زيارة منزلية', 'مكالمة تليفونية', 'لقاء في الكنيسة'
   final String? notes;
+  final String serviceId;
+  final String? grade;
   final DateTime createdAt;
 
   const VisitModel({
@@ -21,6 +23,8 @@ class VisitModel {
     required this.visitDate,
     required this.visitType,
     this.notes,
+    this.serviceId = 'thanawy',
+    this.grade,
     required this.createdAt,
   });
 
@@ -36,6 +40,8 @@ class VisitModel {
       'visitType': visitType,
       'notes': notes,
       'description': notes,
+      'serviceId': serviceId,
+      if (grade != null) 'grade': grade,
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }
@@ -49,6 +55,8 @@ class VisitModel {
     DateTime? visitDate,
     String? visitType,
     String? notes,
+    String? serviceId,
+    String? grade,
     DateTime? createdAt,
   }) {
     return VisitModel(
@@ -60,6 +68,8 @@ class VisitModel {
       visitDate: visitDate ?? this.visitDate,
       visitType: visitType ?? this.visitType,
       notes: notes ?? this.notes,
+      serviceId: serviceId ?? this.serviceId,
+      grade: grade ?? this.grade,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -81,6 +91,9 @@ class VisitModel {
         map['content'];
 
     final notesStr = rawNotes?.toString().trim();
+    final rawServiceId = map['serviceId'] as String?;
+    final resolvedServiceId =
+        (rawServiceId != null && rawServiceId.isNotEmpty) ? rawServiceId : 'thanawy';
 
     return VisitModel(
       id: docId,
@@ -91,6 +104,8 @@ class VisitModel {
       visitDate: parseDate(map['visitDate']),
       visitType: map['visitType'] ?? 'home',
       notes: (notesStr != null && notesStr.isNotEmpty) ? notesStr : null,
+      serviceId: resolvedServiceId,
+      grade: map['grade'] as String?,
       createdAt: parseDate(map['createdAt']),
     );
   }

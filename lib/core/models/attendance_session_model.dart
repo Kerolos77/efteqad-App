@@ -52,7 +52,7 @@ class AttendanceSessionModel {
   final DateTime? finalizedAt;
   final DateTime updatedAt;
 
-  // Smart Lease Lock fields (Online single-editor lock with automatic expiry)
+  final String serviceId;
   final String? lockedByKhademId;
   final String? lockedByKhademName;
   final DateTime? lockExpiresAt;
@@ -62,6 +62,7 @@ class AttendanceSessionModel {
     required this.date,
     required this.type,
     required this.grade,
+    this.serviceId = 'thanawy',
     this.attendedMakhdomIds = const [],
     this.presentBy = const {},
     this.excuses = const {},
@@ -121,6 +122,7 @@ class AttendanceSessionModel {
       'date': date,
       'type': type,
       'grade': grade,
+      'serviceId': serviceId,
       'attendedMakhdomIds': attendedMakhdomIds,
       'presentBy': presentBy,
       'excuses': excuses.map((k, v) => MapEntry(k, v.toMap())),
@@ -212,11 +214,16 @@ class AttendanceSessionModel {
       });
     }
 
+    final rawServiceId = map['serviceId'] as String?;
+    final resolvedServiceId =
+        (rawServiceId != null && rawServiceId.isNotEmpty) ? rawServiceId : 'thanawy';
+
     return AttendanceSessionModel(
       id: docId,
       date: parseSessionDay(map['date']),
       type: map['type'] ?? 'khedma',
       grade: map['grade'] ?? '1st',
+      serviceId: resolvedServiceId,
       attendedMakhdomIds: mergedAttendedIds,
       presentBy: parsedPresentBy,
       excuses: parsedExcuses,
@@ -236,6 +243,7 @@ class AttendanceSessionModel {
     String? date,
     String? type,
     String? grade,
+    String? serviceId,
     List<String>? attendedMakhdomIds,
     Map<String, Map<String, bool>>? presentBy,
     Map<String, AttendanceExcuse>? excuses,
@@ -253,6 +261,7 @@ class AttendanceSessionModel {
       date: date ?? this.date,
       type: type ?? this.type,
       grade: grade ?? this.grade,
+      serviceId: serviceId ?? this.serviceId,
       attendedMakhdomIds: attendedMakhdomIds ?? this.attendedMakhdomIds,
       presentBy: presentBy ?? this.presentBy,
       excuses: excuses ?? this.excuses,

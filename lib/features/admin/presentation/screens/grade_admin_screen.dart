@@ -22,8 +22,9 @@ import 'khodam_tab.dart';
 
 class GradeAdminScreen extends StatefulWidget {
   final String grade; // '1st', '2nd', '3rd'
+  final String? serviceId;
 
-  const GradeAdminScreen({super.key, required this.grade});
+  const GradeAdminScreen({super.key, required this.grade, this.serviceId});
 
   @override
   State<GradeAdminScreen> createState() => _GradeAdminScreenState();
@@ -33,6 +34,7 @@ class _GradeAdminScreenState extends State<GradeAdminScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   final AuthService _authService = AuthService();
 
+  late final String _serviceId = widget.serviceId ?? 'thanawy';
   late final Stream<List<MakhdomModel>> _makhdomeenStream;
   late final Stream<List<KhademModel>> _khodamStream;
   late final Stream<List<TaskModel>> _tasksStream;
@@ -47,9 +49,16 @@ class _GradeAdminScreenState extends State<GradeAdminScreen> {
     super.initState();
     _makhdomeenStream = _firestoreService.getMakhdomeenByGradeStream(
       widget.grade,
+      serviceId: _serviceId,
     );
-    _khodamStream = _firestoreService.getKhodamByGradeStream(widget.grade);
-    _tasksStream = _firestoreService.getTasksForGradeStream(widget.grade);
+    _khodamStream = _firestoreService.getKhodamByGradeStream(
+      widget.grade,
+      serviceId: _serviceId,
+    );
+    _tasksStream = _firestoreService.getTasksForGradeStream(
+      widget.grade,
+      serviceId: _serviceId,
+    );
   }
 
   String _getGradeLabel(BuildContext context) {
@@ -81,6 +90,7 @@ class _GradeAdminScreenState extends State<GradeAdminScreen> {
               fullName: '',
               phone: '',
               grade: widget.grade,
+              serviceId: _serviceId,
               createdAt: DateTime.now(),
             ),
       ),
@@ -311,6 +321,7 @@ class _GradeAdminScreenState extends State<GradeAdminScreen> {
                           makhdomeen: allMakhdomeen,
                           khodam: khodamList,
                           grade: widget.grade,
+                          serviceId: _serviceId,
                         ),
 
                         // Tab 2: قائمة الخدام
@@ -325,6 +336,7 @@ class _GradeAdminScreenState extends State<GradeAdminScreen> {
                           availableKhodam: khodamList,
                           grade: widget.grade,
                           canCreateTasks: true,
+                          serviceId: _serviceId,
                         ),
                       ],
                     ),

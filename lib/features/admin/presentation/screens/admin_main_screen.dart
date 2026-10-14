@@ -45,7 +45,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     super.initState();
     _makhdomeenStream = _firestoreService.getMakhdomeenStream(serviceId: _serviceId);
     _khodamStream = _firestoreService.getKhodamStream(serviceId: _serviceId);
-    _tasksStream = _firestoreService.getAllTasksStream();
+    _tasksStream = _firestoreService.getAllTasksStream(serviceId: _serviceId);
     _serviceStream = _firestoreService.watchService(_serviceId);
   }
 
@@ -391,6 +391,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                         makhdomeen: allMakhdomeen,
                         khodam: activeKhodam,
                         firestoreService: _firestoreService,
+                        serviceId: _serviceId,
                       ),
 
                       // Tab 2: مهام المرحلة العامة
@@ -399,6 +400,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                         availableKhodam: activeKhodam,
                         grade: 'all',
                         canCreateTasks: true,
+                        serviceId: _serviceId,
                       ),
                     ],
                   ),

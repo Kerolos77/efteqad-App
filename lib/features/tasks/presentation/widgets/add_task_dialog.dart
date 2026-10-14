@@ -12,6 +12,7 @@ import '../../../../core/services/trusted_mutations.dart';
 class AddTaskDialog extends StatefulWidget {
   final List<KhademModel> availableKhodam;
   final String grade; // '1st', '2nd', '3rd', or 'all'
+  final String? serviceId;
 
   final FirestoreService? firestoreService;
   final AuthService? authService;
@@ -21,6 +22,7 @@ class AddTaskDialog extends StatefulWidget {
     this.authService,
     required this.availableKhodam,
     required this.grade,
+    this.serviceId,
   });
 
   @override
@@ -93,6 +95,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
         createdByName: currentUser?.displayName ?? (context.tr.messageAdmin),
         type: _taskType,
         dueDate: _dueDate,
+        serviceId: widget.serviceId ?? 'thanawy',
         isCompleted: false,
         createdAt: DateTime.now(),
       );

@@ -830,6 +830,8 @@ class _GradeShellScaffoldState extends State<_GradeShellScaffold> {
     BuildContext context,
     List<KhademModel> khodamList,
   ) {
+    final serviceId =
+        RouterServices.of(context).session.state.profile?.serviceId ?? 'thanawy';
     showDialog(
       context: context,
       builder: (ctx) => AddEditMakhdomDialog(
@@ -839,6 +841,7 @@ class _GradeShellScaffoldState extends State<_GradeShellScaffold> {
           fullName: '',
           phone: '',
           grade: grade,
+          serviceId: serviceId,
           createdAt: DateTime.now(),
         ),
       ),
@@ -849,10 +852,12 @@ class _GradeShellScaffoldState extends State<_GradeShellScaffold> {
   Widget build(BuildContext context) {
     final gradeLabel = _getGradeLabel(context);
     final firestoreService = RouterServices.of(context).firestore;
+    final session = RouterServices.of(context).session.state;
+    final serviceId = session.profile?.serviceId ?? 'thanawy';
 
     return QueryContent<List<KhademModel>>(
-      queryKey: '${RouterServices.of(context).session.state.scopeKey}/shell',
-      query: () => firestoreService.getKhodamByGradeStream(grade),
+      queryKey: '${session.scopeKey}/shell',
+      query: () => firestoreService.getKhodamByGradeStream(grade, serviceId: serviceId),
       builder: (context, khodamList) {
         if (kIsWeb) {
           return WebScaffold(
@@ -933,6 +938,7 @@ class _GradeShellScaffoldState extends State<_GradeShellScaffold> {
             onOpenExcel: () async {
               final makhdomeen = await firestoreService.getMakhdomeenByGrade(
                 grade,
+                serviceId: serviceId,
               );
               if (context.mounted) {
                 showModalBottomSheet(
@@ -1197,6 +1203,7 @@ class _StageAnalyticsWrapper extends StatelessWidget {
               firestoreService: firestore,
               makhdomeen: allMakhdomeen,
               khodam: activeKhodam,
+              serviceId: serviceId,
             );
           },
         );
@@ -1222,11 +1229,12 @@ class _StageTasksWrapper extends StatelessWidget {
         final activeKhodam = allKhodam.where((k) => k.isActive).toList();
 
         return TasksTab(
-          tasksStream: firestore.getAllTasksStream(),
-          tasksQuery: () => firestore.getAllTasksStream(),
+          tasksStream: firestore.getAllTasksStream(serviceId: serviceId),
+          tasksQuery: () => firestore.getAllTasksStream(serviceId: serviceId),
           availableKhodam: activeKhodam,
           grade: 'all',
           canCreateTasks: true,
+          serviceId: serviceId,
         );
       },
     );
@@ -1241,15 +1249,18 @@ class _GradeMakhdomeenWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final firestore = RouterServices.of(context).firestore;
+    final session = RouterServices.of(context).session.state;
+    final serviceId = session.profile?.serviceId ?? 'thanawy';
+
     return QueryContent<List<MakhdomModel>>(
       queryKey:
-          '${RouterServices.of(context).session.state.scopeKey}/makhdomeenSnap',
-      query: () => firestore.getMakhdomeenByGradeStream(grade),
+          '${session.scopeKey}/makhdomeenSnap',
+      query: () => firestore.getMakhdomeenByGradeStream(grade, serviceId: serviceId),
       builder: (context, makhdomeenSnap) {
         return QueryContent<List<KhademModel>>(
           queryKey:
-              '${RouterServices.of(context).session.state.scopeKey}/khodamSnap',
-          query: () => firestore.getKhodamByGradeStream(grade),
+              '${session.scopeKey}/khodamSnap',
+          query: () => firestore.getKhodamByGradeStream(grade, serviceId: serviceId),
           builder: (context, khodamSnap) {
             final allMakhdomeen = makhdomeenSnap;
             final khodamList = khodamSnap;
@@ -1274,15 +1285,18 @@ class _GradeAnalyticsWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final firestore = RouterServices.of(context).firestore;
+    final session = RouterServices.of(context).session.state;
+    final serviceId = session.profile?.serviceId ?? 'thanawy';
+
     return QueryContent<List<MakhdomModel>>(
       queryKey:
-          '${RouterServices.of(context).session.state.scopeKey}/makhdomeenSnap',
-      query: () => firestore.getMakhdomeenByGradeStream(grade),
+          '${session.scopeKey}/makhdomeenSnap',
+      query: () => firestore.getMakhdomeenByGradeStream(grade, serviceId: serviceId),
       builder: (context, makhdomeenSnap) {
         return QueryContent<List<KhademModel>>(
           queryKey:
-              '${RouterServices.of(context).session.state.scopeKey}/khodamSnap',
-          query: () => firestore.getKhodamByGradeStream(grade),
+              '${session.scopeKey}/khodamSnap',
+          query: () => firestore.getKhodamByGradeStream(grade, serviceId: serviceId),
           builder: (context, khodamSnap) {
             final allMakhdomeen = makhdomeenSnap;
             final khodamList = khodamSnap;
@@ -1292,6 +1306,7 @@ class _GradeAnalyticsWrapper extends StatelessWidget {
               makhdomeen: allMakhdomeen,
               khodam: khodamList,
               grade: grade,
+              serviceId: serviceId,
             );
           },
         );
@@ -1308,15 +1323,18 @@ class _GradeKhodamWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final firestore = RouterServices.of(context).firestore;
+    final session = RouterServices.of(context).session.state;
+    final serviceId = session.profile?.serviceId ?? 'thanawy';
+
     return QueryContent<List<MakhdomModel>>(
       queryKey:
-          '${RouterServices.of(context).session.state.scopeKey}/makhdomeenSnap',
-      query: () => firestore.getMakhdomeenByGradeStream(grade),
+          '${session.scopeKey}/makhdomeenSnap',
+      query: () => firestore.getMakhdomeenByGradeStream(grade, serviceId: serviceId),
       builder: (context, makhdomeenSnap) {
         return QueryContent<List<KhademModel>>(
           queryKey:
-              '${RouterServices.of(context).session.state.scopeKey}/khodamSnap',
-          query: () => firestore.getKhodamByGradeStream(grade),
+              '${session.scopeKey}/khodamSnap',
+          query: () => firestore.getKhodamByGradeStream(grade, serviceId: serviceId),
           builder: (context, khodamSnap) {
             final allMakhdomeen = makhdomeenSnap;
             final khodamList = khodamSnap;
@@ -1337,19 +1355,23 @@ class _GradeTasksWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final firestore = RouterServices.of(context).firestore;
+    final session = RouterServices.of(context).session.state;
+    final serviceId = session.profile?.serviceId ?? 'thanawy';
+
     return QueryContent<List<KhademModel>>(
       queryKey:
-          '${RouterServices.of(context).session.state.scopeKey}/khodamSnap',
-      query: () => firestore.getKhodamByGradeStream(grade),
+          '${session.scopeKey}/khodamSnap',
+      query: () => firestore.getKhodamByGradeStream(grade, serviceId: serviceId),
       builder: (context, khodamSnap) {
         final khodamList = khodamSnap;
 
         return TasksTab(
-          tasksStream: firestore.getTasksForGradeStream(grade),
-          tasksQuery: () => firestore.getTasksForGradeStream(grade),
+          tasksStream: firestore.getTasksForGradeStream(grade, serviceId: serviceId),
+          tasksQuery: () => firestore.getTasksForGradeStream(grade, serviceId: serviceId),
           availableKhodam: khodamList,
           grade: grade,
           canCreateTasks: true,
+          serviceId: serviceId,
         );
       },
     );
@@ -1364,24 +1386,26 @@ class _MyMakhdomeenWrapper extends StatelessWidget {
     final firestore = RouterServices.of(context).firestore;
     final state = RouterServices.of(context).session.state;
     final uid = state.userId ?? '', grade = state.grade;
+    final serviceId = state.profile?.serviceId ?? 'thanawy';
     if (state.status != SessionStatus.active || grade == null) {
       return const SizedBox.shrink();
     }
 
     return QueryContent<List<MakhdomModel>>(
       queryKey:
-          '${RouterServices.of(context).session.state.scopeKey}/makhdomeenSnap',
-      query: () => firestore.getMakhdomeenForKhademStream(uid),
+          '${state.scopeKey}/makhdomeenSnap',
+      query: () => firestore.getMakhdomeenForKhademStream(uid, serviceId: serviceId),
       builder: (context, makhdomeenSnap) {
         final makhdomeen = makhdomeenSnap;
 
         return QueryContent<List<AttendanceSessionModel>>(
           queryKey:
-              '${RouterServices.of(context).session.state.scopeKey}/sessionsSnap',
+              '${state.scopeKey}/sessionsSnap',
           query: () => firestore.getAttendanceSessionsForGradeStream(
             grade,
             from: calendarDay(DateTime.now(), -89),
             to: DateTime.now(),
+            serviceId: serviceId,
           ),
           builder: (context, sessionsSnap) {
             final sessions = sessionsSnap;
@@ -1410,22 +1434,25 @@ class _MyTasksWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final firestore = RouterServices.of(context).firestore;
-    final uid = RouterServices.of(context).session.state.userId ?? '';
+    final session = RouterServices.of(context).session.state;
+    final uid = session.userId ?? '';
+    final serviceId = session.profile?.serviceId ?? 'thanawy';
 
     if (kIsWeb) {
       return QueryContent<List<TaskModel>>(
-        queryKey: '${RouterServices.of(context).session.state.scopeKey}/tasks',
-        query: () => firestore.getTasksForKhademStream(uid),
+        queryKey: '${session.scopeKey}/tasks',
+        query: () => firestore.getTasksForKhademStream(uid, serviceId: serviceId),
         builder: (context, tasks) => MyTasksWebScreen(tasks: tasks),
       );
     }
 
     return TasksTab(
-      tasksStream: firestore.getTasksForKhademStream(uid),
-      tasksQuery: () => firestore.getTasksForKhademStream(uid),
+      tasksStream: firestore.getTasksForKhademStream(uid, serviceId: serviceId),
+      tasksQuery: () => firestore.getTasksForKhademStream(uid, serviceId: serviceId),
       availableKhodam: const [],
       grade: 'all',
       canCreateTasks: false,
+      serviceId: serviceId,
     );
   }
 }
@@ -1441,9 +1468,11 @@ class _MyAnalyticsWrapperState extends State<_MyAnalyticsWrapper> {
   @override
   Widget build(BuildContext context) {
     final services = RouterServices.of(context), firestore = services.firestore;
-    final uid = services.session.state.userId ?? '',
-        grade = services.session.state.grade;
-    if (services.session.state.status != SessionStatus.active ||
+    final session = services.session.state;
+    final uid = session.userId ?? '',
+        grade = session.grade;
+    final serviceId = session.profile?.serviceId ?? 'thanawy';
+    if (session.status != SessionStatus.active ||
         grade == null) {
       return const SizedBox.shrink();
     }
@@ -1451,22 +1480,23 @@ class _MyAnalyticsWrapperState extends State<_MyAnalyticsWrapper> {
         asOf = DateTime(now.year, now.month, now.day),
         from = calendarDay(now, -89);
     return QueryContent<List<MakhdomModel>>(
-      queryKey: services.session.state.scopeKey,
-      query: () => firestore.getMakhdomeenForKhademStream(uid),
+      queryKey: session.scopeKey,
+      query: () => firestore.getMakhdomeenForKhademStream(uid, serviceId: serviceId),
       builder: (context, children) {
         final ids = children.map((m) => m.id).toList()..sort();
         return QueryContent<List<VisitModel>>(
           queryKey:
-              '${services.session.state.scopeKey}/${ids.join(',')}/$from/$_revision',
+              '${session.scopeKey}/${ids.join(',')}/$from/$_revision',
           query: () =>
               firestore.watchVisitsForChildrenWindow(ids, from: from, to: asOf),
           builder: (context, visits) =>
               QueryContent<List<AttendanceSessionModel>>(
-                queryKey: '${services.session.state.scopeKey}/$grade/$from',
+                queryKey: '${session.scopeKey}/$grade/$from',
                 query: () => firestore.getAttendanceSessionsForGradeStream(
                   grade,
                   from: from,
                   to: asOf,
+                  serviceId: serviceId,
                 ),
                 builder: (context, sessions) {
                   if (kIsWeb) {

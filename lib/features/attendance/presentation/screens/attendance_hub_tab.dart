@@ -5,6 +5,7 @@ import '../../../../core/constants/constants.dart';
 import '../../../../core/localization/app_formatters.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/attendance_session_model.dart';
+import '../../../../core/models/service_model.dart';
 import '../../../../core/models/task_model.dart';
 import '../../../../core/repositories/attendance_repository.dart';
 import '../../../../core/services/firestore_service.dart';
@@ -63,7 +64,11 @@ class _AttendanceHubTabState extends State<AttendanceHubTab> {
     }
   }
 
-  String _gradeLabel(BuildContext context, String grade) {
+  String _gradeLabel(BuildContext context, String grade, [ServiceModel? service]) {
+    if (service != null) {
+      final found = service.grades.where((g) => g.id == grade).firstOrNull;
+      if (found != null && found.name.isNotEmpty) return found.name;
+    }
     switch (grade) {
       case AppConstants.grade1st:
         return context.tr.grade1stName;
@@ -72,7 +77,7 @@ class _AttendanceHubTabState extends State<AttendanceHubTab> {
       case AppConstants.grade3rd:
         return context.tr.grade3rdName;
       default:
-        return context.tr.messageSecondary;
+        return grade;
     }
   }
 
@@ -119,7 +124,7 @@ class _AttendanceHubTabState extends State<AttendanceHubTab> {
     TaskModel? matchingTask;
     try {
       final tasks = await FirestoreService()
-          .getTasksForGradeStream(_selectedGrade)
+          .getTasksForGradeStream(_selectedGrade, serviceId: session.serviceId)
           .first
           .timeout(const Duration(seconds: 2));
       matchingTask = tasks.where((t) {
@@ -176,115 +181,126 @@ class _AttendanceHubTabState extends State<AttendanceHubTab> {
     final isStageAdmin = widget.fixedGrade == null && session.isStageAdmin;
     final dayStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
 
-    return StreamBuilder<List<AttendanceSessionModel>>(
-      stream: _repository.watchGradeAttendance(grade: _selectedGrade),
-      builder: (context, snapshot) {
-        final sessions = snapshot.data ?? const <AttendanceSessionModel>[];
-        final khedmaId = AttendanceSessionModel.generateSessionId(
-          date: dayStr,
-          type: 'khedma',
-          grade: _selectedGrade,
-        );
-        final qoddasId = AttendanceSessionModel.generateSessionId(
-          date: dayStr,
-          type: 'qoddas',
-          grade: _selectedGrade,
-        );
+    return StreamBuilder<ServiceModel?>(
+      stream: FirestoreService().watchService(session.serviceId),
+      builder: (context, serviceSnap) {
+        final service = serviceSnap.data;
+        final grades = (service != null && service.grades.isNotEmpty)
+            ? service.grades.map((g) => g.id).toList()
+            : [
+                AppConstants.grade1st,
+                AppConstants.grade2nd,
+                AppConstants.grade3rd,
+              ];
 
-        AttendanceSessionModel? findSession(String id, String type) {
-          for (final s in sessions) {
-            if (s.id == id || (s.date == dayStr && s.type == type)) {
-              return s;
+        return StreamBuilder<List<AttendanceSessionModel>>(
+          stream: _repository.watchGradeAttendance(
+            grade: _selectedGrade,
+            serviceId: session.serviceId,
+          ),
+          builder: (context, snapshot) {
+            final sessions = snapshot.data ?? const <AttendanceSessionModel>[];
+            final khedmaId = AttendanceSessionModel.generateSessionId(
+              date: dayStr,
+              type: 'khedma',
+              grade: _selectedGrade,
+            );
+            final qoddasId = AttendanceSessionModel.generateSessionId(
+              date: dayStr,
+              type: 'qoddas',
+              grade: _selectedGrade,
+            );
+
+            AttendanceSessionModel? findSession(String id, String type) {
+              for (final s in sessions) {
+                if (s.id == id || (s.date == dayStr && s.type == type)) {
+                  return s;
+                }
+              }
+              return null;
             }
-          }
-          return null;
-        }
 
-        final todayKhedma = findSession(khedmaId, 'khedma');
-        final todayQoddas = findSession(qoddasId, 'qoddas');
+            final todayKhedma = findSession(khedmaId, 'khedma');
+            final todayQoddas = findSession(qoddasId, 'qoddas');
 
-        return SingleChildScrollView(
-          padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 85),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // عنوان القسم والفرقة
-              Row(
+            return SingleChildScrollView(
+              padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 85),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppConstants.primaryLight.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Icon(
-                      Icons.how_to_reg_rounded,
-                      color: AppConstants.primaryLight,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'الحضور والغياب (${_gradeLabel(context, _selectedGrade)})',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w900,
-                            color: isDark ? Colors.white : AppConstants.textDark,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        const Text(
-                          'رصد مباشر لخدام الفرقة مع قفل تلقائي لمنع التضارب ودمج ذكي للأوفلاين',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: AppConstants.textMuted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              if (isStageAdmin) ...[
-                const SizedBox(height: 14),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
+                  // عنوان القسم والفرقة
+                  Row(
                     children: [
-                      for (final g in [
-                        AppConstants.grade1st,
-                        AppConstants.grade2nd,
-                        AppConstants.grade3rd,
-                      ])
-                        Padding(
-                          padding: const EdgeInsetsDirectional.only(end: 8),
-                          child: ChoiceChip(
-                            label: Text(
-                              _gradeLabel(context, g),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppConstants.primaryLight.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(
+                          Icons.how_to_reg_rounded,
+                          color: AppConstants.primaryLight,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'الحضور والغياب (${_gradeLabel(context, _selectedGrade, service)})',
                               style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                                color: _selectedGrade == g
-                                    ? Colors.white
-                                    : (isDark
-                                          ? Colors.white70
-                                          : AppConstants.textDark),
+                                fontSize: 17,
+                                fontWeight: FontWeight.w900,
+                                color: isDark ? Colors.white : AppConstants.textDark,
                               ),
                             ),
-                            selected: _selectedGrade == g,
-                            selectedColor: AppConstants.primaryLight,
-                            onSelected: (_) =>
-                                setState(() => _selectedGrade = g),
-                          ),
+                            const SizedBox(height: 2),
+                            const Text(
+                              'رصد مباشر لخدام الفرقة مع قفل تلقائي لمنع التضارب ودمج ذكي للأوفلاين',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: AppConstants.textMuted,
+                              ),
+                            ),
+                          ],
                         ),
+                      ),
                     ],
                   ),
-                ),
-              ],
+
+                  if (isStageAdmin) ...[
+                    const SizedBox(height: 14),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          for (final g in grades)
+                            Padding(
+                              padding: const EdgeInsetsDirectional.only(end: 8),
+                              child: ChoiceChip(
+                                label: Text(
+                                  _gradeLabel(context, g, service),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    color: _selectedGrade == g
+                                        ? Colors.white
+                                        : (isDark
+                                              ? Colors.white70
+                                              : AppConstants.textDark),
+                                  ),
+                                ),
+                                selected: _selectedGrade == g,
+                                selectedColor: AppConstants.primaryLight,
+                                onSelected: (_) =>
+                                    setState(() => _selectedGrade = g),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
 
               const SizedBox(height: 14),
 
@@ -479,7 +495,9 @@ class _AttendanceHubTabState extends State<AttendanceHubTab> {
         );
       },
     );
-  }
+  },
+);
+}
 
   Widget _buildSessionActionCard({
     required BuildContext context,

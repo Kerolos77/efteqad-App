@@ -19,8 +19,9 @@ import '../../../tasks/presentation/widgets/tasks_tab.dart';
 
 class KhademHomeScreen extends StatefulWidget {
   final String? grade;
+  final String? serviceId;
 
-  const KhademHomeScreen({super.key, this.grade});
+  const KhademHomeScreen({super.key, this.grade, this.serviceId});
 
   @override
   State<KhademHomeScreen> createState() => _KhademHomeScreenState();
@@ -29,6 +30,7 @@ class KhademHomeScreen extends StatefulWidget {
 class _KhademHomeScreenState extends State<KhademHomeScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   final AuthService _authService = AuthService();
+  late final String _serviceId = widget.serviceId ?? 'thanawy';
   late final Stream<List<MakhdomModel>> _makhdomeenStream;
   late final Stream<List<TaskModel>> _tasksStream;
   late final Stream<List<AttendanceSessionModel>> _attendanceStream;
@@ -44,14 +46,21 @@ class _KhademHomeScreenState extends State<KhademHomeScreen> {
     final user = _authService.currentUser;
     _makhdomeenStream = _firestoreService.getMakhdomeenForKhademStream(
       user?.uid ?? '',
+      serviceId: _serviceId,
     );
-    _tasksStream = _firestoreService.getTasksForKhademStream(user?.uid ?? '');
+    _tasksStream = _firestoreService.getTasksForKhademStream(
+      user?.uid ?? '',
+      serviceId: _serviceId,
+    );
     if (widget.grade != null) {
       _attendanceStream = _firestoreService.getAttendanceSessionsForGradeStream(
         widget.grade!,
+        serviceId: _serviceId,
       );
     } else {
-      _attendanceStream = _firestoreService.getAllAttendanceSessionsStream();
+      _attendanceStream = _firestoreService.getAllAttendanceSessionsStream(
+        serviceId: _serviceId,
+      );
     }
   }
 

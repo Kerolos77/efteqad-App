@@ -39,12 +39,14 @@ class HistoryFailure extends FirestoreService {
   Stream<List<AttendanceSessionModel>> getAllAttendanceSessionsStream({
     DateTime? from,
     DateTime? to,
+    String? serviceId,
   }) => Stream.value([]);
   @override
   Stream<List<AttendanceSessionModel>> getAttendanceSessionsForGradeStream(
     String grade, {
     DateTime? from,
     DateTime? to,
+    String? serviceId,
   }) => Stream.value([]);
 }
 

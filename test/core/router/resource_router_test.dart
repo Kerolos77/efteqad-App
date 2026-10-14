@@ -110,22 +110,24 @@ class ShellRepository extends FirestoreService {
     DateTime? to,
   }) => Stream.value([]);
   @override
-  Stream<List<TaskModel>> getTasksForKhademStream(String id) =>
+  Stream<List<TaskModel>> getTasksForKhademStream(String id, {String? serviceId}) =>
       Stream.value([task('one'), task('done').copyWith(isCompleted: true)]);
   @override
-  Stream<List<MakhdomModel>> getMakhdomeenForKhademStream(String id) =>
+  Stream<List<MakhdomModel>> getMakhdomeenForKhademStream(String id, {String? serviceId}) =>
       Stream.value([]);
   @override
   Stream<List<AttendanceSessionModel>> getAllAttendanceSessionsStream({
     DateTime? from,
     DateTime? to,
+    String? serviceId,
   }) => Stream.value([]);
   @override
   Stream<List<AttendanceSessionModel>> getAttendanceSessionsForGradeStream(
     String grade, {
     DateTime? from,
     DateTime? to,
-  }) => getAllAttendanceSessionsStream(from: from, to: to);
+    String? serviceId,
+  }) => getAllAttendanceSessionsStream(from: from, to: to, serviceId: serviceId);
 
   @override
   Stream<List<KhademModel>> getKhodamByGradeStream(String grade, {String? serviceId}) =>
@@ -134,7 +136,7 @@ class ShellRepository extends FirestoreService {
   Stream<List<MakhdomModel>> getMakhdomeenByGradeStream(String grade, {String? serviceId}) =>
       Stream.value([]);
   @override
-  Stream<List<TaskModel>> getTasksForGradeStream(String grade) => Stream.value([
+  Stream<List<TaskModel>> getTasksForGradeStream(String grade, {String? serviceId}) => Stream.value([
     task('one', grade: grade),
     task('done', grade: grade).copyWith(isCompleted: true),
   ]);
@@ -145,7 +147,7 @@ class ShellRepository extends FirestoreService {
 
 class LongShellRepository extends ShellRepository {
   @override
-  Stream<List<TaskModel>> getTasksForKhademStream(String id) => Stream.value(
+  Stream<List<TaskModel>> getTasksForKhademStream(String id, {String? serviceId}) => Stream.value(
     List.generate(
       40,
       (index) => task('scroll$index').copyWith(isCompleted: index.isEven),

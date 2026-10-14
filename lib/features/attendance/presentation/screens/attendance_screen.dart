@@ -169,8 +169,8 @@ class _AttendanceScreenState extends State<AttendanceScreen>
           (session.isGradeAdmin &&
               (session.grade == _sessionGrade || _sessionGrade == 'all'))) {
         final list = _sessionGrade == 'all'
-            ? await FirestoreService().getMakhdomeenStream().first
-            : await FirestoreService().getMakhdomeenByGrade(_sessionGrade);
+            ? await FirestoreService().getMakhdomeenStream(serviceId: session.serviceId).first
+            : await FirestoreService().getMakhdomeenByGrade(_sessionGrade, serviceId: session.serviceId);
         return list
             .where((m) => m.active)
             .map(
@@ -187,7 +187,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
       } else if (session.userId != null) {
         // Normal servant: load their assigned students for this grade
         final list = await FirestoreService()
-            .getMakhdomeenForKhademStream(session.userId!)
+            .getMakhdomeenForKhademStream(session.userId!, serviceId: session.serviceId)
             .first;
         return list
             .where((m) =>

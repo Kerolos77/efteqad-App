@@ -56,6 +56,7 @@ class AdminBoundary extends FirestoreService {
     DateTime? to,
     String? grade,
     String? khademId,
+    String? serviceId,
   }) => Stream.value([]);
   final List<KhademModel> servants;
   AdminBoundary(this.servants);
@@ -64,11 +65,12 @@ class AdminBoundary extends FirestoreService {
   @override
   Stream<List<KhademModel>> getKhodamStream({String? serviceId}) => Stream.value(servants);
   @override
-  Stream<List<TaskModel>> getAllTasksStream() => Stream.value([]);
+  Stream<List<TaskModel>> getAllTasksStream({String? serviceId}) => Stream.value([]);
   @override
   Stream<List<AttendanceSessionModel>> getAllAttendanceSessionsStream({
     DateTime? from,
     DateTime? to,
+    String? serviceId,
   }) => Stream.value([]);
   @override
   Stream<ServiceModel?> watchService(String serviceId) => Stream.value(null);

@@ -124,6 +124,8 @@ class _RecordVisitSheetState extends State<RecordVisitSheet> {
             visitDate: _selectedDate,
             visitType: _visitType ?? 'home',
             notes: match['notes'] as String?,
+            serviceId: widget.makhdom.serviceId,
+            grade: widget.makhdom.grade,
             createdAt: DateTime.now(),
           );
         }
@@ -180,6 +182,8 @@ class _RecordVisitSheetState extends State<RecordVisitSheet> {
         notes: _notesController.text.trim().isNotEmpty
             ? _notesController.text.trim()
             : null,
+        serviceId: widget.makhdom.serviceId,
+        grade: widget.makhdom.grade,
         createdAt: DateTime.now(),
       );
 

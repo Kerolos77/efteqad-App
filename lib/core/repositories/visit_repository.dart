@@ -93,6 +93,8 @@ class FirestoreVisitRepository implements VisitRepository {
       'visitDate': visit.visitDate.toIso8601String(),
       'visitType': canonicalVisitType(visit.visitType),
       'notes': visit.notes,
+      if (visit.serviceId.isNotEmpty && visit.serviceId != 'thanawy')
+        'serviceId': visit.serviceId,
       'operationId': op,
     };
     final submitted = saved?['submittedPayload'];

@@ -24,12 +24,14 @@ class AnalyticsTab extends StatefulWidget {
   final List<MakhdomModel> makhdomeen;
   final List<KhademModel> khodam;
   final String? grade; // '1st', '2nd', '3rd', or null for Stage Admin
+  final String? serviceId;
 
   const AnalyticsTab({
     super.key,
     required this.makhdomeen,
     required this.khodam,
     this.grade,
+    this.serviceId,
     this.firestoreService,
     this.asOf,
   });
@@ -56,11 +58,13 @@ class _AnalyticsTabState extends State<AnalyticsTab> {
         widget.grade!,
         from: _from,
         to: _asOf,
+        serviceId: widget.serviceId,
       );
     }
     return _firestoreService.getAllAttendanceSessionsStream(
       from: _from,
       to: _asOf,
+      serviceId: widget.serviceId,
     );
   }
 
@@ -109,16 +113,17 @@ class _AnalyticsTabState extends State<AnalyticsTab> {
     }
 
     return QueryContent<List<VisitModel>>(
-      queryKey: '${widget.grade}/$_from/$_asOf',
+      queryKey: '${widget.serviceId}/${widget.grade}/$_from/$_asOf',
       query: () => _firestoreService.getAllVisitsStream(
         grade: widget.grade,
         from: _from,
         to: _asOf,
+        serviceId: widget.serviceId,
       ),
       builder: (context, visits) {
         _windowVisits = visits;
         return QueryContent<List<AttendanceSessionModel>>(
-          queryKey: '${widget.grade}/$_from/$_asOf',
+          queryKey: '${widget.serviceId}/${widget.grade}/$_from/$_asOf',
           query: _buildAttendanceStream,
           builder: (context, sessions) {
             final atRiskList = AttendanceAnalyticsService.getAtRiskStudents(

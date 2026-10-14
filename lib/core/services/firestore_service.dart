@@ -99,8 +99,8 @@ class FirestoreService {
         });
   }
 
-  /// جلب مخدومي خادم معين فقط (للخادم)
-  Stream<List<MakhdomModel>> getMakhdomeenForKhademStream(String khademId) {
+  /// جلب مخدومي خادم معين فقط (للخادم) مع فلترة الخدمة اختيارياً
+  Stream<List<MakhdomModel>> getMakhdomeenForKhademStream(String khademId, {String? serviceId}) {
     return _firestore
         .collection(AppConstants.colMakhdomeen)
         .where('assignedKhademId', isEqualTo: khademId)
@@ -109,7 +109,16 @@ class FirestoreService {
           (snapshot) => SnapshotList(
             snapshot.docs
                 .map((doc) => MakhdomModel.fromMap(doc.data(), doc.id))
-                .where((m) => m.active)
+                .where((m) {
+                  if (!m.active) return false;
+                  if (serviceId != null) {
+                    if (serviceId == 'thanawy') {
+                      return m.serviceId == 'thanawy' || m.serviceId.isEmpty;
+                    }
+                    return m.serviceId == serviceId;
+                  }
+                  return true;
+                })
                 .toList(),
             isFromCache: snapshot.metadata.isFromCache,
             hasPendingWrites: snapshot.metadata.hasPendingWrites,
@@ -140,15 +149,24 @@ class FirestoreService {
     return MakhdomModel.fromMap(doc.data()!, doc.id);
   }
 
-  /// جلب مخدومي سنة دراسية كـ Future
-  Future<List<MakhdomModel>> getMakhdomeenByGrade(String grade) async {
+  /// جلب مخدومي سنة دراسية كـ Future مع فلترة الخدمة اختيارياً
+  Future<List<MakhdomModel>> getMakhdomeenByGrade(String grade, {String? serviceId}) async {
     final snapshot = await _firestore
         .collection(AppConstants.colMakhdomeen)
         .where('grade', isEqualTo: grade)
         .get();
     final list = snapshot.docs
         .map((doc) => MakhdomModel.fromMap(doc.data(), doc.id))
-        .where((m) => m.active)
+        .where((m) {
+          if (!m.active) return false;
+          if (serviceId != null) {
+            if (serviceId == 'thanawy') {
+              return m.serviceId == 'thanawy' || m.serviceId.isEmpty;
+            }
+            return m.serviceId == serviceId;
+          }
+          return true;
+        })
         .toList();
     list.sort((a, b) => a.fullName.compareTo(b.fullName));
     return SnapshotList(
@@ -524,7 +542,14 @@ class FirestoreService {
     DateTime? to,
     String? grade,
     String? khademId,
-  }) => watchVisitsWindow(grade: grade, khademId: khademId, from: from, to: to);
+    String? serviceId,
+  }) => watchVisitsWindow(
+    grade: grade,
+    khademId: khademId,
+    from: from,
+    to: to,
+    serviceId: serviceId,
+  );
 
   Query<Map<String, dynamic>> _visitWindowQuery({
     String? makhdomId,
@@ -567,6 +592,7 @@ class FirestoreService {
     String? khademId,
     DateTime? from,
     DateTime? to,
+    String? serviceId,
   }) {
     final primary = _visitWindowQuery(
       makhdomId: makhdomId,
@@ -577,10 +603,25 @@ class FirestoreService {
     )
         .snapshots(includeMetadataChanges: true)
         .map<List<VisitModel>>(
-          (snapshot) => SnapshotList<VisitModel>.fromSnapshot(
-            snapshot,
-            (doc) => VisitModel.fromMap(doc.data(), doc.id),
-          ),
+          (snapshot) {
+            final list = snapshot.docs
+                .map((doc) => VisitModel.fromMap(doc.data(), doc.id))
+                .where((v) {
+                  if (serviceId != null) {
+                    if (serviceId == 'thanawy') {
+                      return v.serviceId == 'thanawy' || v.serviceId.isEmpty;
+                    }
+                    return v.serviceId == serviceId;
+                  }
+                  return true;
+                })
+                .toList();
+            return SnapshotList<VisitModel>(
+              list,
+              isFromCache: snapshot.metadata.isFromCache,
+              hasPendingWrites: snapshot.metadata.hasPendingWrites,
+            );
+          },
         );
     return _withQueryFallback<List<VisitModel>>(
       primary,
@@ -590,6 +631,7 @@ class FirestoreService {
         khademId: khademId,
         from: from,
         to: to,
+        serviceId: serviceId,
       ),
     );
   }
@@ -600,6 +642,7 @@ class FirestoreService {
     String? khademId,
     DateTime? from,
     DateTime? to,
+    String? serviceId,
   }) {
     Query<Map<String, dynamic>> query = _firestore.collection(
       AppConstants.colVisits,
@@ -619,6 +662,15 @@ class FirestoreService {
           final list = snapshot.docs
               .map((doc) => VisitModel.fromMap(doc.data(), doc.id))
               .where((v) {
+                if (serviceId != null) {
+                  if (serviceId == 'thanawy') {
+                    if (v.serviceId != 'thanawy' && v.serviceId.isNotEmpty) {
+                      return false;
+                    }
+                  } else {
+                    if (v.serviceId != serviceId) return false;
+                  }
+                }
                 if (fromBound != null && v.visitDate.isBefore(fromBound)) {
                   return false;
                 }
@@ -783,8 +835,8 @@ class FirestoreService {
 
   // ===================== المهام (Tasks) =====================
 
-  /// جلب المهام المسندة لخادم معين (سواء من أمين المرحلة أو أمين سنته)
-  Stream<List<TaskModel>> getTasksForKhademStream(String khademId) {
+  /// جلب المهام المسندة لخادم معين مع فلترة الخدمة اختيارياً
+  Stream<List<TaskModel>> getTasksForKhademStream(String khademId, {String? serviceId}) {
     return _firestore
         .collection(AppConstants.colTasks)
         .where('assignedKhademId', isEqualTo: khademId)
@@ -793,6 +845,15 @@ class FirestoreService {
           final list = snapshot.docs
               .where((doc) => doc.data()['status'] != 'cancelled')
               .map((doc) => TaskModel.fromMap(doc.data(), doc.id))
+              .where((t) {
+                if (serviceId != null) {
+                  if (serviceId == 'thanawy') {
+                    return t.serviceId == 'thanawy' || t.serviceId.isEmpty;
+                  }
+                  return t.serviceId == serviceId;
+                }
+                return true;
+              })
               .toList();
           list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
           return SnapshotList(
@@ -803,8 +864,8 @@ class FirestoreService {
         });
   }
 
-  /// جلب مهام سنة دراسية معينة (لأمين السنة)
-  Stream<List<TaskModel>> getTasksForGradeStream(String grade) {
+  /// جلب مهام سنة دراسية معينة (لأمين السنة) مع فلترة الخدمة اختيارياً
+  Stream<List<TaskModel>> getTasksForGradeStream(String grade, {String? serviceId}) {
     return _firestore
         .collection(AppConstants.colTasks)
         .where('grade', isEqualTo: grade)
@@ -813,6 +874,15 @@ class FirestoreService {
           final list = snapshot.docs
               .where((doc) => doc.data()['status'] != 'cancelled')
               .map((doc) => TaskModel.fromMap(doc.data(), doc.id))
+              .where((t) {
+                if (serviceId != null) {
+                  if (serviceId == 'thanawy') {
+                    return t.serviceId == 'thanawy' || t.serviceId.isEmpty;
+                  }
+                  return t.serviceId == serviceId;
+                }
+                return true;
+              })
               .toList();
           list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
           return SnapshotList(
@@ -823,8 +893,8 @@ class FirestoreService {
         });
   }
 
-  /// جلب جميع المهام للمرحلة ككل (لأمين مرحلة ثانوي)
-  Stream<List<TaskModel>> getAllTasksStream() {
+  /// جلب جميع المهام للمرحلة ككل مع فلترة الخدمة اختيارياً
+  Stream<List<TaskModel>> getAllTasksStream({String? serviceId}) {
     return _firestore
         .collection(AppConstants.colTasks)
         .snapshots(includeMetadataChanges: true)
@@ -832,6 +902,15 @@ class FirestoreService {
           final list = snapshot.docs
               .where((doc) => doc.data()['status'] != 'cancelled')
               .map((doc) => TaskModel.fromMap(doc.data(), doc.id))
+              .where((t) {
+                if (serviceId != null) {
+                  if (serviceId == 'thanawy') {
+                    return t.serviceId == 'thanawy' || t.serviceId.isEmpty;
+                  }
+                  return t.serviceId == serviceId;
+                }
+                return true;
+              })
               .toList();
           list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
           return SnapshotList(
@@ -913,6 +992,7 @@ class FirestoreService {
   Stream<List<AttendanceSessionModel>> getAllAttendanceSessionsStream({
     DateTime? from,
     DateTime? to,
+    String? serviceId,
   }) async* {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
@@ -934,6 +1014,7 @@ class FirestoreService {
       grade: profile.isStageAdmin ? null : profile.grade,
       from: from,
       to: to,
+      serviceId: serviceId ?? profile.serviceId,
     );
   }
 
@@ -941,13 +1022,18 @@ class FirestoreService {
     String? grade,
     DateTime? from,
     DateTime? to,
+    String? serviceId,
   }) {
     if (grade != null) {
-      return watchGradeAttendance(grade: grade, from: from, to: to);
+      return watchGradeAttendance(
+        grade: grade,
+        from: from,
+        to: to,
+        serviceId: serviceId,
+      );
     }
     Query<Map<String, dynamic>> query = _firestore
-        .collectionGroup('grades')
-        .where('grade', whereIn: ['1st', '2nd', '3rd']);
+        .collectionGroup('grades');
     if (from != null) {
       query = query.where(
         'date',
@@ -968,18 +1054,39 @@ class FirestoreService {
         .orderBy('date', descending: true)
         .snapshots(includeMetadataChanges: true)
         .map<List<AttendanceSessionModel>>(
-          (snapshot) => SnapshotList<AttendanceSessionModel>.fromSnapshot(
-            snapshot,
-            (doc) => AttendanceSessionModel.fromMap(
-              doc.data(),
-              doc.data()['sessionId'] as String? ??
-                  doc.reference.parent.parent!.id,
-            ),
-          ),
+          (snapshot) {
+            final list = snapshot.docs
+                .map(
+                  (doc) => AttendanceSessionModel.fromMap(
+                    doc.data(),
+                    doc.data()['sessionId'] as String? ??
+                        doc.reference.parent.parent!.id,
+                  ),
+                )
+                .where((s) {
+                  if (serviceId != null) {
+                    if (serviceId == 'thanawy') {
+                      return s.serviceId == 'thanawy' || s.serviceId.isEmpty;
+                    }
+                    return s.serviceId == serviceId;
+                  }
+                  return true;
+                })
+                .toList();
+            return SnapshotList<AttendanceSessionModel>(
+              list,
+              isFromCache: snapshot.metadata.isFromCache,
+              hasPendingWrites: snapshot.metadata.hasPendingWrites,
+            );
+          },
         );
     return _withQueryFallback<List<AttendanceSessionModel>>(
       primary,
-      () => _fallbackStageAttendanceStream(from: from, to: to),
+      () => _fallbackStageAttendanceStream(
+        from: from,
+        to: to,
+        serviceId: serviceId,
+      ),
       allowPermissionFallback: true,
     );
   }
@@ -987,6 +1094,7 @@ class FirestoreService {
   Stream<List<AttendanceSessionModel>> _fallbackStageAttendanceStream({
     DateTime? from,
     DateTime? to,
+    String? serviceId,
   }) {
     final fromDay = from != null
         ? DateTime.utc(from.year, from.month, from.day)
@@ -1001,6 +1109,15 @@ class FirestoreService {
           final items = snap.docs
               .map((doc) => AttendanceSessionModel.fromMap(doc.data(), doc.id))
               .where((s) {
+                if (serviceId != null) {
+                  if (serviceId == 'thanawy') {
+                    if (s.serviceId != 'thanawy' && s.serviceId.isNotEmpty) {
+                      return false;
+                    }
+                  } else {
+                    if (s.serviceId != serviceId) return false;
+                  }
+                }
                 final parsed = DateTime.tryParse(s.date);
                 if (parsed == null) return true;
                 final utcDay = DateTime.utc(
@@ -1032,18 +1149,30 @@ class FirestoreService {
     required String grade,
     DateTime? from,
     DateTime? to,
+    String? serviceId,
   }) => FirestoreAttendanceRepository(
     firestore: _firestore,
     mutations: _mutations,
-  ).watchGradeAttendance(grade: grade, from: from, to: to);
+  ).watchGradeAttendance(
+    grade: grade,
+    from: from,
+    to: to,
+    serviceId: serviceId,
+  );
 
   /// جلب جلسات الحضور الخاصة بسنة معينة وجلسات القداس العامة للمرحلة باستعلام مباشر
   Stream<List<AttendanceSessionModel>> getAttendanceSessionsForGradeStream(
     String grade, {
     DateTime? from,
     DateTime? to,
+    String? serviceId,
   }) {
-    return watchGradeAttendance(grade: grade, from: from, to: to);
+    return watchGradeAttendance(
+      grade: grade,
+      from: from,
+      to: to,
+      serviceId: serviceId,
+    );
   }
 
   /// جلب صفحة من الزيارات للمخدوم باستخدام cursor للترتيب والتقسيم

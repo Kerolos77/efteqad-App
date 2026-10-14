@@ -102,6 +102,7 @@ class SessionState {
   bool get isStageAdmin => role == UserRole.stageAdmin;
   bool get isGradeAdmin => role == UserRole.gradeAdmin;
   bool get isServant => role == UserRole.servant;
+  String get serviceId => profile?.serviceId ?? 'thanawy';
 
   SessionState copyWith({
     SessionStatus? status,

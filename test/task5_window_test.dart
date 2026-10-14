@@ -29,6 +29,7 @@ class WindowBoundary extends FirestoreService {
     String grade, {
     DateTime? from,
     DateTime? to,
+    String? serviceId,
   }) {
     scopes.add(grade);
     return Stream.value([

@@ -18,6 +18,7 @@ class TaskModel {
   String? get attendanceDay =>
       _attendanceDay ?? dueDate?.toIso8601String().substring(0, 10);
   final String type; // 'general', 'attendance', 'visitation'
+  final String serviceId;
   final DateTime createdAt;
 
   const TaskModel({
@@ -35,6 +36,7 @@ class TaskModel {
     this.dueDate,
     String? attendanceDay,
     this.type = 'general',
+    this.serviceId = 'thanawy',
     required this.createdAt,
   }) : _attendanceDay = attendanceDay;
 
@@ -62,6 +64,7 @@ class TaskModel {
     DateTime? dueDate,
     String? attendanceDay,
     String? type,
+    String? serviceId,
     DateTime? createdAt,
   }) {
     return TaskModel(
@@ -80,6 +83,7 @@ class TaskModel {
       attendanceDay:
           attendanceDay ?? (dueDate == null ? this.attendanceDay : null),
       type: type ?? this.type,
+      serviceId: serviceId ?? this.serviceId,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -101,6 +105,7 @@ class TaskModel {
       'attendanceDay': attendanceDay,
       'dueDate': dueDate != null ? Timestamp.fromDate(dueDate!) : null,
       'type': type,
+      'serviceId': serviceId,
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }
@@ -115,6 +120,10 @@ class TaskModel {
       if (val is String) return DateTime.tryParse(val);
       return null;
     }
+
+    final rawServiceId = map['serviceId'] as String?;
+    final resolvedServiceId =
+        (rawServiceId != null && rawServiceId.isNotEmpty) ? rawServiceId : 'thanawy';
 
     return TaskModel(
       id: docId,
@@ -133,6 +142,7 @@ class TaskModel {
           map['attendanceDay'] as String? ??
           parseDate(map['dueDate'])?.toUtc().toIso8601String().substring(0, 10),
       type: map['type'] ?? 'general',
+      serviceId: resolvedServiceId,
       createdAt: parseDate(map['createdAt']) ?? DateTime.now(),
     );
   }

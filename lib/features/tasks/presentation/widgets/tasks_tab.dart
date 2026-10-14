@@ -17,6 +17,7 @@ class TasksTab extends StatefulWidget {
   final List<KhademModel> availableKhodam;
   final String grade; // '1st', '2nd', '3rd', or 'all'
   final bool canCreateTasks;
+  final String? serviceId;
 
   const TasksTab({
     super.key,
@@ -25,6 +26,7 @@ class TasksTab extends StatefulWidget {
     required this.availableKhodam,
     required this.grade,
     this.canCreateTasks = true,
+    this.serviceId,
   });
 
   @override
@@ -41,6 +43,7 @@ class _TasksTabState extends State<TasksTab> {
       builder: (_) => AddTaskDialog(
         availableKhodam: widget.availableKhodam,
         grade: widget.grade,
+        serviceId: widget.serviceId,
       ),
     );
   }

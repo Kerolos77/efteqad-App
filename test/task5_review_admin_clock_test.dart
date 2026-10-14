@@ -37,6 +37,7 @@ class AdminClockBoundary extends FirestoreService {
     String grade, {
     DateTime? from,
     DateTime? to,
+    String? serviceId,
   }) {
     this.from = from;
     this.to = to;
@@ -49,6 +50,7 @@ class AdminClockBoundary extends FirestoreService {
     DateTime? to,
     String? grade,
     String? khademId,
+    String? serviceId,
   }) => Stream.value([
     VisitModel(
       id: 'v',
