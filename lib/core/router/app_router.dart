@@ -439,7 +439,7 @@ GoRouter createAppRouter({
               path: AppRoutes.stageAttendancePath,
               name: AppRoutes.stageAttendanceName,
               builder: (context, state) => BlocProvider.value(
-                value: RouterServices.of(context).session,
+                value: sessionCubit,
                 child: AttendanceHubTab(repository: attendanceRepository),
               ),
             ),
@@ -530,7 +530,7 @@ GoRouter createAppRouter({
                 final grade =
                     state.pathParameters['grade'] ?? AppConstants.grade1st;
                 return BlocProvider.value(
-                  value: RouterServices.of(context).session,
+                  value: sessionCubit,
                   child: AttendanceHubTab(
                     fixedGrade: grade,
                     repository: attendanceRepository,
@@ -587,10 +587,9 @@ GoRouter createAppRouter({
               path: AppRoutes.myAttendancePath,
               name: AppRoutes.myAttendanceName,
               builder: (context, state) {
-                final session = RouterServices.of(context).session;
-                final grade = session.state.grade ?? AppConstants.grade1st;
+                final grade = sessionCubit.state.grade ?? AppConstants.grade1st;
                 return BlocProvider.value(
-                  value: session,
+                  value: sessionCubit,
                   child: AttendanceHubTab(
                     fixedGrade: grade,
                     repository: attendanceRepository,

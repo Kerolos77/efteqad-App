@@ -221,7 +221,8 @@ class FirestoreAttendanceRepository implements AttendanceRepository {
             (doc) => AttendanceSessionModel.fromMap(
               doc.data(),
               doc.data()['sessionId'] as String? ??
-                  doc.reference.parent.parent!.id,
+                  doc.reference.parent.parent?.id ??
+                  doc.id,
             ),
           ),
         );

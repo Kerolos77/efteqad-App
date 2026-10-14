@@ -283,29 +283,66 @@ class _AttendanceHubTabState extends State<AttendanceHubTab> {
               const SizedBox(height: 14),
 
               // بطاقتا رصد الخدمة والقداس لليوم المحدد
-              _buildSessionActionCard(
-                context: context,
-                title: 'حضور اجتماع الخدمة',
-                subtitle: 'رصد حضور المخدومين وأعذار الغياب في اجتماع الخدمة',
-                icon: Icons.fact_check_rounded,
-                accentColor: const Color(0xFF8B5CF6),
-                sessionType: 'khedma',
-                session: todayKhedma,
-                currentUid: currentUid,
-                isDark: isDark,
-              ),
-              const SizedBox(height: 10),
-              _buildSessionActionCard(
-                context: context,
-                title: 'حضور القداس الإلهي',
-                subtitle: 'رصد حضور المخدومين وأعذار الغياب في القداس',
-                icon: Icons.church_rounded,
-                accentColor: AppConstants.accentGold,
-                sessionType: 'qoddas',
-                session: todayQoddas,
-                currentUid: currentUid,
-                isDark: isDark,
-              ),
+              if (MediaQuery.sizeOf(context).width >= 800)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _buildSessionActionCard(
+                        context: context,
+                        title: 'حضور اجتماع الخدمة',
+                        subtitle:
+                            'رصد حضور المخدومين وأعذار الغياب في اجتماع الخدمة',
+                        icon: Icons.fact_check_rounded,
+                        accentColor: const Color(0xFF8B5CF6),
+                        sessionType: 'khedma',
+                        session: todayKhedma,
+                        currentUid: currentUid,
+                        isDark: isDark,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: _buildSessionActionCard(
+                        context: context,
+                        title: 'حضور القداس الإلهي',
+                        subtitle:
+                            'رصد حضور المخدومين وأعذار الغياب في القداس',
+                        icon: Icons.church_rounded,
+                        accentColor: AppConstants.accentGold,
+                        sessionType: 'qoddas',
+                        session: todayQoddas,
+                        currentUid: currentUid,
+                        isDark: isDark,
+                      ),
+                    ),
+                  ],
+                )
+              else ...[
+                _buildSessionActionCard(
+                  context: context,
+                  title: 'حضور اجتماع الخدمة',
+                  subtitle: 'رصد حضور المخدومين وأعذار الغياب في اجتماع الخدمة',
+                  icon: Icons.fact_check_rounded,
+                  accentColor: const Color(0xFF8B5CF6),
+                  sessionType: 'khedma',
+                  session: todayKhedma,
+                  currentUid: currentUid,
+                  isDark: isDark,
+                ),
+                const SizedBox(height: 10),
+                _buildSessionActionCard(
+                  context: context,
+                  title: 'حضور القداس الإلهي',
+                  subtitle: 'رصد حضور المخدومين وأعذار الغياب في القداس',
+                  icon: Icons.church_rounded,
+                  accentColor: AppConstants.accentGold,
+                  sessionType: 'qoddas',
+                  session: todayQoddas,
+                  currentUid: currentUid,
+                  isDark: isDark,
+                ),
+              ],
 
               const SizedBox(height: 20),
 
