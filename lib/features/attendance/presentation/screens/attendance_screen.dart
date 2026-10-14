@@ -82,6 +82,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
 
   String _searchQuery = '';
   String _statusFilter = 'all'; // 'all', 'present', 'absent', 'excused'
+  String? _selectedClassFilter; // null = all classes
 
   @override
   void initState() {
@@ -178,6 +179,8 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                 fullName: m.fullName,
                 grade: m.grade,
                 active: m.active,
+                classId: m.classId,
+                className: m.className,
               ),
             )
             .toList();
@@ -196,6 +199,8 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                 fullName: m.fullName,
                 grade: m.grade,
                 active: m.active,
+                classId: m.classId,
+                className: m.className,
               ),
             )
             .toList();
@@ -914,10 +919,20 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                             excusedList.length)
                         .clamp(0, allMakhdomeen.length);
 
+                final availableClasses = <String, String>{};
+                for (final m in allMakhdomeen) {
+                  if (m.classId != null && m.classId!.isNotEmpty) {
+                    availableClasses[m.classId!] = m.className ?? 'فصل';
+                  }
+                }
+
                 final filteredList = allMakhdomeen.where((m) {
                   if (_searchQuery.isNotEmpty) {
                     final q = _searchQuery.toLowerCase();
                     if (!m.fullName.toLowerCase().contains(q)) return false;
+                  }
+                  if (_selectedClassFilter != null) {
+                    if (m.classId != _selectedClassFilter) return false;
                   }
                   if (_statusFilter == 'present') {
                     return attendanceState.isAttended(m.id);
@@ -1101,6 +1116,41 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                       ),
                     ),
 
+                    if (availableClasses.isNotEmpty)
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsetsDirectional.fromSTEB(
+                          16,
+                          0,
+                          16,
+                          6,
+                        ),
+                        child: Row(
+                          children: [
+                            _buildClassFilterChip(
+                              key: null,
+                              label: 'كل الفصول',
+                              isDark: isDark,
+                            ),
+                            ...availableClasses.entries.map((entry) {
+                              final count = allMakhdomeen
+                                  .where((m) => m.classId == entry.key)
+                                  .length;
+                              return Padding(
+                                padding: const EdgeInsetsDirectional.only(
+                                  start: 6,
+                                ),
+                                child: _buildClassFilterChip(
+                                  key: entry.key,
+                                  label: '${entry.value} ($count)',
+                                  isDark: isDark,
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsetsDirectional.fromSTEB(
@@ -1208,6 +1258,55 @@ class _AttendanceScreenState extends State<AttendanceScreen>
     );
   }
 
+  Widget _buildClassFilterChip({
+    required String? key,
+    required String label,
+    required bool isDark,
+  }) {
+    final selected = _selectedClassFilter == key;
+    return InkWell(
+      onTap: () => setState(() => _selectedClassFilter = key),
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppConstants.sacredGold
+              : (isDark ? Colors.white10 : const Color(0xFFF1F5F9)),
+          borderRadius: BorderRadius.circular(10),
+          border: selected
+              ? null
+              : Border.all(
+                  color: isDark ? Colors.white12 : const Color(0xFFE2E8F0),
+                ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.diversity_3_rounded,
+              size: 13,
+              color: selected
+                  ? Colors.black87
+                  : (isDark ? Colors.white60 : AppConstants.textMuted),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                color: selected
+                    ? Colors.black87
+                    : (isDark ? Colors.white70 : AppConstants.textDark),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildFilterChip({
     required String key,
     required String label,
@@ -1248,7 +1347,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
     required bool isAuthorized,
   }) {
     return Container(
-      constraints: const BoxConstraints(minHeight: 86, maxHeight: 135),
+      constraints: const BoxConstraints(minHeight: 86, maxHeight: 240),
       margin: const EdgeInsetsDirectional.fromSTEB(16, 6, 16, 2),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(

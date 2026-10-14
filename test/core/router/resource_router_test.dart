@@ -128,10 +128,10 @@ class ShellRepository extends FirestoreService {
   }) => getAllAttendanceSessionsStream(from: from, to: to);
 
   @override
-  Stream<List<KhademModel>> getKhodamByGradeStream(String grade) =>
+  Stream<List<KhademModel>> getKhodamByGradeStream(String grade, {String? serviceId}) =>
       Stream.value([]);
   @override
-  Stream<List<MakhdomModel>> getMakhdomeenByGradeStream(String grade) =>
+  Stream<List<MakhdomModel>> getMakhdomeenByGradeStream(String grade, {String? serviceId}) =>
       Stream.value([]);
   @override
   Stream<List<TaskModel>> getTasksForGradeStream(String grade) => Stream.value([

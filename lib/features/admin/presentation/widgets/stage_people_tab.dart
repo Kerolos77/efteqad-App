@@ -5,19 +5,23 @@ import '../../../../core/constants/constants.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/khadem_model.dart';
 import '../../../../core/models/makhdom_model.dart';
+import '../../../../core/models/service_model.dart';
 import '../../../../core/services/firestore_service.dart';
 import '../../../../core/utils/color_generator.dart';
+import 'service_setup_dialog.dart';
 
 class StagePeopleTab extends StatefulWidget {
   final List<KhademModel> pendingKhodam;
   final List<KhademModel> allKhodam;
   final List<MakhdomModel> allMakhdomeen;
+  final ServiceModel? service;
 
   const StagePeopleTab({
     super.key,
     required this.pendingKhodam,
     required this.allKhodam,
     required this.allMakhdomeen,
+    this.service,
   });
 
   @override
@@ -27,6 +31,47 @@ class StagePeopleTab extends StatefulWidget {
 class _StagePeopleTabState extends State<StagePeopleTab> {
   final FirestoreService _firestoreService = FirestoreService();
   String _selectedGradeFilter = 'all';
+
+  List<ServiceGrade> _getServiceGrades() {
+    if (widget.service != null && widget.service!.grades.isNotEmpty) {
+      return widget.service!.grades;
+    }
+    return [
+      ServiceGrade(
+        id: AppConstants.grade1st,
+        name: context.tr.grade1stName,
+        order: 1,
+      ),
+      ServiceGrade(
+        id: AppConstants.grade2nd,
+        name: context.tr.grade2ndName,
+        order: 2,
+      ),
+      ServiceGrade(
+        id: AppConstants.grade3rd,
+        name: context.tr.grade3rdName,
+        order: 3,
+      ),
+    ];
+  }
+
+  Color _getGradeColor(int order) {
+    switch ((order - 1) % 6) {
+      case 0:
+        return const Color(0xFF3B82F6); // Blue
+      case 1:
+        return const Color(0xFF8B5CF6); // Purple
+      case 2:
+        return const Color(0xFFEC4899); // Pink
+      case 3:
+        return const Color(0xFF10B981); // Emerald
+      case 4:
+        return const Color(0xFFF59E0B); // Amber
+      case 5:
+      default:
+        return const Color(0xFF06B6D4); // Cyan
+    }
+  }
 
   Future<void> _makeCall(String phone) async {
     final clean = phone.replaceAll(RegExp(r'[^0-9+]'), '');
@@ -38,6 +83,7 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
   }
 
   void _openAssignGradeDialog(KhademModel khadem) {
+    final grades = _getServiceGrades();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -52,42 +98,21 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
           children: [
             Text('${ctx.tr.messageServant580}: ${khadem.name}'),
             const SizedBox(height: 16),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.school, color: Color(0xFF3B82F6)),
-              title: Text(ctx.tr.grade1stName),
-              onTap: () async {
-                Navigator.pop(ctx);
-                await _firestoreService.assignKhademToGrade(
-                  khadem.id,
-                  AppConstants.grade1st,
-                );
-              },
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.school, color: Color(0xFF8B5CF6)),
-              title: Text(ctx.tr.grade2ndName),
-              onTap: () async {
-                Navigator.pop(ctx);
-                await _firestoreService.assignKhademToGrade(
-                  khadem.id,
-                  AppConstants.grade2nd,
-                );
-              },
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.school, color: Color(0xFFEC4899)),
-              title: Text(ctx.tr.grade3rdName),
-              onTap: () async {
-                Navigator.pop(ctx);
-                await _firestoreService.assignKhademToGrade(
-                  khadem.id,
-                  AppConstants.grade3rd,
-                );
-              },
-            ),
+            ...grades.map((g) {
+              final color = _getGradeColor(g.order);
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.school, color: color),
+                title: Text(g.name),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  await _firestoreService.assignKhademToGrade(
+                    khadem.id,
+                    g.id,
+                  );
+                },
+              );
+            }),
           ],
         ),
       ),
@@ -239,45 +264,74 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final grades = _getServiceGrades();
 
-    final khodam1st = widget.allKhodam
-        .where((k) => k.grade == AppConstants.grade1st)
-        .toList();
-    final khodam2nd = widget.allKhodam
-        .where((k) => k.grade == AppConstants.grade2nd)
-        .toList();
-    final khodam3rd = widget.allKhodam
-        .where((k) => k.grade == AppConstants.grade3rd)
-        .toList();
-
-    KhademModel? head1st;
-    KhademModel? head2nd;
-    KhademModel? head3rd;
-    try {
-      head1st = khodam1st.firstWhere((k) => k.isGradeAdmin);
-    } catch (_) {}
-    try {
-      head2nd = khodam2nd.firstWhere((k) => k.isGradeAdmin);
-    } catch (_) {}
-    try {
-      head3rd = khodam3rd.firstWhere((k) => k.isGradeAdmin);
-    } catch (_) {}
-
+    // Filter displayed servants
     List<KhademModel> displayedKhodam;
-    if (_selectedGradeFilter == AppConstants.grade1st) {
-      displayedKhodam = khodam1st;
-    } else if (_selectedGradeFilter == AppConstants.grade2nd) {
-      displayedKhodam = khodam2nd;
-    } else if (_selectedGradeFilter == AppConstants.grade3rd) {
-      displayedKhodam = khodam3rd;
-    } else {
+    if (_selectedGradeFilter == 'all') {
       displayedKhodam = widget.allKhodam.where((k) => k.isActive).toList();
+    } else {
+      displayedKhodam = widget.allKhodam
+          .where((k) => k.grade == _selectedGradeFilter)
+          .toList();
     }
 
     return ListView(
       padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 85),
       physics: const BouncingScrollPhysics(),
       children: [
+        // 0. تنبيه إعداد الخدمة لأول مرة (إن كانت الخدمة جديدة وغير مهيأة)
+        if (widget.service != null && widget.service!.grades.isEmpty) ...[
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppConstants.primaryLight.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppConstants.primaryLight.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Column(
+              children: [
+                const Icon(
+                  Icons.auto_awesome_rounded,
+                  color: AppConstants.primaryLight,
+                  size: 36,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'مرحباً بك! لم يتم إعداد صفوف الخدمة بعد',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'حدد عدد سنوات / صفوف الخدمة وتسمية كل صف لبدء تسكين الخدام والمخدومين',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: AppConstants.textMuted),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: () => ServiceSetupDialog.show(
+                    context,
+                    service: widget.service!,
+                    firestoreService: _firestoreService,
+                  ),
+                  icon: const Icon(Icons.tune_rounded, size: 18),
+                  label: const Text('إعداد صفوف الخدمة الآن'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppConstants.primaryLight,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+
         // 1. قطاع الخدام الجدد بانتظار التسكين
         if (widget.pendingKhodam.isNotEmpty) ...[
           Row(
@@ -329,7 +383,7 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
           const SizedBox(height: 20),
         ],
 
-        // 2. قطاع أمناء السنين الدراسية
+        // 2. قطاع أمناء السنين الدراسية (ديناميكي لجميع صفوف الخدمة)
         Row(
           children: [
             Container(
@@ -349,36 +403,44 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
               context.tr.gradeHeadsSection,
               style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
             ),
+            const Spacer(),
+            if (widget.service != null)
+              IconButton(
+                icon: const Icon(Icons.tune_rounded, size: 20),
+                tooltip: 'تعديل الخدمة والصفوف',
+                onPressed: () => ServiceSetupDialog.show(
+                  context,
+                  service: widget.service!,
+                  firestoreService: _firestoreService,
+                ),
+              ),
           ],
         ),
         const SizedBox(height: 12),
-        _buildGradeHeadCard(
-          gradeKey: AppConstants.grade1st,
-          gradeTitle: context.tr.grade1stName,
-          headKhadem: head1st,
-          gradeKhodam: khodam1st,
-          color: const Color(0xFF3B82F6),
-          isDark: isDark,
-        ),
-        const SizedBox(height: 8),
-        _buildGradeHeadCard(
-          gradeKey: AppConstants.grade2nd,
-          gradeTitle: context.tr.grade2ndName,
-          headKhadem: head2nd,
-          gradeKhodam: khodam2nd,
-          color: const Color(0xFF8B5CF6),
-          isDark: isDark,
-        ),
-        const SizedBox(height: 8),
-        _buildGradeHeadCard(
-          gradeKey: AppConstants.grade3rd,
-          gradeTitle: context.tr.grade3rdName,
-          headKhadem: head3rd,
-          gradeKhodam: khodam3rd,
-          color: const Color(0xFFEC4899),
-          isDark: isDark,
-        ),
-        const SizedBox(height: 24),
+
+        // بطاقات أمناء الصفوف ديناميكياً
+        ...grades.map((g) {
+          final gradeKhodam = widget.allKhodam
+              .where((k) => k.grade == g.id)
+              .toList();
+          KhademModel? headKhadem;
+          try {
+            headKhadem = gradeKhodam.firstWhere((k) => k.isGradeAdmin);
+          } catch (_) {}
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: _buildGradeHeadCard(
+              gradeKey: g.id,
+              gradeTitle: g.name,
+              headKhadem: headKhadem,
+              gradeKhodam: gradeKhodam,
+              color: _getGradeColor(g.order),
+              isDark: isDark,
+            ),
+          );
+        }),
+        const SizedBox(height: 20),
 
         // 3. فريق الخدام وتوزيع السنين
         Row(
@@ -386,7 +448,9 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
           children: [
             Expanded(
               child: Text(
-                context.tr.messageAssignedSecondaryStageServants,
+                widget.service?.name.isNotEmpty == true
+                    ? 'خدام ${widget.service!.name}'
+                    : context.tr.messageAssignedSecondaryStageServants,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -408,31 +472,26 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
         ),
         const SizedBox(height: 10),
 
-        // فلاتر السنين
+        // فلاتر السنين ديناميكياً
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
           child: Row(
             children: [
               _buildGradeFilterChip('all', context.tr.allGrades, isDark),
-              const SizedBox(width: 8),
-              _buildGradeFilterChip(
-                AppConstants.grade1st,
-                '${context.tr.grade1stName} (${khodam1st.length})',
-                isDark,
-              ),
-              const SizedBox(width: 8),
-              _buildGradeFilterChip(
-                AppConstants.grade2nd,
-                '${context.tr.grade2ndName} (${khodam2nd.length})',
-                isDark,
-              ),
-              const SizedBox(width: 8),
-              _buildGradeFilterChip(
-                AppConstants.grade3rd,
-                '${context.tr.grade3rdName} (${khodam3rd.length})',
-                isDark,
-              ),
+              ...grades.map((g) {
+                final count = widget.allKhodam
+                    .where((k) => k.grade == g.id)
+                    .length;
+                return Padding(
+                  padding: const EdgeInsetsDirectional.only(start: 8),
+                  child: _buildGradeFilterChip(
+                    g.id,
+                    '${g.name} ($count)',
+                    isDark,
+                  ),
+                );
+              }),
             ],
           ),
         ),
@@ -448,7 +507,7 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
             child: Center(
               child: Text(
                 context.tr.messageNoServantsAssignedToThisSectionYet,
-                style: TextStyle(color: AppConstants.textMuted),
+                style: const TextStyle(color: AppConstants.textMuted),
               ),
             ),
           )
@@ -745,6 +804,11 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
   }
 
   String _getGradeLabel(String? grade) {
+    if (grade == null || grade.isEmpty) return context.tr.messageUnspecified;
+    if (widget.service != null && widget.service!.grades.isNotEmpty) {
+      final match = widget.service!.grades.where((g) => g.id == grade).toList();
+      if (match.isNotEmpty) return match.first.name;
+    }
     switch (grade) {
       case AppConstants.grade1st:
         return context.tr.grade1stName;
@@ -753,7 +817,7 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
       case AppConstants.grade3rd:
         return context.tr.grade3rdName;
       default:
-        return context.tr.messageUnspecified;
+        return grade;
     }
   }
 }

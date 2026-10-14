@@ -33,7 +33,10 @@ import '../../features/admin/presentation/screens/makhdom_history_screen.dart';
 import '../../features/admin/presentation/widgets/add_edit_makhdom_dialog.dart';
 import '../../features/admin/presentation/widgets/excel_actions_sheet.dart';
 import '../../features/admin/presentation/widgets/grade_makhdomeen_tab.dart';
+import '../models/service_model.dart';
 import '../../features/admin/presentation/widgets/stage_people_tab.dart';
+import '../../features/admin/presentation/widgets/service_setup_dialog.dart';
+import '../../features/admin/presentation/widgets/manage_classes_dialog.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/pending_assignment_screen.dart';
 import '../../features/auth/presentation/web/login_web_screen.dart';
@@ -645,36 +648,64 @@ class _StageShellScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final firestore = RouterServices.of(context).firestore;
+    final session = RouterServices.of(context).session.state;
+    final serviceId = session.profile?.serviceId ?? 'thanawy';
+
     if (kIsWeb) {
-      return WebScaffold(
-        title: context.tr.stageDashboardTitle,
-        subtitle: 'لوحة تحكم أمين المرحلة',
-        selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: (idx) =>
-            navigationShell.goBranch(idx, initialLocation: false),
-        destinations: [
-          WebNavDestination(
-            icon: Icons.manage_accounts_outlined,
-            selectedIcon: Icons.manage_accounts,
-            label: context.tr.tabGradesAndServants,
-          ),
-          WebNavDestination(
-            icon: Icons.insights_outlined,
-            selectedIcon: Icons.insights,
-            label: context.tr.tabStageAnalytics,
-          ),
-          WebNavDestination(
-            icon: Icons.assignment_outlined,
-            selectedIcon: Icons.assignment,
-            label: context.tr.tabStageTasks,
-          ),
-          const WebNavDestination(
-            icon: Icons.how_to_reg_outlined,
-            selectedIcon: Icons.how_to_reg,
-            label: 'الحضور والغياب',
-          ),
-        ],
-        body: navigationShell,
+      return StreamBuilder<ServiceModel?>(
+        stream: firestore.watchService(serviceId),
+        builder: (context, snapshot) {
+          final service = snapshot.data;
+          final serviceName = service?.name;
+          final title = (serviceName != null && serviceName.isNotEmpty)
+              ? serviceName
+              : context.tr.stageDashboardTitle;
+
+          return WebScaffold(
+            title: title,
+            subtitle: 'لوحة تحكم أمين المرحلة',
+            selectedIndex: navigationShell.currentIndex,
+            onDestinationSelected: (idx) =>
+                navigationShell.goBranch(idx, initialLocation: false),
+            destinations: [
+              WebNavDestination(
+                icon: Icons.manage_accounts_outlined,
+                selectedIcon: Icons.manage_accounts,
+                label: context.tr.tabGradesAndServants,
+              ),
+              WebNavDestination(
+                icon: Icons.insights_outlined,
+                selectedIcon: Icons.insights,
+                label: context.tr.tabStageAnalytics,
+              ),
+              WebNavDestination(
+                icon: Icons.assignment_outlined,
+                selectedIcon: Icons.assignment,
+                label: context.tr.tabStageTasks,
+              ),
+              const WebNavDestination(
+                icon: Icons.how_to_reg_outlined,
+                selectedIcon: Icons.how_to_reg,
+                label: 'الحضور والغياب',
+              ),
+            ],
+            actions: [
+              if (service != null)
+                IconButton(
+                  icon: const Icon(Icons.tune_rounded),
+                  tooltip: 'تخصيص الخدمة والصفوف',
+                  onPressed: () => ServiceSetupDialog.show(
+                    context,
+                    service: service,
+                    firestoreService: firestore,
+                  ),
+                ),
+              const NotificationBellButton(),
+            ],
+            body: navigationShell,
+          );
+        },
       );
     }
 
@@ -688,11 +719,35 @@ class _StageShellScaffold extends StatelessWidget {
             onPressed: () => Scaffold.of(ctx).openDrawer(),
           ),
         ),
-        title: Text(
-          context.tr.stageDashboardTitle,
-          style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w900),
+        title: StreamBuilder<ServiceModel?>(
+          stream: firestore.watchService(serviceId),
+          builder: (context, snapshot) {
+            final name = snapshot.data?.name;
+            return Text(
+              name != null && name.isNotEmpty ? name : context.tr.stageDashboardTitle,
+              style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w900),
+            );
+          },
         ),
-        actions: const [NotificationBellButton()],
+        actions: [
+          StreamBuilder<ServiceModel?>(
+            stream: firestore.watchService(serviceId),
+            builder: (context, snapshot) {
+              final service = snapshot.data;
+              if (service == null) return const SizedBox.shrink();
+              return IconButton(
+                icon: const Icon(Icons.tune_rounded),
+                tooltip: 'تخصيص الخدمة والصفوف',
+                onPressed: () => ServiceSetupDialog.show(
+                  context,
+                  service: service,
+                  firestoreService: firestore,
+                ),
+              );
+            },
+          ),
+          const NotificationBellButton(),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
@@ -850,6 +905,26 @@ class _GradeShellScaffoldState extends State<_GradeShellScaffold> {
                 label: 'الحضور والغياب',
               ),
             ],
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.diversity_3_outlined, size: 20),
+                tooltip: 'إدارة فصول السنة',
+                onPressed: () {
+                  final serviceId =
+                      RouterServices.of(context).session.state.profile?.serviceId ??
+                      'thanawy';
+                  ManageClassesDialog.show(
+                    context,
+                    serviceId: serviceId,
+                    gradeId: grade,
+                    gradeTitle: gradeLabel,
+                    khodamList: khodamList,
+                    firestoreService: firestoreService,
+                  );
+                },
+              ),
+              const NotificationBellButton(),
+            ],
             body: navigationShell,
           );
         }
@@ -889,7 +964,26 @@ class _GradeShellScaffoldState extends State<_GradeShellScaffold> {
                 fontWeight: FontWeight.w900,
               ),
             ),
-            actions: const [NotificationBellButton()],
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.diversity_3_outlined, size: 22),
+                tooltip: 'إدارة فصول السنة',
+                onPressed: () {
+                  final serviceId =
+                      RouterServices.of(context).session.state.profile?.serviceId ??
+                      'thanawy';
+                  ManageClassesDialog.show(
+                    context,
+                    serviceId: serviceId,
+                    gradeId: grade,
+                    gradeTitle: gradeLabel,
+                    khodamList: khodamList,
+                    firestoreService: firestoreService,
+                  );
+                },
+              ),
+              const NotificationBellButton(),
+            ],
           ),
           bottomNavigationBar: NavigationBar(
             selectedIndex: navigationShell.currentIndex,
@@ -1044,26 +1138,34 @@ class _StagePeopleWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final firestore = RouterServices.of(context).firestore;
-    return QueryContent<List<MakhdomModel>>(
-      queryKey:
-          '${RouterServices.of(context).session.state.scopeKey}/makhdomeenSnap',
-      query: () => firestore.getMakhdomeenStream(),
-      builder: (context, makhdomeenSnap) {
-        return QueryContent<List<KhademModel>>(
-          queryKey:
-              '${RouterServices.of(context).session.state.scopeKey}/khodamSnap',
-          query: () => firestore.getKhodamStream(),
-          builder: (context, khodamSnap) {
-            final allKhodam = khodamSnap;
-            final pendingKhodam = allKhodam
-                .where((k) => k.isPending || !k.isActive)
-                .toList();
-            final allMakhdomeen = makhdomeenSnap;
+    final session = RouterServices.of(context).session.state;
+    final serviceId = session.profile?.serviceId ?? 'thanawy';
 
-            return StagePeopleTab(
-              pendingKhodam: pendingKhodam,
-              allKhodam: allKhodam,
-              allMakhdomeen: allMakhdomeen,
+    return QueryContent<ServiceModel?>(
+      queryKey: '${session.scopeKey}/service',
+      query: () => firestore.watchService(serviceId),
+      builder: (context, service) {
+        return QueryContent<List<MakhdomModel>>(
+          queryKey: '${session.scopeKey}/makhdomeenSnap',
+          query: () => firestore.getMakhdomeenStream(serviceId: serviceId),
+          builder: (context, makhdomeenSnap) {
+            return QueryContent<List<KhademModel>>(
+              queryKey: '${session.scopeKey}/khodamSnap',
+              query: () => firestore.getKhodamStream(serviceId: serviceId),
+              builder: (context, khodamSnap) {
+                final allKhodam = khodamSnap;
+                final pendingKhodam = allKhodam
+                    .where((k) => k.isPending || !k.isActive)
+                    .toList();
+                final allMakhdomeen = makhdomeenSnap;
+
+                return StagePeopleTab(
+                  pendingKhodam: pendingKhodam,
+                  allKhodam: allKhodam,
+                  allMakhdomeen: allMakhdomeen,
+                  service: service,
+                );
+              },
             );
           },
         );
@@ -1078,15 +1180,16 @@ class _StageAnalyticsWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final firestore = RouterServices.of(context).firestore;
+    final session = RouterServices.of(context).session.state;
+    final serviceId = session.profile?.serviceId ?? 'thanawy';
+
     return QueryContent<List<MakhdomModel>>(
-      queryKey:
-          '${RouterServices.of(context).session.state.scopeKey}/makhdomeenSnap',
-      query: () => firestore.getMakhdomeenStream(),
+      queryKey: '${session.scopeKey}/makhdomeenSnap',
+      query: () => firestore.getMakhdomeenStream(serviceId: serviceId),
       builder: (context, makhdomeenSnap) {
         return QueryContent<List<KhademModel>>(
-          queryKey:
-              '${RouterServices.of(context).session.state.scopeKey}/khodamSnap',
-          query: () => firestore.getKhodamStream(),
+          queryKey: '${session.scopeKey}/khodamSnap',
+          query: () => firestore.getKhodamStream(serviceId: serviceId),
           builder: (context, khodamSnap) {
             final allKhodam = khodamSnap;
             final activeKhodam = allKhodam.where((k) => k.isActive).toList();
@@ -1110,10 +1213,12 @@ class _StageTasksWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final firestore = RouterServices.of(context).firestore;
+    final session = RouterServices.of(context).session.state;
+    final serviceId = session.profile?.serviceId ?? 'thanawy';
+
     return QueryContent<List<KhademModel>>(
-      queryKey:
-          '${RouterServices.of(context).session.state.scopeKey}/khodamSnap',
-      query: () => firestore.getKhodamStream(),
+      queryKey: '${session.scopeKey}/khodamSnap',
+      query: () => firestore.getKhodamStream(serviceId: serviceId),
       builder: (context, khodamSnap) {
         final allKhodam = khodamSnap;
         final activeKhodam = allKhodam.where((k) => k.isActive).toList();

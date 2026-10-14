@@ -9,6 +9,8 @@ import '../models/task_model.dart';
 import '../models/attendance_session_model.dart';
 import '../models/notification_model.dart';
 import '../models/makhdom_profile_patch.dart';
+import '../models/service_model.dart';
+import '../models/class_model.dart';
 import '../models/page_result.dart';
 import '../models/snapshot_list.dart';
 import '../errors/app_failure.dart';
@@ -41,8 +43,8 @@ class FirestoreService {
 
   // ===================== مخدومين (Makhdomeen) =====================
 
-  /// جلب كل المخدومين في بث مباشر (Realtime Stream)
-  Stream<List<MakhdomModel>> getMakhdomeenStream() {
+  /// جلب كل المخدومين في بث مباشر (Realtime Stream) مع فلترة الخدمة اختيارياً
+  Stream<List<MakhdomModel>> getMakhdomeenStream({String? serviceId}) {
     return _firestore
         .collection(AppConstants.colMakhdomeen)
         .orderBy('fullName')
@@ -51,7 +53,16 @@ class FirestoreService {
           (snapshot) => SnapshotList(
             snapshot.docs
                 .map((doc) => MakhdomModel.fromMap(doc.data(), doc.id))
-                .where((m) => m.active)
+                .where((m) {
+                  if (!m.active) return false;
+                  if (serviceId != null) {
+                    if (serviceId == 'thanawy') {
+                      return m.serviceId == 'thanawy' || m.serviceId.isEmpty;
+                    }
+                    return m.serviceId == serviceId;
+                  }
+                  return true;
+                })
                 .toList(),
             isFromCache: snapshot.metadata.isFromCache,
             hasPendingWrites: snapshot.metadata.hasPendingWrites,
@@ -59,8 +70,8 @@ class FirestoreService {
         );
   }
 
-  /// جلب مخدومي سنة دراسية معينة فقط (لأمين السنة)
-  Stream<List<MakhdomModel>> getMakhdomeenByGradeStream(String grade) {
+  /// جلب مخدومي سنة دراسية معينة فقط (لأمين السنة) مع فلترة الخدمة اختيارياً
+  Stream<List<MakhdomModel>> getMakhdomeenByGradeStream(String grade, {String? serviceId}) {
     return _firestore
         .collection(AppConstants.colMakhdomeen)
         .where('grade', isEqualTo: grade)
@@ -68,7 +79,16 @@ class FirestoreService {
         .map((snapshot) {
           final list = snapshot.docs
               .map((doc) => MakhdomModel.fromMap(doc.data(), doc.id))
-              .where((m) => m.active)
+              .where((m) {
+                if (!m.active) return false;
+                if (serviceId != null) {
+                  if (serviceId == 'thanawy') {
+                    return m.serviceId == 'thanawy' || m.serviceId.isEmpty;
+                  }
+                  return m.serviceId == serviceId;
+                }
+                return true;
+              })
               .toList();
           list.sort((a, b) => a.fullName.compareTo(b.fullName));
           return SnapshotList(
@@ -261,8 +281,8 @@ class FirestoreService {
 
   // ===================== الخدام (Khodam) =====================
 
-  /// جلب قائمة الخدام بث مباشر
-  Stream<List<KhademModel>> getKhodamStream() {
+  /// جلب قائمة الخدام بث مباشر مع فلترة الخدمة اختيارياً
+  Stream<List<KhademModel>> getKhodamStream({String? serviceId}) {
     return _firestore
         .collection(AppConstants.colKhodam)
         .orderBy('name')
@@ -271,6 +291,16 @@ class FirestoreService {
           (snapshot) => SnapshotList(
             snapshot.docs
                 .map((doc) => KhademModel.fromMap(doc.data(), doc.id))
+                .where((k) {
+                  if (serviceId != null) {
+                    final kService = k.serviceId ?? 'thanawy';
+                    if (serviceId == 'thanawy') {
+                      return kService == 'thanawy' || kService.isEmpty;
+                    }
+                    return kService == serviceId || k.serviceIds.contains(serviceId);
+                  }
+                  return true;
+                })
                 .toList(),
             isFromCache: snapshot.metadata.isFromCache,
             hasPendingWrites: snapshot.metadata.hasPendingWrites,
@@ -278,8 +308,8 @@ class FirestoreService {
         );
   }
 
-  /// جلب قائمة الخدام لسنة دراسية معينة فقط
-  Stream<List<KhademModel>> getKhodamByGradeStream(String grade) {
+  /// جلب قائمة الخدام لسنة دراسية معينة فقط مع فلترة الخدمة اختيارياً
+  Stream<List<KhademModel>> getKhodamByGradeStream(String grade, {String? serviceId}) {
     return _firestore
         .collection(AppConstants.colKhodam)
         .where('grade', isEqualTo: grade)
@@ -287,6 +317,16 @@ class FirestoreService {
         .map((snapshot) {
           final list = snapshot.docs
               .map((doc) => KhademModel.fromMap(doc.data(), doc.id))
+              .where((k) {
+                if (serviceId != null) {
+                  final kService = k.serviceId ?? 'thanawy';
+                  if (serviceId == 'thanawy') {
+                    return kService == 'thanawy' || kService.isEmpty;
+                  }
+                  return kService == serviceId || k.serviceIds.contains(serviceId);
+                }
+                return true;
+              })
               .toList();
           list.sort((a, b) => a.name.compareTo(b.name));
           return SnapshotList(
@@ -297,8 +337,8 @@ class FirestoreService {
         });
   }
 
-  /// جلب قائمة الخدام الجدد في الانتظار (Pending)
-  Stream<List<KhademModel>> getPendingKhodamStream() {
+  /// جلب قائمة الخدام الجدد في الانتظار (Pending) مع فلترة الخدمة اختيارياً
+  Stream<List<KhademModel>> getPendingKhodamStream({String? serviceId}) {
     return _firestore
         .collection(AppConstants.colKhodam)
         .where('role', isEqualTo: AppConstants.rolePending)
@@ -306,6 +346,16 @@ class FirestoreService {
         .map((snapshot) {
           final list = snapshot.docs
               .map((doc) => KhademModel.fromMap(doc.data(), doc.id))
+              .where((k) {
+                if (serviceId != null) {
+                  final kService = k.serviceId ?? 'thanawy';
+                  if (serviceId == 'thanawy') {
+                    return kService == 'thanawy' || kService.isEmpty;
+                  }
+                  return kService == serviceId || k.serviceIds.contains(serviceId);
+                }
+                return true;
+              })
               .toList();
           list.sort((a, b) => a.createdAt.compareTo(b.createdAt));
           return SnapshotList(
@@ -1059,4 +1109,220 @@ class FirestoreService {
       FirestoreNotificationRepository(
         firestore: _firestore,
       ).markAllNotificationsAsRead(userId);
+
+  // ===================== إدارة الخدمات الكبرى والمراحل (Services) =====================
+
+  /// جلب خدمة معينة ببث مباشر (Watch Service)
+  Stream<ServiceModel?> watchService(String serviceId) {
+    try {
+      return _firestore
+          .collection(AppConstants.colServices)
+          .doc(serviceId)
+          .snapshots(includeMetadataChanges: true)
+          .map((doc) {
+            if (!doc.exists || doc.data() == null) {
+              // إذا كانت الخدمة هي الثانوية ولم تنشأ بعد في قاعدة البيانات، نعيد النموذج الافتراضي
+              if (serviceId == 'thanawy') {
+                return ServiceModel(
+                  id: 'thanawy',
+                  name: 'المرحلة الثانوية',
+                  gradesCount: 3,
+                  grades: const [
+                    ServiceGrade(id: AppConstants.grade1st, name: 'الصف الأول الثانوي', order: 1),
+                    ServiceGrade(id: AppConstants.grade2nd, name: 'الصف الثاني الثانوي', order: 2),
+                    ServiceGrade(id: AppConstants.grade3rd, name: 'الصف الثالث الثانوي', order: 3),
+                  ],
+                  createdAt: DateTime.now(),
+                );
+              }
+              return null;
+            }
+            final model = ServiceModel.fromMap(doc.data()!, doc.id);
+            // إذا كانت الثانوية موجودة لكن grades فارغة (لم تخصص بعد):
+            if (model.id == 'thanawy' && model.grades.isEmpty) {
+              return model.copyWith(
+                gradesCount: 3,
+                grades: const [
+                  ServiceGrade(id: AppConstants.grade1st, name: 'الصف الأول الثانوي', order: 1),
+                  ServiceGrade(id: AppConstants.grade2nd, name: 'الصف الثاني الثانوي', order: 2),
+                  ServiceGrade(id: AppConstants.grade3rd, name: 'الصف الثالث الثانوي', order: 3),
+                ],
+              );
+            }
+            return model;
+          });
+    } catch (_) {
+      if (serviceId == 'thanawy') {
+        return Stream.value(
+          ServiceModel(
+            id: 'thanawy',
+            name: 'المرحلة الثانوية',
+            gradesCount: 3,
+            grades: const [
+              ServiceGrade(id: AppConstants.grade1st, name: 'الصف الأول الثانوي', order: 1),
+              ServiceGrade(id: AppConstants.grade2nd, name: 'الصف الثاني الثانوي', order: 2),
+              ServiceGrade(id: AppConstants.grade3rd, name: 'الصف الثالث الثانوي', order: 3),
+            ],
+            createdAt: DateTime.now(),
+          ),
+        );
+      }
+      return const Stream.empty();
+    }
+  }
+
+  /// جلب بيانات خدمة معينة كـ Future
+  Future<ServiceModel?> getService(String serviceId) async {
+    final doc = await _firestore.collection(AppConstants.colServices).doc(serviceId).get();
+    if (!doc.exists || doc.data() == null) {
+      if (serviceId == 'thanawy') {
+        return ServiceModel(
+          id: 'thanawy',
+          name: 'المرحلة الثانوية',
+          gradesCount: 3,
+          grades: const [
+            ServiceGrade(id: AppConstants.grade1st, name: 'الصف الأول الثانوي', order: 1),
+            ServiceGrade(id: AppConstants.grade2nd, name: 'الصف الثاني الثانوي', order: 2),
+            ServiceGrade(id: AppConstants.grade3rd, name: 'الصف الثالث الثانوي', order: 3),
+          ],
+          createdAt: DateTime.now(),
+        );
+      }
+      return null;
+    }
+    final model = ServiceModel.fromMap(doc.data()!, doc.id);
+    if (model.id == 'thanawy' && model.grades.isEmpty) {
+      return model.copyWith(
+        gradesCount: 3,
+        grades: const [
+          ServiceGrade(id: AppConstants.grade1st, name: 'الصف الأول الثانوي', order: 1),
+          ServiceGrade(id: AppConstants.grade2nd, name: 'الصف الثاني الثانوي', order: 2),
+          ServiceGrade(id: AppConstants.grade3rd, name: 'الصف الثالث الثانوي', order: 3),
+        ],
+      );
+    }
+    return model;
+  }
+
+  /// تحديث عدد وتسميات صفوف الخدمة
+  Future<void> updateServiceGrades({
+    required String serviceId,
+    required int gradesCount,
+    required List<ServiceGrade> grades,
+  }) async {
+    await _firestore.collection(AppConstants.colServices).doc(serviceId).set({
+      'gradesCount': gradesCount,
+      'grades': grades.map((g) => g.toMap()).toList(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  /// تحديث اسم الخدمة
+  Future<void> updateServiceName({
+    required String serviceId,
+    required String newName,
+  }) async {
+    await _firestore.collection(AppConstants.colServices).doc(serviceId).set({
+      'name': newName.trim(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  /// جلب كافة الخدمات المتاحة
+  Stream<List<ServiceModel>> watchAllServices() {
+    return _firestore
+        .collection(AppConstants.colServices)
+        .where('active', isEqualTo: true)
+        .snapshots(includeMetadataChanges: true)
+        .map((snap) => snap.docs.map((d) => ServiceModel.fromMap(d.data(), d.id)).toList());
+  }
+
+  // ===================== إدارة الفصول (Classes) =====================
+
+  /// جلب فصول خدمة معينة (مع إمكانية الفلترة بالسنة/الصف)
+  Stream<List<ClassModel>> watchClasses({required String serviceId, String? gradeId}) {
+    try {
+      Query query = _firestore
+          .collection(AppConstants.colClasses)
+          .where('serviceId', isEqualTo: serviceId);
+      if (gradeId != null && gradeId.isNotEmpty) {
+        query = query.where('gradeId', isEqualTo: gradeId);
+      }
+      return query.snapshots(includeMetadataChanges: true).map((snap) =>
+          snap.docs.map((d) => ClassModel.fromMap(d.data() as Map<String, dynamic>, d.id)).toList());
+    } catch (_) {
+      return const Stream.empty();
+    }
+  }
+
+  /// جلب فصول مرحلة دراسية معينة دفعة واحدة
+  Future<List<ClassModel>> getClasses({required String serviceId, String? gradeId}) async {
+    try {
+      Query query = _firestore
+          .collection(AppConstants.colClasses)
+          .where('serviceId', isEqualTo: serviceId);
+      if (gradeId != null && gradeId.isNotEmpty) {
+        query = query.where('gradeId', isEqualTo: gradeId);
+      }
+      final snap = await query.get();
+      return snap.docs
+          .map((d) => ClassModel.fromMap(d.data() as Map<String, dynamic>, d.id))
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// إنشاء فصل جديد
+  Future<String> createClass({
+    required String name,
+    required String serviceId,
+    required String gradeId,
+    String? servantId,
+    String? servantName,
+  }) async {
+    final docRef = await _firestore.collection(AppConstants.colClasses).add({
+      'name': name.trim(),
+      'serviceId': serviceId,
+      'gradeId': gradeId,
+      'servantId': servantId,
+      'servantName': servantName,
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    return docRef.id;
+  }
+
+  /// تعديل بيانات فصل
+  Future<void> updateClass({
+    required String classId,
+    required String name,
+    String? servantId,
+    String? servantName,
+  }) async {
+    await _firestore.collection(AppConstants.colClasses).doc(classId).update({
+      'name': name.trim(),
+      'servantId': servantId,
+      'servantName': servantName,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// حذف فصل
+  Future<void> deleteClass(String classId) async {
+    await _firestore.collection(AppConstants.colClasses).doc(classId).delete();
+  }
+
+  /// تسكين مخدوم في فصل (أو فك ارتباطه)
+  Future<void> assignMakhdomToClass(
+    String makhdomId, {
+    String? classId,
+    String? className,
+  }) async {
+    await _firestore.collection(AppConstants.colMakhdomeen).doc(makhdomId).update({
+      'classId': classId,
+      'className': className,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
 }

@@ -227,6 +227,13 @@ class _MakhdomCardState extends State<MakhdomCard> {
                                       ),
                                       isDark,
                                     ),
+                                  if (makhdom.className != null &&
+                                      makhdom.className!.isNotEmpty)
+                                    _buildMiniTag(
+                                      Icons.diversity_3_rounded,
+                                      makhdom.className!,
+                                      isDark,
+                                    ),
                                 ],
                               ),
                             ],

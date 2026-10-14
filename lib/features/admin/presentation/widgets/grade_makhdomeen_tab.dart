@@ -37,6 +37,7 @@ class _GradeMakhdomeenTabState extends State<GradeMakhdomeenTab> {
   final FirestoreService _firestoreService = FirestoreService();
 
   String? _selectedKhademFilterId;
+  String? _selectedClassFilterId;
   String _searchQuery = '';
 
   void _openAddMakhdomDialog([MakhdomModel? makhdom]) {
@@ -156,6 +157,13 @@ class _GradeMakhdomeenTabState extends State<GradeMakhdomeenTab> {
               .where((m) => m.assignedKhademId == currentUser.id)
               .length;
 
+    final availableClasses = <String, String>{};
+    for (final m in widget.allMakhdomeen) {
+      if (m.classId != null && m.classId!.isNotEmpty) {
+        availableClasses[m.classId!] = m.className ?? 'فصل';
+      }
+    }
+
     final filteredList = widget.allMakhdomeen.where((m) {
       if (_searchQuery.isNotEmpty) {
         final q = _searchQuery.toLowerCase();
@@ -166,6 +174,10 @@ class _GradeMakhdomeenTabState extends State<GradeMakhdomeenTab> {
         if (!matchesName && !matchesArea && !matchesPhone && !matchesSchool) {
           return false;
         }
+      }
+
+      if (_selectedClassFilterId != null) {
+        if (m.classId != _selectedClassFilterId) return false;
       }
 
       if (_selectedKhademFilterId == 'unassigned') {
@@ -214,6 +226,35 @@ class _GradeMakhdomeenTabState extends State<GradeMakhdomeenTab> {
                       : null,
                 ),
               ),
+              if (availableClasses.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: Row(
+                    children: [
+                      _buildClassFilterChip(
+                        id: null,
+                        name: 'كل الفصول',
+                        count: widget.allMakhdomeen.length,
+                      ),
+                      ...availableClasses.entries.map((entry) {
+                        final count = widget.allMakhdomeen
+                            .where((m) => m.classId == entry.key)
+                            .length;
+                        return Padding(
+                          padding: const EdgeInsetsDirectional.only(start: 6),
+                          child: _buildClassFilterChip(
+                            id: entry.key,
+                            name: entry.value,
+                            count: count,
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 10),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -415,6 +456,80 @@ class _GradeMakhdomeenTabState extends State<GradeMakhdomeenTab> {
                   fontSize: 10.5,
                   fontWeight: FontWeight.bold,
                   color: isSelected ? Colors.white : color,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClassFilterChip({
+    required String? id,
+    required String name,
+    required int count,
+  }) {
+    final isSelected = _selectedClassFilterId == id;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: () =>
+          setState(() => _selectedClassFilterId = isSelected ? null : id),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppConstants.sacredGold
+              : (isDark ? AppConstants.surfaceDark : Colors.white),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected
+                ? AppConstants.sacredGold
+                : (isDark
+                      ? AppConstants.cardBorderDark
+                      : AppConstants.cardBorderLight),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.diversity_3_rounded,
+              size: 13,
+              color: isSelected
+                  ? Colors.black87
+                  : (isDark ? Colors.white60 : AppConstants.textMuted),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              name,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                color: isSelected
+                    ? Colors.black87
+                    : (isDark ? Colors.white70 : AppConstants.textDark),
+              ),
+            ),
+            const SizedBox(width: 5),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.black.withValues(alpha: 0.12)
+                    : AppConstants.sacredGold.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                AppFormatters(
+                  Localizations.localeOf(context),
+                ).formatNumber(count),
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.black87 : AppConstants.sacredGold,
                 ),
               ),
             ),

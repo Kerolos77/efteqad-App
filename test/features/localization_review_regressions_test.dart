@@ -1,4 +1,5 @@
 import 'package:efteqad/core/models/visit_model.dart';
+import 'package:efteqad/core/models/service_model.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -59,9 +60,9 @@ class AdminBoundary extends FirestoreService {
   final List<KhademModel> servants;
   AdminBoundary(this.servants);
   @override
-  Stream<List<MakhdomModel>> getMakhdomeenStream() => Stream.value([]);
+  Stream<List<MakhdomModel>> getMakhdomeenStream({String? serviceId}) => Stream.value([]);
   @override
-  Stream<List<KhademModel>> getKhodamStream() => Stream.value(servants);
+  Stream<List<KhademModel>> getKhodamStream({String? serviceId}) => Stream.value(servants);
   @override
   Stream<List<TaskModel>> getAllTasksStream() => Stream.value([]);
   @override
@@ -69,6 +70,8 @@ class AdminBoundary extends FirestoreService {
     DateTime? from,
     DateTime? to,
   }) => Stream.value([]);
+  @override
+  Stream<ServiceModel?> watchService(String serviceId) => Stream.value(null);
 }
 
 Future<void> show(WidgetTester t, String language, Widget page) async {

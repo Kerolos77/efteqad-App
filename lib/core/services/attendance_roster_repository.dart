@@ -3,18 +3,26 @@ import 'trusted_mutations.dart';
 class AttendanceRosterRow {
   final String id, fullName, grade;
   final bool active;
+  final String? classId;
+  final String? className;
+
   const AttendanceRosterRow({
     required this.id,
     required this.fullName,
     required this.grade,
     required this.active,
+    this.classId,
+    this.className,
   });
+
   factory AttendanceRosterRow.fromMap(Map<String, dynamic> row) =>
       AttendanceRosterRow(
         id: row['id'] as String,
         fullName: row['fullName'] as String,
         grade: row['grade'] as String,
         active: row['active'] == true,
+        classId: row['classId'] as String?,
+        className: row['className'] as String?,
       );
 }
 

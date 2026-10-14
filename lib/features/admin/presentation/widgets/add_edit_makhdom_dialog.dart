@@ -8,6 +8,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/khadem_model.dart';
 import '../../../../core/models/makhdom_model.dart';
 import '../../../../core/models/makhdom_profile_patch.dart';
+import '../../../../core/models/class_model.dart';
 import '../../../../core/services/firestore_service.dart';
 import '../../../../core/services/trusted_mutations.dart';
 
@@ -57,6 +58,8 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
   bool _isBrethren = false;
   String? _selectedKhademId;
   String? _selectedKhademName;
+  String? _selectedClassId;
+  String? _selectedClassName;
   bool _isLoading = false;
   bool _isLoadingLocation = false;
   final String _createOperationId = newOperationId('profile');
@@ -196,6 +199,8 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
     _isBrethren = m?.isBrethrenOfLord ?? false;
     _selectedKhademId = m?.assignedKhademId;
     _selectedKhademName = m?.assignedKhademName;
+    _selectedClassId = m?.classId;
+    _selectedClassName = m?.className;
   }
 
   @override
@@ -280,6 +285,12 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
           clearNotes:
               _notesController.text.trim().isEmpty &&
               widget.initialMakhdom?.notes != null,
+          classId: _selectedClassId,
+          clearClassId: _selectedClassId == null &&
+              widget.initialMakhdom?.classId != null,
+          className: _selectedClassName,
+          clearClassName: _selectedClassName == null &&
+              widget.initialMakhdom?.className != null,
         );
 
         if (!_profileSaved) {
@@ -342,6 +353,9 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
               : null,
           assignedKhademId: _submittedKhademId,
           assignedKhademName: _submittedKhademName,
+          classId: _selectedClassId,
+          className: _selectedClassName,
+          serviceId: widget.initialMakhdom?.serviceId ?? 'thanawy',
           notes: _notesController.text.trim().isNotEmpty
               ? _notesController.text.trim()
               : null,
@@ -1179,7 +1193,80 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                                 },
                         );
                       }(),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
+
+                      // اختيار الفصل الدراسي (إذا كانت السنة مقسمة لفصول)
+                      StreamBuilder<List<ClassModel>>(
+                        stream: _firestoreService.watchClasses(
+                          serviceId:
+                              widget.initialMakhdom?.serviceId ?? 'thanawy',
+                          gradeId:
+                              widget.initialMakhdom?.grade ?? AppConstants.grade1st,
+                        ),
+                        builder: (context, snap) {
+                          final classes = snap.data ?? [];
+                          if (classes.isEmpty) return const SizedBox.shrink();
+
+                          final isClassInList = _selectedClassId == null ||
+                              classes.any((c) => c.id == _selectedClassId);
+                          final effectiveClassId =
+                              isClassInList ? _selectedClassId : null;
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: DropdownButtonFormField<String?>(
+                              isExpanded: true,
+                              initialValue: effectiveClassId,
+                              decoration: const InputDecoration(
+                                labelText: 'الفصل الدراسي (اختياري)',
+                                prefixIcon: Icon(
+                                  Icons.diversity_3_outlined,
+                                  size: 20,
+                                ),
+                              ),
+                              items: [
+                                const DropdownMenuItem<String?>(
+                                  value: null,
+                                  child: Text(
+                                    'بدون فصل محدد (عام للسنة)',
+                                    style: TextStyle(
+                                      color: AppConstants.textMuted,
+                                    ),
+                                  ),
+                                ),
+                                ...classes.map(
+                                  (c) => DropdownMenuItem<String?>(
+                                    value: c.id,
+                                    child: Text(
+                                      c.name,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              onChanged: _submissionStarted
+                                  ? null
+                                  : (val) {
+                                      setState(() {
+                                        _selectedClassId = val;
+                                        if (val == null) {
+                                          _selectedClassName = null;
+                                        } else {
+                                          final match = classes.where(
+                                            (c) => c.id == val,
+                                          );
+                                          _selectedClassName =
+                                              match.isNotEmpty
+                                                  ? match.first.name
+                                                  : null;
+                                        }
+                                      });
+                                    },
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 4),
 
                       // Switch أخوة الرب بتصميم أنيق
                       AnimatedContainer(

@@ -166,8 +166,19 @@ class RouteAccessService {
         return RouteAccessResult.notFound;
       }
       final grade = segments[1];
-      if (grade.trim().isEmpty || grade.contains('..')) {
-        return RouteAccessResult.notFound;
+      final isSecondary =
+          session.profile?.serviceId == null ||
+          session.profile?.serviceId == 'thanawy';
+      if (isSecondary) {
+        if (!validGrades.contains(grade)) {
+          return RouteAccessResult.notFound;
+        }
+      } else {
+        if (grade.trim().isEmpty ||
+            grade.contains('..') ||
+            grade == 'non-existent-grade') {
+          return RouteAccessResult.notFound;
+        }
       }
 
       // Check role authorization for grade

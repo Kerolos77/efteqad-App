@@ -23,7 +23,7 @@ class DomainLabels {
       case 'all':
         return tr.messageAllGrades;
       default:
-        return tr.messageSecondary;
+        return (grade != null && grade.isNotEmpty) ? grade : tr.messageSecondary;
     }
   }
 
@@ -36,7 +36,7 @@ class DomainLabels {
       case AppConstants.grade3rd:
         return tr.message3rd;
       default:
-        return '';
+        return grade ?? '';
     }
   }
 
