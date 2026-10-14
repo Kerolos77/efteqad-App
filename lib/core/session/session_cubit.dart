@@ -127,10 +127,7 @@ class SessionCubit extends Cubit<SessionState> {
 
     final role = UserRole.fromString(profile.role);
     final isValidGrade =
-        profile.grade != null &&
-        (profile.grade == '1st' ||
-            profile.grade == '2nd' ||
-            profile.grade == '3rd');
+        profile.grade != null && profile.grade!.trim().isNotEmpty;
 
     if (role == UserRole.stageAdmin) {
       // أمين المرحلة لا يحتاج لسنة، لكن يجب أن يكون نشطاً (غير قيد الحذف أو معلق)

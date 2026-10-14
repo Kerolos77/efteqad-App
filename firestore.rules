@@ -198,6 +198,24 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /services/{serviceId} {
+      allow read: if signedIn();
+      allow create, delete: if isConstAdmin();
+      allow update: if isConstAdmin() || (
+        signedIn() && (
+          (resource.data.get('adminUids', []) is list && resource.data.adminUids.hasAny([request.auth.uid]))
+          || (resource.data.get('adminEmails', []) is list && request.auth.token.email in resource.data.adminEmails)
+        )
+      );
+    }
+
+    match /classes/{classId} {
+      allow read: if active();
+      allow create, update, delete: if isConstAdmin() || stage() || (
+        active() && gradeAdmin(request.resource.data.get('gradeId', resource.data.get('gradeId', '')))
+      );
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

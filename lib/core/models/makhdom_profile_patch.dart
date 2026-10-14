@@ -14,6 +14,11 @@ class MakhdomProfilePatch {
   final DateTime? trackingStartDate;
   final bool clearTrackingStartDate;
   final String? grade;
+  final String? serviceId;
+  final String? classId;
+  final bool clearClassId;
+  final String? className;
+  final bool clearClassName;
   final String? homeLocationUrl;
   final bool? isBrethrenOfLord;
   final String? photoUrl;
@@ -39,6 +44,11 @@ class MakhdomProfilePatch {
     this.trackingStartDate,
     this.clearTrackingStartDate = false,
     this.grade,
+    this.serviceId,
+    this.classId,
+    this.clearClassId = false,
+    this.className,
+    this.clearClassName = false,
     this.homeLocationUrl,
     this.isBrethrenOfLord,
     this.photoUrl,
@@ -73,6 +83,17 @@ class MakhdomProfilePatch {
           : Timestamp.fromDate(trackingStartDate!);
     }
     if (grade != null) map['grade'] = grade;
+    if (serviceId != null) map['serviceId'] = serviceId;
+    if (clearClassId) {
+      map['classId'] = FieldValue.delete();
+    } else if (classId != null) {
+      map['classId'] = classId;
+    }
+    if (clearClassName) {
+      map['className'] = FieldValue.delete();
+    } else if (className != null) {
+      map['className'] = className;
+    }
     if (isBrethrenOfLord != null) map['isBrethrenOfLord'] = isBrethrenOfLord;
     if (clearPhotoUrl) {
       map['photoUrl'] = FieldValue.delete();

@@ -207,8 +207,8 @@ class _EfteqadAppState extends State<EfteqadApp> {
         builder: (context, settingsState) {
           if (!settingsState.isLoaded) return const SizedBox.shrink();
           return MaterialApp.router(
-            title: AppConstants.appName,
-            onGenerateTitle: (ctx) => ctx.tr.appName,
+            title: '${AppConstants.appName} - منظومة الافتقاد والخدمة',
+            onGenerateTitle: (ctx) => '${ctx.tr.appName} - منظومة الافتقاد والخدمة',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,

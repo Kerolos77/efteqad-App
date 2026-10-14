@@ -162,22 +162,28 @@ class _LoginWebScreenState extends State<LoginWebScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // App Church Emblem
+          // App Logo
           Container(
-            width: 68,
-            height: 68,
+            width: 80,
+            height: 80,
             decoration: BoxDecoration(
-              color: AppConstants.sacredGold.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(22),
               border: Border.all(
-                color: AppConstants.sacredGold.withValues(alpha: 0.35),
-                width: 1.5,
+                color: AppConstants.sacredGold.withValues(alpha: 0.45),
+                width: 2,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppConstants.sacredGold.withValues(alpha: 0.25),
+                  blurRadius: 20,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
-            child: const Icon(
-              Icons.church_rounded,
-              color: AppConstants.sacredGold,
-              size: 36,
+            clipBehavior: Clip.antiAlias,
+            child: Image.asset(
+              AppConstants.appLogoPath,
+              fit: BoxFit.cover,
             ),
           ),
           const SizedBox(height: 24),
@@ -277,15 +283,26 @@ class _LoginWebScreenState extends State<LoginWebScreen> {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            width: 68,
+            height: 68,
             decoration: BoxDecoration(
-              color: AppConstants.sacredGold.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppConstants.sacredGold.withValues(alpha: 0.45),
+                width: 1.8,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.25),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: const Icon(
-              Icons.church_rounded,
-              color: AppConstants.sacredGold,
-              size: 28,
+            clipBehavior: Clip.antiAlias,
+            child: Image.asset(
+              AppConstants.appLogoPath,
+              fit: BoxFit.cover,
             ),
           ),
           const SizedBox(height: 12),

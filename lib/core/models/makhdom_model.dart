@@ -12,7 +12,10 @@ class MakhdomModel {
   final String school; // 7. المدرسة
   final String secondaryType; // 8. نوع الثانوية (عامة، صنايع، فني، خدمات...)
   final String? secondaryTypeCustomLabel;
-  final String grade; // السنة الدراسية: '1st', '2nd', '3rd'
+  final String grade; // السنة الدراسية: '1st', '2nd', '3rd', or custom grade id
+  final String serviceId; // معرّف الخدمة التابع لها المخدوم (مثال: thanawy، ebtedai)
+  final String? classId; // معرّف الفصل التابع له المخدوم إن وُجد
+  final String? className; // اسم الفصل للعرض السريع
   final String?
   homeLocationUrl; // 9. لوكيشن بيت المخدوم (رابط خريطة أو إحداثيات)
   final bool isBrethrenOfLord; // 10. أخوة رب (نعم / لا)
@@ -44,6 +47,9 @@ class MakhdomModel {
     this.secondaryType = '',
     this.secondaryTypeCustomLabel,
     this.grade = AppConstants.grade1st,
+    this.serviceId = 'thanawy',
+    this.classId,
+    this.className,
     this.homeLocationUrl,
     this.isBrethrenOfLord = false,
     this.photoUrl,
@@ -114,6 +120,11 @@ class MakhdomModel {
     String? secondaryTypeCustomLabel,
     bool clearSecondaryTypeCustomLabel = false,
     String? grade,
+    String? serviceId,
+    String? classId,
+    bool clearClassId = false,
+    String? className,
+    bool clearClassName = false,
     String? homeLocationUrl,
     bool? isBrethrenOfLord,
     String? photoUrl,
@@ -146,6 +157,9 @@ class MakhdomModel {
           ? null
           : secondaryTypeCustomLabel ?? this.secondaryTypeCustomLabel,
       grade: grade ?? this.grade,
+      serviceId: serviceId ?? this.serviceId,
+      classId: clearClassId ? null : (classId ?? this.classId),
+      className: clearClassName ? null : (className ?? this.className),
       homeLocationUrl: homeLocationUrl ?? this.homeLocationUrl,
       isBrethrenOfLord: isBrethrenOfLord ?? this.isBrethrenOfLord,
       photoUrl: photoUrl ?? this.photoUrl,
@@ -185,6 +199,9 @@ class MakhdomModel {
       'secondaryType': secondaryType,
       'secondaryTypeCustomLabel': secondaryTypeCustomLabel,
       'grade': grade,
+      'serviceId': serviceId,
+      if (classId != null) 'classId': classId,
+      if (className != null) 'className': className,
       'homeLocationUrl': homeLocationUrl,
       'isBrethrenOfLord': isBrethrenOfLord,
       'photoUrl': photoUrl,
@@ -234,6 +251,11 @@ class MakhdomModel {
       secondaryType: map['secondaryType'] ?? '',
       secondaryTypeCustomLabel: map['secondaryTypeCustomLabel'] as String?,
       grade: map['grade'] ?? AppConstants.grade1st,
+      serviceId: (map['serviceId'] != null && map['serviceId'].toString().trim().isNotEmpty)
+          ? map['serviceId'].toString().trim()
+          : 'thanawy',
+      classId: map['classId'] as String?,
+      className: map['className'] as String?,
       homeLocationUrl: map['homeLocationUrl'],
       isBrethrenOfLord: map['isBrethrenOfLord'] is bool
           ? map['isBrethrenOfLord']

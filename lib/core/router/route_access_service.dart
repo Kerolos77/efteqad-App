@@ -166,7 +166,7 @@ class RouteAccessService {
         return RouteAccessResult.notFound;
       }
       final grade = segments[1];
-      if (!validGrades.contains(grade)) {
+      if (grade.trim().isEmpty || grade.contains('..')) {
         return RouteAccessResult.notFound;
       }
 

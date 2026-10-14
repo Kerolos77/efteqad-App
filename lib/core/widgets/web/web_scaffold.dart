@@ -244,27 +244,23 @@ class _WebSidebar extends StatelessWidget {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppConstants.primaryNavy,
-                          AppConstants.primaryLight,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppConstants.sacredGold.withValues(alpha: 0.35),
+                        width: 1.5,
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: AppConstants.primaryLight.withValues(alpha: 0.25),
+                          color: Colors.black.withValues(alpha: 0.15),
                           blurRadius: 8,
-                          offset: const Offset(0, 3),
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.church_rounded,
-                      color: AppConstants.sacredGold,
-                      size: 24,
+                    clipBehavior: Clip.antiAlias,
+                    child: Image.asset(
+                      AppConstants.appLogoPath,
+                      fit: BoxFit.cover,
                     ),
                   ),
                   const SizedBox(width: 14),

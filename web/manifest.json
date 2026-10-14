@@ -1,12 +1,12 @@
 {
-    "name": "efteqad",
-    "short_name": "efteqad",
+    "name": "الراعي - منظومة الافتقاد والخدمة",
+    "short_name": "الراعي",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#0A192F",
+    "theme_color": "#0A192F",
+    "description": "منظومة الراعي لإدارة الافتقاد وخدمة التربية الكنسية ومتابعة الحضور والغياب.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {
