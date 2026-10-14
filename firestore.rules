@@ -200,8 +200,19 @@ service cloud.firestore {
 
     match /services/{serviceId} {
       allow read: if signedIn();
-      allow create, delete: if isConstAdmin();
+      allow create: if isConstAdmin() || (
+        stage() && (
+          serviceId == profile().get('serviceId', 'thanawy')
+          || (hasProfile() && profile().get('serviceId', '') == serviceId)
+        )
+      );
+      allow delete: if isConstAdmin();
       allow update: if isConstAdmin() || (
+        stage() && (
+          serviceId == profile().get('serviceId', 'thanawy')
+          || (hasProfile() && profile().get('serviceId', '') == serviceId)
+        )
+      ) || (
         signedIn() && (
           (resource.data.get('adminUids', []) is list && resource.data.adminUids.hasAny([request.auth.uid]))
           || (resource.data.get('adminEmails', []) is list && request.auth.token.email in resource.data.adminEmails)

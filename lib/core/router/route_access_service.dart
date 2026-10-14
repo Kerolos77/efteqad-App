@@ -140,8 +140,10 @@ class RouteAccessService {
       return RouteAccessResult.denied;
     }
 
-    // Notifications and Profile
-    if (path == AppRoutes.notificationsPath || path == AppRoutes.profilePath) {
+    // Notifications, Profile, and Reports
+    if (path == AppRoutes.notificationsPath ||
+        path == AppRoutes.profilePath ||
+        path == AppRoutes.reportsPath) {
       return RouteAccessResult.allowed;
     }
 

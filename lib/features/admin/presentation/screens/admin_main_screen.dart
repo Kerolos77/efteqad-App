@@ -1,6 +1,7 @@
 import 'package:efteqad/core/localization/app_formatters.dart';
 import 'package:efteqad/core/localization/domain_labels.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/constants.dart';
 import '../../../../core/localization/app_localizations.dart';
@@ -8,6 +9,7 @@ import '../../../../core/models/khadem_model.dart';
 import '../../../../core/models/makhdom_model.dart';
 import '../../../../core/models/service_model.dart';
 import '../../../../core/models/task_model.dart';
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/services/firestore_service.dart';
 import '../../../../core/utils/color_generator.dart';
 import '../../../common/widgets/app_drawer.dart';
@@ -264,6 +266,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                               await _firestoreService.setGradeAdmin(
                                 gradeKey,
                                 k.id,
+                                serviceId: _serviceId,
                               );
                               messenger.showSnackBar(
                                 SnackBar(
@@ -841,72 +844,89 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     required Color color,
     required bool isDark,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: isDark ? AppConstants.surfaceDark : Colors.white,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.go(AppRoutes.gradeMakhdomeen(gradeKey)),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(Icons.shield_outlined, color: color, size: 22),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: isDark ? AppConstants.surfaceDark : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  gradeTitle,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13,
-                    color: color,
-                  ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  headKhadem != null
-                      ? headKhadem.name
-                      : context.tr.noGradeHeadAssigned,
-                  style: TextStyle(
-                    fontWeight: headKhadem != null
-                        ? FontWeight.bold
-                        : FontWeight.normal,
-                    fontSize: 14,
-                    color: headKhadem != null
-                        ? (isDark ? Colors.white : AppConstants.textDark)
-                        : AppConstants.textMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () =>
-                _openAppointGradeHeadDialog(gradeKey, gradeTitle, gradeKhodam),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: color,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                child: Icon(Icons.shield_outlined, color: color, size: 22),
               ),
-            ),
-            child: Text(
-              headKhadem != null
-                  ? context.tr.changeGradeHeadBtn
-                  : context.tr.appointGradeHeadBtn,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          gradeTitle,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                            color: color,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(
+                          Icons.open_in_new_rounded,
+                          size: 13,
+                          color: color.withValues(alpha: 0.7),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      headKhadem != null
+                          ? headKhadem.name
+                          : context.tr.noGradeHeadAssigned,
+                      style: TextStyle(
+                        fontWeight: headKhadem != null
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        fontSize: 14,
+                        color: headKhadem != null
+                            ? (isDark ? Colors.white : AppConstants.textDark)
+                            : AppConstants.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () =>
+                    _openAppointGradeHeadDialog(gradeKey, gradeTitle, gradeKhodam),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: color,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: Text(
+                  headKhadem != null
+                      ? context.tr.changeGradeHeadBtn
+                      : context.tr.appointGradeHeadBtn,
+                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

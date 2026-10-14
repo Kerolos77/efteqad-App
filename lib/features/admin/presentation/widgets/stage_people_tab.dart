@@ -1,11 +1,13 @@
 import 'package:efteqad/core/localization/app_formatters.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/constants.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/khadem_model.dart';
 import '../../../../core/models/makhdom_model.dart';
 import '../../../../core/models/service_model.dart';
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/services/firestore_service.dart';
 import '../../../../core/utils/color_generator.dart';
 import 'service_setup_dialog.dart';
@@ -694,51 +696,66 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
     required Color color,
     required bool isDark,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? AppConstants.surfaceDark : Colors.white,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.go(AppRoutes.gradeMakhdomeen(gradeKey)),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(Icons.school, color: color, size: 20),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isDark ? AppConstants.surfaceDark : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withValues(alpha: 0.2)),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  gradeTitle,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13.5,
-                  ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  headKhadem != null
-                      ? headKhadem.name
-                      : context.tr.noGradeHeadAssigned,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: headKhadem != null
-                        ? FontWeight.w600
-                        : FontWeight.normal,
-                    color: headKhadem != null ? null : AppConstants.textMuted,
-                  ),
+                child: Icon(Icons.school, color: color, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          gradeTitle,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13.5,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(
+                          Icons.open_in_new_rounded,
+                          size: 13,
+                          color: color.withValues(alpha: 0.7),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      headKhadem != null
+                          ? headKhadem.name
+                          : context.tr.noGradeHeadAssigned,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: headKhadem != null
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                        color: headKhadem != null ? null : AppConstants.textMuted,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
           OutlinedButton(
             onPressed: () => _openAppointHeadDialog(
               gradeKey: gradeKey,
@@ -764,7 +781,9 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
               ),
             ),
           ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }

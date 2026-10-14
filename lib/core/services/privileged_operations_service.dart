@@ -36,21 +36,26 @@ class PrivilegedOperationsService {
   Future<void> setGradeAdmin({
     required String khademId,
     required String grade,
+    String? serviceId,
   }) async {
     if (_providedFunctions != null) {
       final callable = _providedFunctions.httpsCallable('setGradeAdmin');
       await callable.call<Map<String, dynamic>>({
         'khademId': khademId,
         'grade': grade,
+        if (serviceId != null) 'serviceId': serviceId,
       });
       return;
     }
     final firestore = FirebaseFirestore.instance;
-    final currentAdmins = await firestore
+    Query query = firestore
         .collection(AppConstants.colKhodam)
         .where('grade', isEqualTo: grade)
-        .where('role', isEqualTo: AppConstants.roleGradeAdmin)
-        .get();
+        .where('role', isEqualTo: AppConstants.roleGradeAdmin);
+    if (serviceId != null) {
+      query = query.where('serviceId', isEqualTo: serviceId);
+    }
+    final currentAdmins = await query.get();
     final batch = firestore.batch();
     for (final doc in currentAdmins.docs) {
       if (doc.id != khademId) {

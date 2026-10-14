@@ -149,6 +149,12 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
   }
 
   int _defaultAgeForGrade(String? grade) {
+    if (grade != null && grade.startsWith('grade_')) {
+      final order = int.tryParse(grade.replaceFirst('grade_', ''));
+      if (order != null) {
+        return 5 + order;
+      }
+    }
     switch (grade) {
       case AppConstants.grade1st:
         return 15;

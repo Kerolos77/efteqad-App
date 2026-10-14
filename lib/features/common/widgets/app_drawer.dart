@@ -9,6 +9,9 @@ import '../../../core/router/router_services.dart';
 import '../../../core/services/app_version_service.dart';
 import '../../../core/utils/color_generator.dart';
 import '../../../main.dart';
+import '../../../core/models/service_model.dart';
+import '../../../core/services/firestore_service.dart';
+import '../../admin/presentation/widgets/service_setup_dialog.dart';
 import 'app_update_dialog.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -230,6 +233,88 @@ class AppDrawer extends StatelessWidget {
                           },
                           isDark: isDark,
                         ),
+                        if (session.isStageAdmin)
+                          StreamBuilder<ServiceModel?>(
+                            stream: (RouterServices.maybeOf(context)?.firestore ??
+                                    FirestoreService())
+                                .watchService(session.serviceId),
+                            builder: (context, snap) {
+                              final service = snap.data;
+                              if (service == null) return const SizedBox.shrink();
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _buildDrawerTile(
+                                    icon: Icons.tune_rounded,
+                                    title: 'تخصيص الخدمة والصفوف',
+                                    color: AppConstants.sacredGold,
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      ServiceSetupDialog.show(
+                                        context,
+                                        service: service,
+                                        firestoreService:
+                                            RouterServices.maybeOf(context)
+                                                    ?.firestore ??
+                                                FirestoreService(),
+                                      );
+                                    },
+                                    isDark: isDark,
+                                  ),
+                                  if (service.grades.isNotEmpty)
+                                    Theme(
+                                      data: Theme.of(context).copyWith(
+                                        dividerColor: Colors.transparent,
+                                      ),
+                                      child: ExpansionTile(
+                                        tilePadding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 0,
+                                        ),
+                                        leading: const Icon(
+                                          Icons.school_outlined,
+                                          size: 20,
+                                        ),
+                                        title: Text(
+                                          'صفوف الخدمة (${service.grades.length})',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        children: service.grades.map((g) {
+                                          return ListTile(
+                                            dense: true,
+                                            contentPadding:
+                                                const EdgeInsetsDirectional.only(
+                                              start: 36,
+                                              end: 16,
+                                            ),
+                                            leading: const Icon(
+                                              Icons.arrow_right_rounded,
+                                              size: 20,
+                                            ),
+                                            title: Text(
+                                              g.name,
+                                              style: const TextStyle(
+                                                fontSize: 12.5,
+                                              ),
+                                            ),
+                                            onTap: () {
+                                              Navigator.pop(context);
+                                              context.go(
+                                                AppRoutes.gradeMakhdomeen(g.id),
+                                              );
+                                            },
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
+                          ),
                         if (onOpenExcel != null)
                           _buildDrawerTile(
                             icon: Icons.table_chart_outlined,
@@ -268,6 +353,16 @@ class AppDrawer extends StatelessWidget {
                           final target = AppRoutes.attendanceHubFor(session);
                           Navigator.pop(context);
                           context.go(target);
+                        },
+                        isDark: isDark,
+                      ),
+                      _buildDrawerTile(
+                        icon: Icons.assessment_outlined,
+                        title: 'مركز التقارير وتصدير البيانات',
+                        color: AppConstants.sacredGold,
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push(AppRoutes.reportsPath);
                         },
                         isDark: isDark,
                       ),

@@ -23,6 +23,17 @@ class PlatformFileSaver {
     );
   }
 
+  /// Saves bytes as a file and downloads or saves it to disk.
+  static Future<String?> saveBytes({
+    required Uint8List bytes,
+    required String fileName,
+  }) {
+    return saveAndShareFileImpl(
+      bytes: bytes,
+      fileName: fileName,
+    );
+  }
+
   /// Reads bytes from a picked [PlatformFile] on either Web or Mobile.
   static Future<Uint8List?> readPickedFileBytes(PlatformFile file) {
     return readPickedFileBytesImpl(file);

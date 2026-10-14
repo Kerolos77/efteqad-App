@@ -402,8 +402,8 @@ class FirestoreService {
       _privilegedOps.setKhademGrade(khademId: khademId, grade: grade);
 
   /// تعيين خادم كأمين لسنة دراسية معينة (بواسطة أمين المرحلة عبر Cloud Function أو مباشرة)
-  Future<void> setGradeAdmin(String grade, String newAdminKhademId) =>
-      _privilegedOps.setGradeAdmin(khademId: newAdminKhademId, grade: grade);
+  Future<void> setGradeAdmin(String grade, String newAdminKhademId, {String? serviceId}) =>
+      _privilegedOps.setGradeAdmin(khademId: newAdminKhademId, grade: grade, serviceId: serviceId);
 
   /// إزالة صفة أمين السنة وتحويله لخادم عادي
   Future<void> removeGradeAdmin(String khademId) async {

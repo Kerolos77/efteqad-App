@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../constants/constants.dart';
 import '../localization/app_localizations.dart';
+import '../localization/domain_labels.dart';
 import '../models/attendance_session_model.dart';
 import '../models/khadem_model.dart';
 import '../models/makhdom_model.dart';
@@ -58,6 +59,7 @@ import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/tasks/presentation/screens/task_details_screen.dart';
 import '../../features/tasks/presentation/widgets/tasks_tab.dart';
 import '../../features/tasks/presentation/web/my_tasks_web_screen.dart';
+import '../../features/reports/presentation/screens/reports_screen.dart';
 
 /// Intent ownership belongs to this router, never to another login/router.
 class RouterIntentState {
@@ -262,6 +264,18 @@ GoRouter createAppRouter({
         child: BlocProvider.value(
           value: sessionCubit,
           child: const SettingsScreen(),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.reportsPath,
+      name: AppRoutes.reportsName,
+      pageBuilder: (context, state) => NoTransitionPage(
+        key: ValueKey('reports/${sessionCubit.state.scopeKey}'),
+        child: RouterServices(
+          firestore: firestore,
+          session: sessionCubit,
+          child: const ReportsScreen(),
         ),
       ),
     ),
@@ -813,7 +827,11 @@ class _GradeShellScaffoldState extends State<_GradeShellScaffold> {
     }
   }
 
-  String _getGradeLabel(BuildContext context) {
+  String _getGradeLabel(BuildContext context, [ServiceModel? service]) {
+    if (service != null && service.grades.isNotEmpty) {
+      final match = service.grades.where((g) => g.id == grade).firstOrNull;
+      if (match != null && match.name.isNotEmpty) return match.name;
+    }
     switch (grade) {
       case AppConstants.grade1st:
         return context.tr.grade1stName;
@@ -822,7 +840,7 @@ class _GradeShellScaffoldState extends State<_GradeShellScaffold> {
       case AppConstants.grade3rd:
         return context.tr.grade3rdName;
       default:
-        return grade;
+        return DomainLabels(Localizations.localeOf(context)).gradeName(grade);
     }
   }
 
@@ -850,19 +868,22 @@ class _GradeShellScaffoldState extends State<_GradeShellScaffold> {
 
   @override
   Widget build(BuildContext context) {
-    final gradeLabel = _getGradeLabel(context);
     final firestoreService = RouterServices.of(context).firestore;
     final session = RouterServices.of(context).session.state;
     final serviceId = session.profile?.serviceId ?? 'thanawy';
 
-    return QueryContent<List<KhademModel>>(
-      queryKey: '${session.scopeKey}/shell',
-      query: () => firestoreService.getKhodamByGradeStream(grade, serviceId: serviceId),
-      builder: (context, khodamList) {
-        if (kIsWeb) {
-          return WebScaffold(
-            title: context.tr.gradeDashboardTitle(gradeLabel),
-            subtitle: 'لوحة تحكم $gradeLabel',
+    return StreamBuilder<ServiceModel?>(
+      stream: firestoreService.watchService(serviceId),
+      builder: (context, serviceSnap) {
+        final gradeLabel = _getGradeLabel(context, serviceSnap.data);
+        return QueryContent<List<KhademModel>>(
+          queryKey: '${session.scopeKey}/shell',
+          query: () => firestoreService.getKhodamByGradeStream(grade, serviceId: serviceId),
+          builder: (context, khodamList) {
+            if (kIsWeb) {
+              return WebScaffold(
+                title: context.tr.gradeDashboardTitle(gradeLabel),
+                subtitle: 'لوحة تحكم $gradeLabel',
             selectedIndex: navigationShell.currentIndex,
             onDestinationSelected: (idx) => _select(context, idx),
             floatingActionButton: navigationShell.currentIndex == 0
@@ -910,6 +931,49 @@ class _GradeShellScaffoldState extends State<_GradeShellScaffold> {
               ),
             ],
             actions: [
+              if (session.isStageAdmin)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 4),
+                  child: TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppConstants.sacredGold,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                    ),
+                    icon: const Icon(Icons.dashboard_outlined, size: 18),
+                    label: const Text(
+                      'لوحة المرحلة',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onPressed: () => context.go(AppRoutes.stagePeoplePath),
+                  ),
+                ),
+              IconButton(
+                icon: const Icon(Icons.table_chart_outlined, size: 20),
+                tooltip: 'عمليات Excel (استيراد وتصدير)',
+                onPressed: () async {
+                  final makhdomeen = await firestoreService.getMakhdomeenByGrade(
+                    grade,
+                    serviceId: serviceId,
+                  );
+                  if (context.mounted) {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => ExcelActionsSheet(
+                        currentMakhdomeen: makhdomeen,
+                        grade: grade,
+                      ),
+                    );
+                  }
+                },
+              ),
               IconButton(
                 icon: const Icon(Icons.diversity_3_outlined, size: 20),
                 tooltip: 'إدارة فصول السنة',
@@ -1039,6 +1103,8 @@ class _GradeShellScaffoldState extends State<_GradeShellScaffold> {
               : null,
           body: AppVersionUpdateGuard(child: navigationShell),
         );
+      },
+    );
       },
     );
   }

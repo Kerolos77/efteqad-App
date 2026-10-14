@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../constants/constants.dart';
 import '../services/trusted_mutations.dart' show canonicalVisitType;
 
+import '../models/service_model.dart';
+
 class DomainLabels {
   final Locale locale;
 
@@ -12,7 +14,11 @@ class DomainLabels {
 
   bool get isArabic => locale.languageCode == 'ar';
 
-  String gradeName(String? grade) {
+  String gradeName(String? grade, [List<ServiceGrade>? serviceGrades]) {
+    if (serviceGrades != null && grade != null) {
+      final match = serviceGrades.where((g) => g.id == grade).firstOrNull;
+      if (match != null && match.name.isNotEmpty) return match.name;
+    }
     switch (grade) {
       case AppConstants.grade1st:
         return tr.message1stSecondary;
@@ -23,6 +29,37 @@ class DomainLabels {
       case 'all':
         return tr.messageAllGrades;
       default:
+        if (grade != null && grade.startsWith('grade_')) {
+          final numStr = grade.replaceFirst('grade_', '');
+          final order = int.tryParse(numStr);
+          if (order != null) {
+            final ordinals = isArabic
+                ? const [
+                    'الصف الأول',
+                    'الصف الثاني',
+                    'الصف الثالث',
+                    'الصف الرابع',
+                    'الصف الخامس',
+                    'الصف السادس',
+                    'الصف السابع',
+                    'الصف الثامن',
+                  ]
+                : const [
+                    '1st Grade',
+                    '2nd Grade',
+                    '3rd Grade',
+                    '4th Grade',
+                    '5th Grade',
+                    '6th Grade',
+                    '7th Grade',
+                    '8th Grade',
+                  ];
+            if (order >= 1 && order <= ordinals.length) {
+              return ordinals[order - 1];
+            }
+            return isArabic ? 'الصف $order' : 'Grade $order';
+          }
+        }
         return (grade != null && grade.isNotEmpty) ? grade : tr.messageSecondary;
     }
   }
@@ -36,6 +73,19 @@ class DomainLabels {
       case AppConstants.grade3rd:
         return tr.message3rd;
       default:
+        if (grade != null && grade.startsWith('grade_')) {
+          final numStr = grade.replaceFirst('grade_', '');
+          final order = int.tryParse(numStr);
+          if (order != null) {
+            final ordinals = isArabic
+                ? const ['أولى', 'ثانية', 'ثالثة', 'رابعة', 'خامسة', 'سادسة']
+                : const ['1st', '2nd', '3rd', '4th', '5th', '6th'];
+            if (order >= 1 && order <= ordinals.length) {
+              return ordinals[order - 1];
+            }
+            return '$order';
+          }
+        }
         return grade ?? '';
     }
   }

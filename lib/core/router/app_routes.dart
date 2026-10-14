@@ -78,6 +78,9 @@ class AppRoutes {
   static const String settingsPath = '/settings';
   static const String settingsName = 'settings';
 
+  static const String reportsPath = '/reports';
+  static const String reportsName = 'reports';
+
   static const String notificationsPath = '/notifications';
   static const String notificationsName = 'notifications';
 
