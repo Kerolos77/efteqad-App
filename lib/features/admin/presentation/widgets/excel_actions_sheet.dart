@@ -16,6 +16,7 @@ import 'excel_import_confirm_dialog.dart';
 class ExcelActionsSheet extends StatefulWidget {
   final List<MakhdomModel> currentMakhdomeen;
   final String grade;
+  final String? serviceId;
   final FirestoreService? firestoreService;
   final Future<ExcelImportResult> Function(String grade)? picker;
 
@@ -23,6 +24,7 @@ class ExcelActionsSheet extends StatefulWidget {
     super.key,
     this.firestoreService,
     this.picker,
+    this.serviceId,
     required this.currentMakhdomeen,
     required this.grade,
   });
@@ -127,8 +129,49 @@ class _ExcelActionsSheetState extends State<ExcelActionsSheet> {
 
       if (confirm == true) {
         setState(() => _statusText = context.tr.messageSavingToFirebase);
+
+        final effServiceId = widget.serviceId ??
+            (widget.currentMakhdomeen.isNotEmpty
+                ? widget.currentMakhdomeen.first.serviceId
+                : 'thanawy');
+
+        List<MakhdomModel> rowsToImport = result.rows;
+        try {
+          final existingClasses = await _firestoreService.getClasses(
+            serviceId: effServiceId,
+            gradeId: widget.grade,
+          );
+          final classMap = <String, String>{};
+          for (final c in existingClasses) {
+            classMap[c.name.trim().toLowerCase()] = c.id;
+          }
+
+          final updatedRows = <MakhdomModel>[];
+          for (final r in result.rows) {
+            var m = r.copyWith(serviceId: effServiceId);
+            if (m.className != null && m.className!.trim().isNotEmpty) {
+              final cKey = m.className!.trim().toLowerCase();
+              if (classMap.containsKey(cKey)) {
+                m = m.copyWith(classId: classMap[cKey]);
+              } else {
+                try {
+                  final newClassId = await _firestoreService.createClass(
+                    name: m.className!.trim(),
+                    serviceId: effServiceId,
+                    gradeId: widget.grade,
+                  );
+                  classMap[cKey] = newClassId;
+                  m = m.copyWith(classId: newClassId);
+                } catch (_) {}
+              }
+            }
+            updatedRows.add(m);
+          }
+          rowsToImport = updatedRows;
+        } catch (_) {}
+
         final outcome = await _firestoreService.importMakhdomeen(
-          result.rows,
+          rowsToImport,
           onProgress: (done, total) {
             if (mounted) {
               setState(() {

@@ -28,6 +28,7 @@ class PrivilegedOperationsService {
           'grade': grade,
           'role': AppConstants.roleServant,
           'status': 'active',
+          'rejectionReason': FieldValue.delete(),
           'updatedAt': FieldValue.serverTimestamp(),
         });
   }

@@ -33,6 +33,7 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
   late Set<String> _selectedIds;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  String? _selectedClassFilter;
   bool _isSaving = false;
   Set<String>? _submittedSelection;
   Set<String>? _submittedRemovals;
@@ -177,10 +178,26 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final targetColor = ColorGenerator.getColorForId(widget.targetKhadem.id);
 
+    final availableClasses = <String>{};
+    for (final m in widget.allMakhdomeen) {
+      if (m.className != null && m.className!.isNotEmpty) {
+        availableClasses.add(m.className!);
+      }
+    }
+
     final filteredList = widget.allMakhdomeen.where((m) {
+      if (_selectedClassFilter != null) {
+        if (_selectedClassFilter == '__unassigned__') {
+          if (m.className != null && m.className!.isNotEmpty) return false;
+        } else {
+          if (m.className != _selectedClassFilter && m.classId != _selectedClassFilter) return false;
+        }
+      }
       if (_searchQuery.isEmpty) return true;
-      return m.fullName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          m.area.toLowerCase().contains(_searchQuery.toLowerCase());
+      final q = _searchQuery.toLowerCase();
+      return m.fullName.toLowerCase().contains(q) ||
+          m.area.toLowerCase().contains(q) ||
+          (m.className != null && m.className!.toLowerCase().contains(q));
     }).toList();
 
     return Container(
@@ -345,6 +362,76 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
             ),
           ),
 
+          if (availableClasses.isNotEmpty)
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 2.h),
+              child: Row(
+                children: [
+                  ChoiceChip(
+                    label: Text(
+                      'كل الفصول (${widget.allMakhdomeen.length})',
+                      style: TextStyle(
+                        fontSize: 11.5.sp,
+                        fontWeight: _selectedClassFilter == null
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                    selected: _selectedClassFilter == null,
+                    onSelected: (selected) {
+                      if (selected) setState(() => _selectedClassFilter = null);
+                    },
+                  ),
+                  SizedBox(width: 6.w),
+                  ...availableClasses.map((className) {
+                    final count = widget.allMakhdomeen
+                        .where((m) => m.className == className)
+                        .length;
+                    return Padding(
+                      padding: EdgeInsets.only(left: 6.w),
+                      child: ChoiceChip(
+                        label: Text(
+                          '$className ($count)',
+                          style: TextStyle(
+                            fontSize: 11.5.sp,
+                            fontWeight: _selectedClassFilter == className
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        selected: _selectedClassFilter == className,
+                        onSelected: (selected) {
+                          setState(() {
+                            _selectedClassFilter = selected ? className : null;
+                          });
+                        },
+                      ),
+                    );
+                  }),
+                  SizedBox(width: 6.w),
+                  ChoiceChip(
+                    label: Text(
+                      'بدون فصل (${widget.allMakhdomeen.where((m) => m.className == null || m.className!.isEmpty).length})',
+                      style: TextStyle(
+                        fontSize: 11.5.sp,
+                        fontWeight: _selectedClassFilter == '__unassigned__'
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                    selected: _selectedClassFilter == '__unassigned__',
+                    onSelected: (selected) {
+                      setState(() {
+                        _selectedClassFilter =
+                            selected ? '__unassigned__' : null;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+
           if (_submittedSelection != null)
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -357,16 +444,18 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
             child: Row(
               children: [
-                Text(
-                  context.tr.resultsCount(filteredList.length),
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: isDark
-                        ? AppColors.textMutedDark
-                        : AppColors.textMuted,
+                Expanded(
+                  child: Text(
+                    context.tr.resultsCount(filteredList.length),
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: isDark
+                          ? AppColors.textMutedDark
+                          : AppColors.textMuted,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const Spacer(),
                 GestureDetector(
                   onTap: () {
                     if (_submittedSelection != null) return;

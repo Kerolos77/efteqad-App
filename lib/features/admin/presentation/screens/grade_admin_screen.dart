@@ -91,6 +91,7 @@ class _GradeAdminScreenState extends State<GradeAdminScreen> {
       builder: (_) => ExcelActionsSheet(
         currentMakhdomeen: currentList,
         grade: widget.grade,
+        serviceId: _serviceId,
       ),
     );
   }

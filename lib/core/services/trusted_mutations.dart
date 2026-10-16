@@ -166,6 +166,9 @@ class TrustedMutations {
             if (row['secondaryTypeCustomLabel'] != null)
               'secondaryTypeCustomLabel': row['secondaryTypeCustomLabel'],
             'grade': grade,
+            if (row['serviceId'] != null) 'serviceId': row['serviceId'],
+            if (row['classId'] != null) 'classId': row['classId'],
+            if (row['className'] != null) 'className': row['className'],
             'homeLocationUrl': row['homeLocationUrl'],
             'isBrethrenOfLord': row['isBrethrenOfLord'] == true,
             'photoUrl': row['photoUrl'],

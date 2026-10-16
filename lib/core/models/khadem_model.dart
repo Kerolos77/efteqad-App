@@ -40,10 +40,10 @@ class KhademModel {
   bool get isGradeAdmin => role == AppConstants.roleGradeAdmin;
   bool get isRejected => status == 'rejected';
   bool get isPending =>
-      role == AppConstants.rolePending ||
-      status == AppConstants.rolePending ||
-      status == 'rejected' ||
-      (role != AppConstants.roleStageAdmin && grade == null);
+      !isRejected &&
+      (role == AppConstants.rolePending ||
+          status == AppConstants.rolePending ||
+          (role != AppConstants.roleStageAdmin && grade == null));
   bool get isActive => !isPending && !isRejected;
 
   KhademModel copyWith({

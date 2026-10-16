@@ -51,6 +51,8 @@ function validateImportRow(row, rowIndex) {
       isBrethrenOfLord: row.isBrethrenOfLord === true,
       photoUrl: text("photoUrl") || null,
       notes: text("notes") || null,
+      classId: text("classId") || null,
+      className: text("className") || null,
     },
   };
 }

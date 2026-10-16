@@ -50,6 +50,53 @@ class ExcelImportConfirmDialog extends StatelessWidget {
             ),
             SizedBox(height: 8.h),
             Text(context.tr.excelConfirmImportPrompt(result.rows.length)),
+            Builder(
+              builder: (context) {
+                final detectedClasses = <String>{};
+                for (final r in result.rows) {
+                  if (r.className != null && r.className!.trim().isNotEmpty) {
+                    detectedClasses.add(r.className!.trim());
+                  }
+                }
+                if (detectedClasses.isEmpty) return const SizedBox.shrink();
+
+                return Padding(
+                  padding: EdgeInsets.only(top: 8.h),
+                  child: Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(8.r),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(
+                        color: AppColors.primaryLight.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.diversity_3_rounded,
+                          size: 16.sp,
+                          color: AppColors.primaryLight,
+                        ),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Text(
+                            'تم رصد ${detectedClasses.length} فصول بالملف: ${detectedClasses.join("، ")}',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: AppColors.primaryLight,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
             if (result.hasErrors) ...[
               SizedBox(height: 10.h),
               Container(

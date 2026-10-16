@@ -1573,4 +1573,23 @@ class FirestoreService {
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
+
+  /// تسكين مخدومين متعددين في فصل دراسي دفعة واحدة (أو فك ارتباطهم)
+  Future<void> bulkAssignMakhdomeenToClass({
+    required List<String> makhdomIds,
+    required String? classId,
+    required String? className,
+  }) async {
+    if (makhdomIds.isEmpty) return;
+    final batch = _firestore.batch();
+    for (final id in makhdomIds) {
+      final docRef = _firestore.collection(AppConstants.colMakhdomeen).doc(id);
+      batch.update(docRef, {
+        'classId': classId,
+        'className': className,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
+    await batch.commit();
+  }
 }

@@ -173,6 +173,26 @@ class AssignMakhdomListItem extends StatelessWidget {
                                 : AppColors.textMuted,
                           ),
                         ),
+                      if (makhdom.className != null &&
+                          makhdom.className!.isNotEmpty)
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6.w,
+                            vertical: 1.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryLight.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(6.r),
+                          ),
+                          child: Text(
+                            makhdom.className!,
+                            style: TextStyle(
+                              fontSize: 10.sp,
+                              color: AppColors.primaryLight,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       if (makhdom.isBrethrenOfLord)
                         Container(
                           padding: EdgeInsets.symmetric(

@@ -6,6 +6,7 @@ import '../../../../core/models/class_model.dart';
 import '../../../../core/models/khadem_model.dart';
 import '../../../../core/services/firestore_service.dart';
 import 'add_edit_class_dialog.dart';
+import 'class_makhdomeen_dialog.dart';
 
 class ManageClassesDialog extends StatefulWidget {
   final String serviceId;
@@ -60,6 +61,15 @@ class _ManageClassesDialogState extends State<ManageClassesDialog> {
       serviceId: widget.serviceId,
       gradeId: widget.gradeId,
       khodamList: widget.khodamList,
+      firestoreService: _firestore,
+    );
+  }
+
+  void _openClassMakhdomeenDialog(ClassModel c) {
+    ClassMakhdomeenDialog.show(
+      context,
+      classModel: c,
+      gradeTitle: widget.gradeTitle,
       firestoreService: _firestore,
     );
   }
@@ -265,6 +275,15 @@ class _ManageClassesDialogState extends State<ManageClassesDialog> {
                                       ),
                                   ],
                                 ),
+                              ),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.people_alt_outlined,
+                                  size: 19.sp,
+                                  color: AppColors.primaryLight,
+                                ),
+                                tooltip: 'المخدومين والتسكين',
+                                onPressed: () => _openClassMakhdomeenDialog(c),
                               ),
                               IconButton(
                                 icon: Icon(Icons.edit_outlined, size: 18.sp),

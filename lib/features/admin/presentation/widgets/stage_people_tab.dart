@@ -12,6 +12,7 @@ import '../../../../core/router/app_routes.dart';
 import '../../../../core/services/firestore_service.dart';
 import 'appoint_head_dialog.dart';
 import 'pending_khadem_card.dart';
+import 'rejected_khadem_card.dart';
 import 'service_setup_dialog.dart';
 import 'stage_grade_head_card.dart';
 import 'stage_servant_tile.dart';
@@ -36,6 +37,7 @@ class StagePeopleTab extends StatefulWidget {
 
 class _StagePeopleTabState extends State<StagePeopleTab> {
   final FirestoreService _firestoreService = FirestoreService();
+  int _selectedStatusTab = 0; // 0: النشطين, 1: قيد الانتظار, 2: المرفوضين
   String _selectedGradeFilter = 'all';
 
   List<ServiceGrade> _getServiceGrades() {
@@ -112,10 +114,30 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
                 title: Text(g.name, style: TextStyle(fontSize: 14.sp)),
                 onTap: () async {
                   Navigator.pop(ctx);
-                  await _firestoreService.assignKhademToGrade(
-                    khadem.id,
-                    g.id,
-                  );
+                  try {
+                    await _firestoreService.assignKhademToGrade(
+                      khadem.id,
+                      g.id,
+                    );
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('تم تسكين الخادم ${khadem.name} في ${g.name} بنجاح'),
+                          backgroundColor: AppColors.successColor,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  } catch (_) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(context.tr.dataUnavailable),
+                          backgroundColor: AppColors.errorColor,
+                        ),
+                      );
+                    }
+                  }
                 },
               );
             }),
@@ -123,6 +145,116 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
         ),
       ),
     );
+  }
+
+  void _openRejectDialog(KhademModel khadem) {
+    final reasonController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+        title: Row(
+          children: [
+            Icon(Icons.highlight_off_rounded, color: AppColors.errorColor, size: 24.sp),
+            SizedBox(width: 8.w),
+            Expanded(
+              child: Text(
+                'رفض طلب الانضمام',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('الخادم: ${khadem.name}', style: const TextStyle(fontWeight: FontWeight.w600)),
+            SizedBox(height: 12.h),
+            Text(
+              'يرجى كتابة سبب الرفض أو الملاحظات لتظهر للخادم في حسابه حتى يتمكن من تعديل بياناته:',
+              style: TextStyle(fontSize: 12.5.sp, color: AppColors.textMuted),
+            ),
+            SizedBox(height: 10.h),
+            TextField(
+              controller: reasonController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'مثال: يرجى اختيار الخدمة الصحيحة، أو كتابة الاسم ثلاثياً للتأكد...',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                contentPadding: EdgeInsets.all(12.r),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(ctx.tr.cancel),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.errorColor,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+            ),
+            onPressed: () async {
+              final reason = reasonController.text.trim();
+              Navigator.pop(ctx);
+              try {
+                await _firestoreService.rejectKhademApplication(
+                  khademId: khadem.id,
+                  reason: reason.isNotEmpty ? reason : 'تم رفض الطلب من قِبل إدارة الخدمة.',
+                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('تم رفض الطلب وإرسال الملاحظات بنجاح.'),
+                      backgroundColor: AppColors.errorColor,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              } catch (_) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(context.tr.dataUnavailable),
+                      backgroundColor: AppColors.errorColor,
+                    ),
+                  );
+                }
+              }
+            },
+            icon: const Icon(Icons.close_rounded, size: 18),
+            label: const Text('تأكيد الرفض'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _reopenApplication(KhademModel khadem) async {
+    try {
+      await _firestoreService.reopenKhademApplication(khademId: khadem.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تمت استعادة الطلب إلى قائمة الانتظار بنجاح.'),
+            backgroundColor: AppColors.successColor,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.tr.dataUnavailable),
+            backgroundColor: AppColors.errorColor,
+          ),
+        );
+      }
+    }
   }
 
   void _openAppointHeadDialog({
@@ -147,12 +279,19 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final grades = _getServiceGrades();
 
-    // Filter displayed servants
-    List<KhademModel> displayedKhodam;
+    // تقسيم الخدام إلى المجموعات الثلاث
+    final activeKhodam = widget.allKhodam.where((k) => k.isActive).toList();
+    final pendingKhodam = widget.allKhodam.where((k) => k.isPending).isNotEmpty
+        ? widget.allKhodam.where((k) => k.isPending).toList()
+        : widget.pendingKhodam.where((k) => !k.isRejected).toList();
+    final rejectedKhodam = widget.allKhodam.where((k) => k.isRejected).toList();
+
+    // فلترة الخدام النشطين المعروضين حسب السنة المختارة
+    List<KhademModel> displayedActiveKhodam;
     if (_selectedGradeFilter == 'all') {
-      displayedKhodam = widget.allKhodam.where((k) => k.isActive).toList();
+      displayedActiveKhodam = activeKhodam;
     } else {
-      displayedKhodam = widget.allKhodam
+      displayedActiveKhodam = activeKhodam
           .where((k) => k.grade == _selectedGradeFilter)
           .toList();
     }
@@ -210,65 +349,184 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
               ],
             ),
           ),
-          SizedBox(height: 20.h),
+          SizedBox(height: 16.h),
         ],
 
-        // 1. قطاع الخدام الجدد بانتظار التسكين
-        if (widget.pendingKhodam.isNotEmpty) ...[
-          Row(
+        // 1. شريط التابات الثلاث (الموافق عليهم، قيد الانتظار، المرفوضين)
+        _buildStatusTabBar(
+          activeCount: activeKhodam.length,
+          pendingCount: pendingKhodam.length,
+          rejectedCount: rejectedKhodam.length,
+          isDark: isDark,
+        ),
+
+        // 2. محتوى التبويب المختار
+        if (_selectedStatusTab == 0) ...[
+          // ==================== تبويب الخدام النشطين ====================
+          _buildActiveKhodamSection(
+            isDark: isDark,
+            grades: grades,
+            activeKhodam: activeKhodam,
+            displayedKhodam: displayedActiveKhodam,
+          ),
+        ] else if (_selectedStatusTab == 1) ...[
+          // ==================== تبويب قيد الانتظار ====================
+          _buildPendingKhodamSection(
+            isDark: isDark,
+            pendingKhodam: pendingKhodam,
+          ),
+        ] else ...[
+          // ==================== تبويب المرفوضين ====================
+          _buildRejectedKhodamSection(
+            isDark: isDark,
+            rejectedKhodam: rejectedKhodam,
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildStatusTabBar({
+    required int activeCount,
+    required int pendingCount,
+    required int rejectedCount,
+    required bool isDark,
+  }) {
+    final formatters = AppFormatters(Localizations.localeOf(context));
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 18.h),
+      padding: EdgeInsets.all(4.r),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Row(
+        children: [
+          _buildStatusTabItem(
+            index: 0,
+            title: 'الموافق عليهم',
+            count: activeCount,
+            isSelected: _selectedStatusTab == 0,
+            isDark: isDark,
+            activeColor: AppColors.primaryLight,
+            formatters: formatters,
+          ),
+          _buildStatusTabItem(
+            index: 1,
+            title: 'قيد الانتظار',
+            count: pendingCount,
+            isSelected: _selectedStatusTab == 1,
+            isDark: isDark,
+            activeColor: AppColors.warningColor,
+            highlightBadge: pendingCount > 0,
+            formatters: formatters,
+          ),
+          _buildStatusTabItem(
+            index: 2,
+            title: 'المرفوضين',
+            count: rejectedCount,
+            isSelected: _selectedStatusTab == 2,
+            isDark: isDark,
+            activeColor: AppColors.errorColor,
+            highlightBadge: rejectedCount > 0,
+            formatters: formatters,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusTabItem({
+    required int index,
+    required String title,
+    required int count,
+    required bool isSelected,
+    required bool isDark,
+    required Color activeColor,
+    bool highlightBadge = false,
+    required AppFormatters formatters,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedStatusTab = index),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: EdgeInsets.symmetric(vertical: 9.h),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? (isDark ? AppColors.surfaceDark : Colors.white)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12.r),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
+                      blurRadius: 6.r,
+                      offset: Offset(0, 2.h),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: EdgeInsets.all(6.r),
-                decoration: BoxDecoration(
-                  color: AppColors.warningColor.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.person_add_rounded,
-                  size: 16.sp,
-                  color: AppColors.warningColor,
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Text(
-                context.tr.pendingServantsSection,
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14.sp,
+              Flexible(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                    color: isSelected
+                        ? (isDark ? Colors.white : AppColors.primaryNavy)
+                        : (isDark ? Colors.white54 : AppColors.textMuted),
+                  ),
                 ),
               ),
-              const Spacer(),
+              SizedBox(width: 5.w),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.5.h),
                 decoration: BoxDecoration(
-                  color: AppColors.warningColor,
+                  color: highlightBadge
+                      ? activeColor
+                      : (isSelected
+                          ? activeColor.withValues(alpha: 0.15)
+                          : (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.06))),
                   borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: Text(
-                  AppFormatters(
-                    Localizations.localeOf(context),
-                  ).formatNumber(widget.pendingKhodam.length),
+                  formatters.formatNumber(count),
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 11.sp,
+                    fontSize: 10.sp,
                     fontWeight: FontWeight.bold,
+                    color: highlightBadge
+                        ? Colors.white
+                        : (isSelected
+                            ? activeColor
+                            : (isDark ? Colors.white54 : AppColors.textMuted)),
                   ),
                 ),
               ),
             ],
           ),
-          SizedBox(height: 10.h),
-          ...widget.pendingKhodam.map(
-            (khadem) => PendingKhademCard(
-              khadem: khadem,
-              isDark: isDark,
-              onAssign: () => _openAssignGradeDialog(khadem),
-            ),
-          ),
-          SizedBox(height: 20.h),
-        ],
+        ),
+      ),
+    );
+  }
 
-        // 2. قطاع أمناء السنين الدراسية (ديناميكي لجميع صفوف الخدمة)
+  // ==================== بناء التبويب الأول: الخدام الحاليين ====================
+  Widget _buildActiveKhodamSection({
+    required bool isDark,
+    required List<ServiceGrade> grades,
+    required List<KhademModel> activeKhodam,
+    required List<KhademModel> displayedKhodam,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // قطاع أمناء السنين الدراسية (ديناميكي لجميع صفوف الخدمة)
         Row(
           children: [
             Container(
@@ -305,7 +563,7 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
 
         // بطاقات أمناء السنوات الدراسية ديناميكياً
         ...grades.map((g) {
-          final gradeKhodam = widget.allKhodam
+          final gradeKhodam = activeKhodam
               .where((k) => k.grade == g.id)
               .toList();
           final headKhodam = gradeKhodam.where((k) => k.isGradeAdmin).toList();
@@ -331,7 +589,7 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
         }),
         SizedBox(height: 20.h),
 
-        // 3. فريق الخدام وتوزيع السنين
+        // فريق الخدام وتوزيع السنين
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -373,7 +631,7 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
             children: [
               _buildGradeFilterChip('all', context.tr.allGrades, isDark),
               ...grades.map((g) {
-                final count = widget.allKhodam
+                final count = activeKhodam
                     .where((k) => k.grade == g.id)
                     .length;
                 final formattedCount = AppFormatters(
@@ -421,6 +679,184 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
               onChangeGrade: () => _openAssignGradeDialog(khadem),
             );
           }),
+      ],
+    );
+  }
+
+  // ==================== بناء التبويب الثاني: قيد الانتظار ====================
+  Widget _buildPendingKhodamSection({
+    required bool isDark,
+    required List<KhademModel> pendingKhodam,
+  }) {
+    if (pendingKhodam.isEmpty) {
+      return Container(
+        margin: EdgeInsets.only(top: 20.h),
+        padding: EdgeInsets.all(32.r),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.how_to_reg_rounded,
+              size: 48.sp,
+              color: AppColors.primaryLight.withValues(alpha: 0.6),
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              'لا توجد طلبات انتظار جديدة',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15.sp),
+            ),
+            SizedBox(height: 6.h),
+            Text(
+              'أي خادم جديد يقوم بالتسجيل واختيار هذه الخدمة ستظهر بياناته هنا لتسكينه أو رفضه.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12.5.sp, color: AppColors.textMuted, height: 1.4),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(6.r),
+              decoration: BoxDecoration(
+                color: AppColors.warningColor.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.person_add_rounded,
+                size: 16.sp,
+                color: AppColors.warningColor,
+              ),
+            ),
+            SizedBox(width: 8.w),
+            Expanded(
+              child: Text(
+                'طلبات انضمام جديدة بانتظار التسكين (${pendingKhodam.length})',
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14.sp,
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 6.h),
+        Text(
+          'يرجى مراجعة بيانات الخدام وتسكينهم في الصف المناسب، أو رفض الطلب مع ذكر السبب ليظهر للخادم:',
+          style: TextStyle(
+            fontSize: 12.sp,
+            color: AppColors.textMuted,
+            height: 1.35,
+          ),
+        ),
+        SizedBox(height: 12.h),
+
+        ...pendingKhodam.map(
+          (khadem) => PendingKhademCard(
+            khadem: khadem,
+            isDark: isDark,
+            onAssign: () => _openAssignGradeDialog(khadem),
+            onReject: () => _openRejectDialog(khadem),
+            onMakeCall: khadem.phone.isNotEmpty ? () => _makeCall(khadem.phone) : null,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ==================== بناء التبويب الثالث: المرفوضين ====================
+  Widget _buildRejectedKhodamSection({
+    required bool isDark,
+    required List<KhademModel> rejectedKhodam,
+  }) {
+    if (rejectedKhodam.isEmpty) {
+      return Container(
+        margin: EdgeInsets.only(top: 20.h),
+        padding: EdgeInsets.all(32.r),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.verified_user_outlined,
+              size: 48.sp,
+              color: AppColors.successColor.withValues(alpha: 0.6),
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              'لا توجد طلبات مرفوضة',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15.sp),
+            ),
+            SizedBox(height: 6.h),
+            Text(
+              'الطلبات التي يتم رفضها ستظهر هنا مع سبب الرفض لتتمكن من مراجعتها أو التراجع وقبولها في أي وقت.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12.5.sp, color: AppColors.textMuted, height: 1.4),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(6.r),
+              decoration: BoxDecoration(
+                color: AppColors.errorColor.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.person_off_rounded,
+                size: 16.sp,
+                color: AppColors.errorColor,
+              ),
+            ),
+            SizedBox(width: 8.w),
+            Expanded(
+              child: Text(
+                'الطلبات المرفوضة (${rejectedKhodam.length})',
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14.sp,
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 6.h),
+        Text(
+          'يمكنك مراجعة أسباب الرفض المسجلة، أو التراجع وإعادة فتح الطلب للانتظار، أو تسكينه مباشرة:',
+          style: TextStyle(
+            fontSize: 12.sp,
+            color: AppColors.textMuted,
+            height: 1.35,
+          ),
+        ),
+        SizedBox(height: 12.h),
+
+        ...rejectedKhodam.map(
+          (khadem) => RejectedKhademCard(
+            khadem: khadem,
+            isDark: isDark,
+            onReopen: () => _reopenApplication(khadem),
+            onAssign: () => _openAssignGradeDialog(khadem),
+            onMakeCall: khadem.phone.isNotEmpty ? () => _makeCall(khadem.phone) : null,
+          ),
+        ),
       ],
     );
   }

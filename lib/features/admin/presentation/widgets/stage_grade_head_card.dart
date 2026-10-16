@@ -62,11 +62,14 @@ class StageGradeHeadCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          gradeTitle,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13.5.sp,
+                        Flexible(
+                          child: Text(
+                            gradeTitle,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13.5.sp,
+                            ),
                           ),
                         ),
                         if (headKhodam.length > 1) ...[

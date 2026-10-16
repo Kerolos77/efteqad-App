@@ -36,6 +36,7 @@ class ExcelColumnLabels {
   String get yearsOld => tr.messageYears;
   String get sheetName => tr.messageStudentsData;
   String get templateSheetName => tr.messageStudentsTemplate;
+  String get studentClass => isArabic ? 'الفصل' : 'Class';
 
   List<String> get exportHeaders => [
     fullName,
@@ -56,6 +57,7 @@ class ExcelColumnLabels {
     visitCount,
     lastVisitDate,
     trackingStartDate,
+    studentClass,
   ];
 
   List<String> get templateHeaders => [
@@ -73,5 +75,6 @@ class ExcelColumnLabels {
     photoUrl,
     notes,
     trackingStartDate,
+    studentClass,
   ];
 }

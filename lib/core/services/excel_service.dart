@@ -58,6 +58,8 @@ class ExcelService {
             labels.no,
             '',
             'محبوب ويشارك في الكشافة',
+            '',
+            'فصل 1',
           ]
         : [
             'Mina Samir Fayez Hanna',
@@ -73,6 +75,8 @@ class ExcelService {
             labels.no,
             '',
             'Active in scouts',
+            '',
+            'Class 1',
           ];
 
     for (int col = 0; col < sampleData.length; col++) {
@@ -287,6 +291,16 @@ class ExcelService {
       'tracking start',
       'tracking',
     ]);
+    final colClass = registerCol([
+      'الفصل',
+      'فصل',
+      'اسم الفصل',
+      'الصف',
+      'class',
+      'group',
+      'مجموعة',
+      'مجموعه',
+    ]);
     if (colName == -1 && colPhone == -1) {
       throw AppFailure(
         code: AppFailure.codeExcelColumns,
@@ -487,6 +501,7 @@ class ExcelService {
           brethrenStr.startsWith('نعم');
       final photoUrl = colPhoto >= 0 ? getCellText(colPhoto) : '';
       final notes = colNotes >= 0 ? getCellText(colNotes) : '';
+      final className = colClass >= 0 ? getCellText(colClass) : '';
 
       rows.add(
         MakhdomModel(
@@ -502,6 +517,7 @@ class ExcelService {
           school: school,
           secondaryType: secondaryType,
           grade: grade, // تثبيت السنة المحددة وعدم الرجوع لأولى افتراضياً
+          className: className.isNotEmpty ? className : null,
           homeLocationUrl: locationUrl.isNotEmpty ? locationUrl : null,
           isBrethrenOfLord: isBrethren,
           photoUrl: photoUrl.isNotEmpty ? photoUrl : null,
@@ -602,6 +618,7 @@ class ExcelService {
         m.trackingStartDate != null
             ? DateFormat('yyyy-MM-dd').format(m.trackingStartDate!)
             : '',
+        m.className ?? '',
       ];
 
       for (int col = 0; col < rowData.length; col++) {
