@@ -88,9 +88,19 @@ service cloud.firestore {
           && (
             isConstAdmin()
             || (
-              resource.data.status in ['active', 'pending']
-              && request.resource.data.diff(resource.data).affectedKeys()
-                .hasOnly(['name', 'phone', 'locale'])
+              resource.data.status in ['active', 'pending', 'rejected']
+              && request.resource.data.get('grade', null) == resource.data.get('grade', null)
+              && (
+                request.resource.data.diff(resource.data).affectedKeys()
+                  .hasOnly(['name', 'phone', 'locale', 'updatedAt'])
+                || (
+                  resource.data.status in ['pending', 'rejected']
+                  && request.resource.data.diff(resource.data).affectedKeys()
+                    .hasOnly(['name', 'phone', 'locale', 'serviceId', 'serviceIds', 'status', 'role', 'rejectionReason', 'updatedAt'])
+                  && request.resource.data.role == 'pending'
+                  && request.resource.data.status == 'pending'
+                )
+              )
             )
           )
         )

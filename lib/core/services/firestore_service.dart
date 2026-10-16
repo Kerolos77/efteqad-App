@@ -486,7 +486,10 @@ class FirestoreService {
       data['role'] = 'pending';
       data['rejectionReason'] = FieldValue.delete();
     }
-    await _firestore.collection(AppConstants.colKhodam).doc(id).update(data);
+    await _firestore
+        .collection(AppConstants.colKhodam)
+        .doc(id)
+        .set(data, SetOptions(merge: true));
   }
 
   /// رفض طلب انضمام خادم مع سبب الرفض
