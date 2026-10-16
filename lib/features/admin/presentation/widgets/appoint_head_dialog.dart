@@ -6,11 +6,11 @@ import '../../../../core/models/khadem_model.dart';
 import '../../../../core/services/firestore_service.dart';
 import '../../../../core/utils/color_generator.dart';
 
-class AppointHeadDialog extends StatelessWidget {
+class AppointHeadDialog extends StatefulWidget {
   final String gradeKey;
   final String gradeTitle;
   final List<KhademModel> gradeKhodam;
-  final KhademModel? currentHead;
+  final List<KhademModel> currentHeads;
   final FirestoreService firestoreService;
   final String? serviceId;
 
@@ -19,7 +19,7 @@ class AppointHeadDialog extends StatelessWidget {
     required this.gradeKey,
     required this.gradeTitle,
     required this.gradeKhodam,
-    required this.currentHead,
+    this.currentHeads = const [],
     required this.firestoreService,
     this.serviceId,
   });
@@ -29,17 +29,21 @@ class AppointHeadDialog extends StatelessWidget {
     required String gradeKey,
     required String gradeTitle,
     required List<KhademModel> gradeKhodam,
-    required KhademModel? currentHead,
+    List<KhademModel> currentHeads = const [],
+    KhademModel? currentHead,
     required FirestoreService firestoreService,
     String? serviceId,
   }) {
+    final heads = currentHeads.isNotEmpty
+        ? currentHeads
+        : (currentHead != null ? [currentHead] : gradeKhodam.where((k) => k.isGradeAdmin).toList());
     showDialog(
       context: context,
       builder: (ctx) => AppointHeadDialog(
         gradeKey: gradeKey,
         gradeTitle: gradeTitle,
         gradeKhodam: gradeKhodam,
-        currentHead: currentHead,
+        currentHeads: heads,
         firestoreService: firestoreService,
         serviceId: serviceId,
       ),
@@ -47,21 +51,45 @@ class AppointHeadDialog extends StatelessWidget {
   }
 
   @override
+  State<AppointHeadDialog> createState() => _AppointHeadDialogState();
+}
+
+class _AppointHeadDialogState extends State<AppointHeadDialog> {
+  late Set<String> _adminIds;
+
+  @override
+  void initState() {
+    super.initState();
+    _adminIds = widget.gradeKhodam.where((k) => k.isGradeAdmin).map((k) => k.id).toSet();
+    if (_adminIds.isEmpty && widget.currentHeads.isNotEmpty) {
+      _adminIds.addAll(widget.currentHeads.map((k) => k.id));
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-      title: Text(
-        '${context.tr.appointGradeHeadBtn} - $gradeTitle',
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
+      title: Row(
+        children: [
+          Icon(Icons.workspace_premium_rounded, color: AppColors.primaryLight, size: 22.sp),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Text(
+              'أمناء السنة - ${widget.gradeTitle}',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
+            ),
+          ),
+        ],
       ),
       content: SizedBox(
         width: double.maxFinite,
-        child: gradeKhodam.isEmpty
+        child: widget.gradeKhodam.isEmpty
             ? Padding(
                 padding: EdgeInsets.symmetric(vertical: 20.h),
                 child: Text(
                   context.tr.messageNoServantsAssignedToYetAssignServants(
-                    gradeTitle,
+                    widget.gradeTitle,
                   ),
                   style: TextStyle(
                     fontSize: 13.sp,
@@ -72,11 +100,10 @@ class AppointHeadDialog extends StatelessWidget {
               )
             : ListView.builder(
                 shrinkWrap: true,
-                itemCount: gradeKhodam.length,
+                itemCount: widget.gradeKhodam.length,
                 itemBuilder: (ctx, index) {
-                  final k = gradeKhodam[index];
-                  final isCurrentAdmin =
-                      k.id == currentHead?.id || k.isGradeAdmin;
+                  final k = widget.gradeKhodam[index];
+                  final isCurrentAdmin = _adminIds.contains(k.id);
                   return ListTile(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.r),
@@ -109,38 +136,64 @@ class AppointHeadDialog extends StatelessWidget {
                       ),
                     ),
                     trailing: isCurrentAdmin
-                        ? Chip(
-                            label: Text(
-                              context.tr.messageCurrentHead,
-                              style: TextStyle(
-                                fontSize: 10.sp,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Chip(
+                                label: const Text(
+                                  'أمين سنة ✓',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                backgroundColor: AppColors.accentGold,
+                                visualDensity: VisualDensity.compact,
                               ),
-                            ),
-                            backgroundColor: AppColors.accentGold,
-                            visualDensity: VisualDensity.compact,
+                              SizedBox(width: 4.w),
+                              IconButton(
+                                icon: const Icon(Icons.remove_circle_outline, size: 20, color: AppColors.errorColor),
+                                tooltip: 'إلغاء صفة الأمين',
+                                onPressed: () async {
+                                  setState(() => _adminIds.remove(k.id));
+                                  await widget.firestoreService.removeGradeAdmin(k.id);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('تم إلغاء صفة أمين السنة للخادم ${k.name}'),
+                                        backgroundColor: AppColors.warningColor,
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
                           )
-                        : const Icon(Icons.check_circle_outline, size: 20),
-                    onTap: isCurrentAdmin
-                        ? null
-                        : () async {
-                            Navigator.pop(ctx);
-                            final messenger = ScaffoldMessenger.of(context);
-                            final successMsg =
-                                context.tr.gradeHeadUpdatedSuccess;
-                            await firestoreService.setGradeAdmin(
-                              gradeKey,
-                              k.id,
-                              serviceId: serviceId,
-                            );
-                            messenger.showSnackBar(
-                              SnackBar(
-                                content: Text(successMsg),
-                                backgroundColor: AppColors.successColor,
-                              ),
-                            );
-                          },
+                        : OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                            ),
+                            icon: const Icon(Icons.add_moderator_rounded, size: 16),
+                            label: const Text('تعيين كأمين', style: TextStyle(fontSize: 11)),
+                            onPressed: () async {
+                              setState(() => _adminIds.add(k.id));
+                              await widget.firestoreService.setGradeAdmin(
+                                widget.gradeKey,
+                                k.id,
+                                serviceId: widget.serviceId,
+                              );
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('تم تعيين ${k.name} كأمين للسنة بنجاح'),
+                                    backgroundColor: AppColors.successColor,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
                   );
                 },
               ),
@@ -148,7 +201,7 @@ class AppointHeadDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(context.tr.cancel),
+          child: const Text('إغلاق'),
         ),
       ],
     );

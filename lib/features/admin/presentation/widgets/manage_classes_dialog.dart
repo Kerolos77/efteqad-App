@@ -251,10 +251,13 @@ class _ManageClassesDialogState extends State<ManageClassesDialog> {
                                         fontSize: 13.5.sp,
                                       ),
                                     ),
-                                    if (c.servantName != null &&
-                                        c.servantName!.isNotEmpty)
+                                    if (c.servantNames.isNotEmpty ||
+                                        (c.servantName != null &&
+                                            c.servantName!.isNotEmpty))
                                       Text(
-                                        'الخادم: ${c.servantName}',
+                                        (c.servantNames.length > 1)
+                                            ? 'الخدام (${c.servantNames.length}): ${c.servantNames.join("، ")}'
+                                            : 'الخادم: ${c.servantName}',
                                         style: TextStyle(
                                           fontSize: 11.sp,
                                           color: AppColors.textMuted,

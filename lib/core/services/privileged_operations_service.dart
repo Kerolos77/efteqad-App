@@ -32,7 +32,7 @@ class PrivilegedOperationsService {
         });
   }
 
-  /// تعيين خادم كأمين لسنة دراسية معينة (بواسطة أمين المرحلة)
+  /// تعيين خادم كأمين لسنة دراسية معينة (بواسطة أمين المرحلة - يدعم تعدد الأمناء للسنة)
   Future<void> setGradeAdmin({
     required String khademId,
     required String grade,
@@ -48,32 +48,29 @@ class PrivilegedOperationsService {
       return;
     }
     final firestore = FirebaseFirestore.instance;
-    Query query = firestore
-        .collection(AppConstants.colKhodam)
-        .where('grade', isEqualTo: grade)
-        .where('role', isEqualTo: AppConstants.roleGradeAdmin);
-    if (serviceId != null) {
-      query = query.where('serviceId', isEqualTo: serviceId);
+    await firestore.collection(AppConstants.colKhodam).doc(khademId).update({
+      'grade': grade,
+      'role': AppConstants.roleGradeAdmin,
+      'status': 'active',
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// إلغاء صفة أمين السنة وإعادة الخادم لدور خادم عادي
+  Future<void> removeGradeAdmin({
+    required String khademId,
+  }) async {
+    if (_providedFunctions != null) {
+      final callable = _providedFunctions.httpsCallable('removeGradeAdmin');
+      await callable.call<Map<String, dynamic>>({
+        'khademId': khademId,
+      });
+      return;
     }
-    final currentAdmins = await query.get();
-    final batch = firestore.batch();
-    for (final doc in currentAdmins.docs) {
-      if (doc.id != khademId) {
-        batch.update(doc.reference, {
-          'role': AppConstants.roleServant,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      }
-    }
-    batch.update(
-      firestore.collection(AppConstants.colKhodam).doc(khademId),
-      {
-        'grade': grade,
-        'role': AppConstants.roleGradeAdmin,
-        'status': 'active',
-        'updatedAt': FieldValue.serverTimestamp(),
-      },
-    );
-    await batch.commit();
+    final firestore = FirebaseFirestore.instance;
+    await firestore.collection(AppConstants.colKhodam).doc(khademId).update({
+      'role': AppConstants.roleServant,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 }

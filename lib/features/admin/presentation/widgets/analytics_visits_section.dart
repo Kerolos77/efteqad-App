@@ -6,6 +6,7 @@ import '../../../../core/localization/app_formatters.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/khadem_model.dart';
 import '../../../../core/models/makhdom_model.dart';
+import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../../../core/utils/color_generator.dart';
 import '../../../khadem/presentation/widgets/analytics_stat_card.dart';
 
@@ -68,12 +69,12 @@ class AnalyticsVisitsSection extends StatelessWidget {
       children: [
         // كروت الإحصائيات السريعة
         GridView.count(
-          crossAxisCount: 2,
+          crossAxisCount: context.isDesktopScreen ? 4 : 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 10.h,
           crossAxisSpacing: 10.w,
-          childAspectRatio: 1.35,
+          childAspectRatio: context.isDesktopScreen ? 2.2 : 1.35,
           children: [
             AnalyticsStatCard(
               title: context.tr.totalMakhdomeenTitle,

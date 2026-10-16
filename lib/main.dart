@@ -211,6 +211,8 @@ class _EfteqadAppState extends State<EfteqadApp> {
             designSize: const Size(390, 844),
             minTextAdapt: true,
             splitScreenMode: true,
+            enableScaleWH: () => !kIsWeb,
+            enableScaleText: () => !kIsWeb,
             builder: (context, child) {
               return MaterialApp.router(
                 title: '${AppConstants.appName} - منظومة الافتقاد والخدمة',

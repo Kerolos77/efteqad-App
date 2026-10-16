@@ -406,14 +406,8 @@ class FirestoreService {
       _privilegedOps.setGradeAdmin(khademId: newAdminKhademId, grade: grade, serviceId: serviceId);
 
   /// إزالة صفة أمين السنة وتحويله لخادم عادي
-  Future<void> removeGradeAdmin(String khademId) async {
-    final profile = await getKhadem(khademId);
-    if (profile?.grade == null) throw StateError('Missing grade');
-    await _privilegedOps.setKhademGrade(
-      khademId: khademId,
-      grade: profile!.grade!,
-    );
-  }
+  Future<void> removeGradeAdmin(String khademId) =>
+      _privilegedOps.removeGradeAdmin(khademId: khademId);
 
   /// إضافة أو تحديث خادم بعد تسجيل الدخول
   Future<void> saveOrUpdateKhadem(KhademModel khadem) async {
@@ -1409,13 +1403,19 @@ class FirestoreService {
     required String gradeId,
     String? servantId,
     String? servantName,
+    List<String>? servantIds,
+    List<String>? servantNames,
   }) async {
+    final sIds = servantIds ?? (servantId != null && servantId.isNotEmpty ? [servantId] : <String>[]);
+    final sNames = servantNames ?? (servantName != null && servantName.isNotEmpty ? [servantName] : <String>[]);
     final docRef = await _firestore.collection(AppConstants.colClasses).add({
       'name': name.trim(),
       'serviceId': serviceId,
       'gradeId': gradeId,
-      'servantId': servantId,
-      'servantName': servantName,
+      'servantId': sIds.isNotEmpty ? sIds.first : null,
+      'servantName': sNames.isNotEmpty ? sNames.join('، ') : null,
+      'servantIds': sIds,
+      'servantNames': sNames,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
@@ -1428,11 +1428,17 @@ class FirestoreService {
     required String name,
     String? servantId,
     String? servantName,
+    List<String>? servantIds,
+    List<String>? servantNames,
   }) async {
+    final sIds = servantIds ?? (servantId != null && servantId.isNotEmpty ? [servantId] : <String>[]);
+    final sNames = servantNames ?? (servantName != null && servantName.isNotEmpty ? [servantName] : <String>[]);
     await _firestore.collection(AppConstants.colClasses).doc(classId).update({
       'name': name.trim(),
-      'servantId': servantId,
-      'servantName': servantName,
+      'servantId': sIds.isNotEmpty ? sIds.first : null,
+      'servantName': sNames.isNotEmpty ? sNames.join('، ') : null,
+      'servantIds': sIds,
+      'servantNames': sNames,
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }

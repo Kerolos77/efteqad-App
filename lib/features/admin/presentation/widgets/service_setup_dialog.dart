@@ -71,7 +71,16 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
         );
       }
     } else {
-      _applyTemplate('thanawy');
+      final count = widget.service.gradesCount > 0 ? widget.service.gradesCount : 3;
+      for (var i = 1; i <= count; i++) {
+        _grades.add(
+          _GradeInputItem(
+            id: 'grade_$i',
+            name: 'سنة $i',
+            order: i,
+          ),
+        );
+      }
     }
   }
 
@@ -82,122 +91,6 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
       g.dispose();
     }
     super.dispose();
-  }
-
-  void _applyTemplate(String type) {
-    setState(() {
-      for (final g in _grades) {
-        g.dispose();
-      }
-      _grades.clear();
-
-      switch (type) {
-        case 'ebtedai':
-          if (_nameController.text.trim().isEmpty || _nameController.text == 'خدمة جديدة') {
-            _nameController.text = 'المرحلة الابتدائية';
-          }
-          final names = [
-            'الصف الأول الابتدائي',
-            'الصف الثاني الابتدائي',
-            'الصف الثالث الابتدائي',
-            'الصف الرابع الابتدائي',
-            'الصف الخامس الابتدائي',
-            'الصف السادس الابتدائي',
-          ];
-          for (var i = 0; i < names.length; i++) {
-            _grades.add(
-              _GradeInputItem(
-                id: 'grade_${i + 1}',
-                name: names[i],
-                order: i + 1,
-              ),
-            );
-          }
-          break;
-
-        case 'e3dady':
-          if (_nameController.text.trim().isEmpty || _nameController.text == 'خدمة جديدة') {
-            _nameController.text = 'المرحلة الإعدادية';
-          }
-          final names = [
-            'الصف الأول الإعدادي',
-            'الصف الثاني الإعدادي',
-            'الصف الثالث الإعدادي',
-          ];
-          for (var i = 0; i < names.length; i++) {
-            _grades.add(
-              _GradeInputItem(
-                id: 'grade_${i + 1}',
-                name: names[i],
-                order: i + 1,
-              ),
-            );
-          }
-          break;
-
-        case 'thanawy':
-          if (_nameController.text.trim().isEmpty || _nameController.text == 'خدمة جديدة') {
-            _nameController.text = 'المرحلة الثانوية';
-          }
-          final names = [
-            'الصف الأول الثانوي',
-            'الصف الثاني الثانوي',
-            'الصف الثالث الثانوي',
-          ];
-          for (var i = 0; i < names.length; i++) {
-            _grades.add(
-              _GradeInputItem(
-                id: 'grade_${i + 1}',
-                name: names[i],
-                order: i + 1,
-              ),
-            );
-          }
-          break;
-
-        case 'gam3a':
-          if (_nameController.text.trim().isEmpty || _nameController.text == 'خدمة جديدة') {
-            _nameController.text = 'خدمة شباب وخريجين';
-          }
-          final names = [
-            'الفرقة الأولى',
-            'الفرقة الثانية',
-            'الفرقة الثالثة',
-            'الفرقة الرابعة / خريجين',
-          ];
-          for (var i = 0; i < names.length; i++) {
-            _grades.add(
-              _GradeInputItem(
-                id: 'grade_${i + 1}',
-                name: names[i],
-                order: i + 1,
-              ),
-            );
-          }
-          break;
-      }
-    });
-  }
-
-  void _addGrade() {
-    setState(() {
-      final nextOrder = _grades.length + 1;
-      _grades.add(
-        _GradeInputItem(
-          id: 'grade_$nextOrder',
-          name: 'الصف $nextOrder',
-          order: nextOrder,
-        ),
-      );
-    });
-  }
-
-  void _removeGrade(int index) {
-    if (_grades.length <= 1) return;
-    setState(() {
-      final removed = _grades.removeAt(index);
-      removed.dispose();
-    });
   }
 
   Future<void> _save() async {
@@ -216,7 +109,7 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
       if (_grades[i].nameController.text.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('يرجى تحديد اسم للصف رقم ${i + 1} أو حذفه'),
+            content: Text('يرجى تحديد اسم للسنة رقم ${i + 1}'),
             backgroundColor: AppColors.errorColor,
           ),
         );
@@ -307,14 +200,14 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'تخصيص وإعداد الخدمة',
+                          'تخصيص مسميات الخدمة والسنوات',
                           style: TextStyle(
                             fontSize: 18.sp,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
-                          'حدد اسم الخدمة وعدد السنوات وأسماء كل صف',
+                          'تعديل اسم الخدمة وتسمية كل سنة دراسية',
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: isDark ? Colors.white60 : AppColors.textMuted,
@@ -336,6 +229,35 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
                 child: ListView(
                   physics: const BouncingScrollPhysics(),
                   children: [
+                    // Lock Notice Banner
+                    Container(
+                      padding: EdgeInsets.all(12.r),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryLight.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: AppColors.primaryLight.withValues(alpha: 0.25),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.lock_outline_rounded,
+                            color: AppColors.primaryLight,
+                            size: 20.sp,
+                          ),
+                          SizedBox(width: 10.w),
+                          Expanded(
+                            child: Text(
+                              'عدد السنوات الدراسية (${_grades.length} سنوات) معتمد من إدارة المنظومة. يمكنك تعديل اسم الخدمة وإعادة تسمية كل سنة دراسية بما يناسب خدمتك.',
+                              style: TextStyle(fontSize: 12.sp, height: 1.4),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+
                     // 1. Service Name Field
                     Text(
                       'اسم الخدمة',
@@ -361,45 +283,7 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
                     ),
                     SizedBox(height: 18.h),
 
-                    // 2. Quick Templates
-                    Text(
-                      'نماذج سريعة للتعبئة',
-                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.sp),
-                    ),
-                    SizedBox(height: 8.h),
-                    Wrap(
-                      spacing: 8.w,
-                      runSpacing: 8.h,
-                      children: [
-                        _buildTemplateChip(
-                          label: 'ابتدائي (6 سنين)',
-                          icon: Icons.school_outlined,
-                          onTap: () => _applyTemplate('ebtedai'),
-                          isDark: isDark,
-                        ),
-                        _buildTemplateChip(
-                          label: 'إعدادي (3 سنين)',
-                          icon: Icons.menu_book_outlined,
-                          onTap: () => _applyTemplate('e3dady'),
-                          isDark: isDark,
-                        ),
-                        _buildTemplateChip(
-                          label: 'ثانوي (3 سنين)',
-                          icon: Icons.account_balance_outlined,
-                          onTap: () => _applyTemplate('thanawy'),
-                          isDark: isDark,
-                        ),
-                        _buildTemplateChip(
-                          label: 'جامعة / خريجين (4)',
-                          icon: Icons.military_tech_outlined,
-                          onTap: () => _applyTemplate('gam3a'),
-                          isDark: isDark,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 20.h),
-
-                    // 3. Grades List Header
+                    // 2. Grades List Header
                     Row(
                       children: [
                         Expanded(
@@ -409,7 +293,7 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
                             runSpacing: 4.h,
                             children: [
                               Text(
-                                'الصفوف والسنوات الدراسية',
+                                'السنوات الدراسية',
                                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.sp),
                               ),
                               Container(
@@ -419,7 +303,7 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
                                   borderRadius: BorderRadius.circular(10.r),
                                 ),
                                 child: Text(
-                                  '${_grades.length} صفوف',
+                                  '${_grades.length} سنوات',
                                   style: TextStyle(
                                     color: AppColors.primaryLight,
                                     fontSize: 11.sp,
@@ -430,20 +314,11 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
                             ],
                           ),
                         ),
-                        TextButton.icon(
-                          onPressed: _isSaving ? null : _addGrade,
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                            visualDensity: VisualDensity.compact,
-                          ),
-                          icon: Icon(Icons.add_circle_outline_rounded, size: 18.sp),
-                          label: Text('إضافة صف', style: TextStyle(fontSize: 12.sp)),
-                        ),
                       ],
                     ),
                     SizedBox(height: 8.h),
 
-                    // 4. Grades Items
+                    // 3. Grades Items
                     ..._grades.asMap().entries.map((entry) {
                       final idx = entry.key;
                       final grade = entry.value;
@@ -452,8 +327,8 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
                         controller: grade.nameController,
                         isSaving: _isSaving,
                         isDark: isDark,
-                        canDelete: _grades.length > 1,
-                        onDelete: () => _removeGrade(idx),
+                        canDelete: false,
+                        onDelete: () {},
                       );
                     }),
                   ],
@@ -508,43 +383,6 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTemplateChip({
-    required String label,
-    required IconData icon,
-    required VoidCallback onTap,
-    required bool isDark,
-  }) {
-    return InkWell(
-      onTap: _isSaving ? null : onTap,
-      borderRadius: BorderRadius.circular(10.r),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 7.h),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(10.r),
-          border: Border.all(
-            color: isDark ? Colors.white12 : const Color(0xFFE2E8F0),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 15.sp, color: AppColors.primaryLight),
-            SizedBox(width: 6.w),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11.5.sp,
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white70 : const Color(0xFF334155),
-              ),
-            ),
-          ],
         ),
       ),
     );

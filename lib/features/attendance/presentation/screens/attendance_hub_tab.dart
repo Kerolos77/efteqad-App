@@ -149,7 +149,7 @@ class _AttendanceHubTabState extends State<AttendanceHubTab> {
     if (!mounted) return;
 
     if (matchingTask != null) {
-      Navigator.of(context).push(
+      Navigator.of(context, rootNavigator: true).push(
         MaterialPageRoute<void>(
           builder: (_) => BlocProvider.value(
             value: sessionCubit,
@@ -161,7 +161,7 @@ class _AttendanceHubTabState extends State<AttendanceHubTab> {
         ),
       );
     } else {
-      Navigator.of(context).push(
+      Navigator.of(context, rootNavigator: true).push(
         MaterialPageRoute<void>(
           builder: (_) => BlocProvider.value(
             value: sessionCubit,

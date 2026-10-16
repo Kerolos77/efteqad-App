@@ -118,99 +118,119 @@ class AppDrawer extends StatelessWidget {
                   child: ListView(
                     padding: EdgeInsets.symmetric(horizontal: 14.w),
                     children: [
-                      if (isAdmin) ...[
+                      if (session.isStageAdmin) ...[
                         AppDrawerTile(
                           icon: Icons.dashboard_outlined,
-                          title: context.tr.mainDashboard,
+                          title: 'لوحة تحكم المرحلة',
                           onTap: () {
-                            final target = AppRoutes.landing(session);
                             Navigator.pop(context);
-                            context.go(target);
+                            context.go(AppRoutes.stagePeoplePath);
                           },
                           isDark: isDark,
                         ),
-                        if (session.isStageAdmin)
-                          StreamBuilder<ServiceModel?>(
-                            stream: (RouterServices.maybeOf(context)?.firestore ??
-                                    FirestoreService())
-                                .watchService(session.serviceId),
-                            builder: (context, snap) {
-                              final service = snap.data;
-                              if (service == null) return const SizedBox.shrink();
-                              return Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  AppDrawerTile(
-                                    icon: Icons.tune_rounded,
-                                    title: 'تخصيص الخدمة والصفوف',
-                                    color: AppColors.sacredGold,
-                                    onTap: () {
-                                      Navigator.pop(context);
-                                      ServiceSetupDialog.show(
-                                        context,
-                                        service: service,
-                                        firestoreService:
-                                            RouterServices.maybeOf(context)
-                                                    ?.firestore ??
-                                                FirestoreService(),
-                                      );
-                                    },
-                                    isDark: isDark,
-                                  ),
-                                  if (service.grades.isNotEmpty)
-                                    Theme(
-                                      data: Theme.of(context).copyWith(
-                                        dividerColor: Colors.transparent,
-                                      ),
-                                      child: ExpansionTile(
-                                        tilePadding: EdgeInsets.symmetric(
-                                          horizontal: 16.w,
-                                          vertical: 0,
-                                        ),
-                                        leading: Icon(
-                                          Icons.school_outlined,
-                                          size: 20.r,
-                                        ),
-                                        title: Text(
-                                          'صفوف الخدمة (${service.grades.length})',
-                                          style: TextStyle(
-                                            fontSize: 13.sp,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        children: service.grades.map((g) {
-                                          return ListTile(
-                                            dense: true,
-                                            contentPadding:
-                                                EdgeInsetsDirectional.only(
-                                              start: 36.w,
-                                              end: 16.w,
-                                            ),
-                                            leading: Icon(
-                                              Icons.arrow_right_rounded,
-                                              size: 20.r,
-                                            ),
-                                            title: Text(
-                                              g.name,
-                                              style: TextStyle(
-                                                fontSize: 12.5.sp,
-                                              ),
-                                            ),
-                                            onTap: () {
-                                              Navigator.pop(context);
-                                              context.go(
-                                                AppRoutes.gradeMakhdomeen(g.id),
-                                              );
-                                            },
-                                          );
-                                        }).toList(),
-                                      ),
+                        StreamBuilder<ServiceModel?>(
+                          stream: (RouterServices.maybeOf(context)?.firestore ??
+                                  FirestoreService())
+                              .watchService(session.serviceId),
+                          builder: (context, snap) {
+                            final service = snap.data;
+                            if (service == null) return const SizedBox.shrink();
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                AppDrawerTile(
+                                  icon: Icons.tune_rounded,
+                                  title: 'تخصيص مسميات الخدمة والسنوات',
+                                  color: AppColors.sacredGold,
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    ServiceSetupDialog.show(
+                                      context,
+                                      service: service,
+                                      firestoreService:
+                                          RouterServices.maybeOf(context)
+                                                  ?.firestore ??
+                                              FirestoreService(),
+                                    );
+                                  },
+                                  isDark: isDark,
+                                ),
+                                if (service.grades.isNotEmpty)
+                                  Theme(
+                                    data: Theme.of(context).copyWith(
+                                      dividerColor: Colors.transparent,
                                     ),
-                                ],
-                              );
+                                    child: ExpansionTile(
+                                      tilePadding: EdgeInsets.symmetric(
+                                        horizontal: 16.w,
+                                        vertical: 0,
+                                      ),
+                                      leading: Icon(
+                                        Icons.school_outlined,
+                                        size: 20.r,
+                                      ),
+                                      title: Text(
+                                        'سنوات المرحلة (${service.grades.length})',
+                                        style: TextStyle(
+                                          fontSize: 13.sp,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      children: service.grades.map((g) {
+                                        return ListTile(
+                                          dense: true,
+                                          contentPadding:
+                                              EdgeInsetsDirectional.only(
+                                            start: 36.w,
+                                            end: 16.w,
+                                          ),
+                                          leading: Icon(
+                                            Icons.arrow_right_rounded,
+                                            size: 20.r,
+                                          ),
+                                          title: Text(
+                                            g.name,
+                                            style: TextStyle(
+                                              fontSize: 12.5.sp,
+                                            ),
+                                          ),
+                                          onTap: () {
+                                            Navigator.pop(context);
+                                            context.go(
+                                              AppRoutes.gradeMakhdomeen(g.id),
+                                            );
+                                          },
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+                        if (onOpenExcel != null)
+                          AppDrawerTile(
+                            icon: Icons.table_chart_outlined,
+                            title: context.tr.excelTools,
+                            onTap: () {
+                              Navigator.pop(context);
+                              onOpenExcel!();
                             },
+                            isDark: isDark,
                           ),
+                      ] else if (session.isGradeAdmin) ...[
+                        AppDrawerTile(
+                          icon: Icons.school_outlined,
+                          title: 'لوحة تحكم السنة',
+                          onTap: () {
+                            Navigator.pop(context);
+                            if (session.grade != null) {
+                              context.go(AppRoutes.gradeMakhdomeen(session.grade!));
+                            }
+                          },
+                          isDark: isDark,
+                        ),
                         if (onOpenExcel != null)
                           AppDrawerTile(
                             icon: Icons.table_chart_outlined,

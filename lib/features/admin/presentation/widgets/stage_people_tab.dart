@@ -129,15 +129,16 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
     required String gradeKey,
     required String gradeTitle,
     required List<KhademModel> gradeKhodam,
-    required KhademModel? currentHead,
+    required List<KhademModel> currentHeads,
   }) {
     AppointHeadDialog.show(
       context,
       gradeKey: gradeKey,
       gradeTitle: gradeTitle,
       gradeKhodam: gradeKhodam,
-      currentHead: currentHead,
+      currentHeads: currentHeads,
       firestoreService: _firestoreService,
+      serviceId: widget.service?.id,
     );
   }
 
@@ -185,7 +186,7 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  'حدد عدد سنوات / صفوف الخدمة وتسمية كل صف لبدء تسكين الخدام والمخدومين',
+                  'تسمية سنوات الخدمة وتخصيص اسمها لبدء تسكين الخدام والمخدومين',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 12.sp, color: AppColors.textMuted),
                 ),
@@ -197,7 +198,7 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
                     firestoreService: _firestoreService,
                   ),
                   icon: Icon(Icons.tune_rounded, size: 18.sp),
-                  label: Text('إعداد صفوف الخدمة الآن', style: TextStyle(fontSize: 13.sp)),
+                  label: Text('تخصيص مسميات السنوات الآن', style: TextStyle(fontSize: 13.sp)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryLight,
                     foregroundColor: Colors.white,
@@ -291,7 +292,7 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
             if (widget.service != null)
               IconButton(
                 icon: Icon(Icons.tune_rounded, size: 20.sp),
-                tooltip: 'تعديل الخدمة والصفوف',
+                tooltip: 'تخصيص مسميات الخدمة والسنوات',
                 onPressed: () => ServiceSetupDialog.show(
                   context,
                   service: widget.service!,
@@ -302,22 +303,19 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
         ),
         SizedBox(height: 12.h),
 
-        // بطاقات أمناء الصفوف ديناميكياً
+        // بطاقات أمناء السنوات الدراسية ديناميكياً
         ...grades.map((g) {
           final gradeKhodam = widget.allKhodam
               .where((k) => k.grade == g.id)
               .toList();
-          KhademModel? headKhadem;
-          try {
-            headKhadem = gradeKhodam.firstWhere((k) => k.isGradeAdmin);
-          } catch (_) {}
+          final headKhodam = gradeKhodam.where((k) => k.isGradeAdmin).toList();
 
           return Padding(
             padding: EdgeInsets.only(bottom: 8.h),
             child: StageGradeHeadCard(
               gradeKey: g.id,
               gradeTitle: g.name,
-              headKhadem: headKhadem,
+              headKhodam: headKhodam,
               gradeKhodam: gradeKhodam,
               color: _getGradeColor(g.order),
               isDark: isDark,
@@ -326,7 +324,7 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
                 gradeKey: g.id,
                 gradeTitle: g.name,
                 gradeKhodam: gradeKhodam,
-                currentHead: headKhadem,
+                currentHeads: headKhodam,
               ),
             ),
           );

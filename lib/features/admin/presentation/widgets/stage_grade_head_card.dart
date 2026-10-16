@@ -7,7 +7,7 @@ import '../../../../core/models/khadem_model.dart';
 class StageGradeHeadCard extends StatelessWidget {
   final String gradeKey;
   final String gradeTitle;
-  final KhademModel? headKhadem;
+  final List<KhademModel> headKhodam;
   final List<KhademModel> gradeKhodam;
   final Color color;
   final bool isDark;
@@ -18,7 +18,7 @@ class StageGradeHeadCard extends StatelessWidget {
     super.key,
     required this.gradeKey,
     required this.gradeTitle,
-    required this.headKhadem,
+    required this.headKhodam,
     required this.gradeKhodam,
     required this.color,
     required this.isDark,
@@ -28,6 +28,11 @@ class StageGradeHeadCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasHeads = headKhodam.isNotEmpty;
+    final headsText = hasHeads
+        ? headKhodam.map((k) => k.name).join('، ')
+        : context.tr.noGradeHeadAssigned;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -64,6 +69,24 @@ class StageGradeHeadCard extends StatelessWidget {
                             fontSize: 13.5.sp,
                           ),
                         ),
+                        if (headKhodam.length > 1) ...[
+                          SizedBox(width: 6.w),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.h),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                            child: Text(
+                              '${headKhodam.length} أمناء',
+                              style: TextStyle(
+                                fontSize: 10.sp,
+                                fontWeight: FontWeight.bold,
+                                color: color,
+                              ),
+                            ),
+                          ),
+                        ],
                         SizedBox(width: 6.w),
                         Icon(
                           Icons.open_in_new_rounded,
@@ -74,16 +97,14 @@ class StageGradeHeadCard extends StatelessWidget {
                     ),
                     SizedBox(height: 2.h),
                     Text(
-                      headKhadem != null
-                          ? headKhadem!.name
-                          : context.tr.noGradeHeadAssigned,
+                      headsText,
                       style: TextStyle(
                         fontSize: 12.sp,
-                        fontWeight: headKhadem != null
-                            ? FontWeight.w600
-                            : FontWeight.normal,
-                        color: headKhadem != null ? null : AppColors.textMuted,
+                        fontWeight: hasHeads ? FontWeight.w600 : FontWeight.normal,
+                        color: hasHeads ? null : AppColors.textMuted,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -101,8 +122,8 @@ class StageGradeHeadCard extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  headKhadem != null
-                      ? context.tr.changeGradeHeadBtn
+                  hasHeads
+                      ? 'إدارة الأمناء'
                       : context.tr.appointGradeHeadBtn,
                   style: TextStyle(
                     fontSize: 11.sp,

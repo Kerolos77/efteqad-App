@@ -6,6 +6,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/attendance_session_model.dart';
 import '../../../../core/models/makhdom_model.dart';
 import '../../../../core/models/visit_model.dart';
+import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../../../core/services/attendance_analytics_service.dart';
 import 'absence_alerts_section.dart';
 import 'analytics_stat_card.dart';
@@ -145,12 +146,12 @@ class _MyAnalyticsTabState extends State<MyAnalyticsTab> {
             ),
           // 1. كروت المؤشرات السريعة لمجموعتي
           GridView.count(
-            crossAxisCount: 2,
+            crossAxisCount: context.isDesktopScreen ? 4 : 2,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             mainAxisSpacing: 10.h,
             crossAxisSpacing: 10.w,
-            childAspectRatio: 1.35,
+            childAspectRatio: context.isDesktopScreen ? 2.2 : 1.35,
             children: [
               AnalyticsStatCard(
                 title: context.tr.servantGroupAttendanceRate,

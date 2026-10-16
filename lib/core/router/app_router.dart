@@ -708,7 +708,7 @@ class _StageShellScaffold extends StatelessWidget {
               if (service != null)
                 IconButton(
                   icon: const Icon(Icons.tune_rounded),
-                  tooltip: 'تخصيص الخدمة والصفوف',
+                  tooltip: 'تخصيص مسميات الخدمة والسنوات',
                   onPressed: () => ServiceSetupDialog.show(
                     context,
                     service: service,
@@ -750,7 +750,7 @@ class _StageShellScaffold extends StatelessWidget {
               if (service == null) return const SizedBox.shrink();
               return IconButton(
                 icon: const Icon(Icons.tune_rounded),
-                tooltip: 'تخصيص الخدمة والصفوف',
+                tooltip: 'تخصيص مسميات الخدمة والسنوات',
                 onPressed: () => ServiceSetupDialog.show(
                   context,
                   service: service,
@@ -931,28 +931,6 @@ class _GradeShellScaffoldState extends State<_GradeShellScaffold> {
               ),
             ],
             actions: [
-              if (session.isStageAdmin)
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 4),
-                  child: TextButton.icon(
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.sacredGold,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                    ),
-                    icon: const Icon(Icons.dashboard_outlined, size: 18),
-                    label: const Text(
-                      'لوحة المرحلة',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    onPressed: () => context.go(AppRoutes.stagePeoplePath),
-                  ),
-                ),
               IconButton(
                 icon: const Icon(Icons.table_chart_outlined, size: 20),
                 tooltip: 'عمليات Excel (استيراد وتصدير)',
@@ -998,7 +976,7 @@ class _GradeShellScaffoldState extends State<_GradeShellScaffold> {
 
         return Scaffold(
           drawer: AppDrawer(
-            isAdmin: true,
+            isAdmin: session.isStageAdmin,
             onOpenExcel: () async {
               final makhdomeen = await firestoreService.getMakhdomeenByGrade(
                 grade,

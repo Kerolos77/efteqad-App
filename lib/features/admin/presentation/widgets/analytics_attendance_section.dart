@@ -5,6 +5,7 @@ import '../../../../core/localization/app_formatters.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/attendance_session_model.dart';
 import '../../../../core/models/makhdom_model.dart';
+import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../../../core/services/attendance_analytics_service.dart';
 import '../../../khadem/presentation/widgets/analytics_stat_card.dart';
 
@@ -92,12 +93,12 @@ class AnalyticsAttendanceSection extends StatelessWidget {
       children: [
         // كروت نسب الحضور الرئيسية
         GridView.count(
-          crossAxisCount: 2,
+          crossAxisCount: context.isDesktopScreen ? 3 : 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 10.h,
           crossAxisSpacing: 10.w,
-          childAspectRatio: 1.35,
+          childAspectRatio: context.isDesktopScreen ? 2.2 : 1.35,
           children: [
             AnalyticsStatCard(
               title: context.tr.messageOverallAttendanceRate,
