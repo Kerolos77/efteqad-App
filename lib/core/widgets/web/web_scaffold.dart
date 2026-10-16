@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../features/common/widgets/notifications_sheet.dart';
 import '../../constants/constants.dart';
 import '../../localization/app_localizations.dart';
@@ -108,13 +109,13 @@ class WebScaffold extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
             ),
             if (subtitle != null)
               Text(
                 subtitle!,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 11.sp,
                   color: theme.textTheme.bodySmall?.color,
                 ),
               ),
@@ -127,6 +128,7 @@ class WebScaffold extends StatelessWidget {
         ],
       ),
       drawer: Drawer(
+        width: 280.w,
         child: _WebSidebar(
           destinations: destinations,
           selectedIndex: selectedIndex,
@@ -232,7 +234,7 @@ class _WebSidebar extends StatelessWidget {
     final primaryColor = theme.colorScheme.primary;
 
     return Container(
-      width: isDrawerMode ? 280 : 260,
+      width: isDrawerMode ? 280.w : 260,
       color: theme.cardColor,
       child: SafeArea(
         child: Column(
@@ -240,16 +242,19 @@ class _WebSidebar extends StatelessWidget {
           children: [
             // App Branding Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+              padding: isDrawerMode
+                  ? EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 16.h)
+                  : const EdgeInsets.fromLTRB(20, 24, 20, 16),
               child: Row(
                 children: [
                   Container(
-                    width: 44,
-                    height: 44,
+                    width: isDrawerMode ? 44.r : 44,
+                    height: isDrawerMode ? 44.r : 44,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius:
+                          BorderRadius.circular(isDrawerMode ? 12.r : 12),
                       border: Border.all(
-                        color: AppConstants.sacredGold.withValues(alpha: 0.35),
+                        color: AppColors.sacredGold.withValues(alpha: 0.35),
                         width: 1.5,
                       ),
                       boxShadow: [
@@ -266,15 +271,15 @@ class _WebSidebar extends StatelessWidget {
                       fit: BoxFit.cover,
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  SizedBox(width: isDrawerMode ? 14.w : 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           AppConstants.appName,
-                          style: const TextStyle(
-                            fontSize: 18,
+                          style: TextStyle(
+                            fontSize: isDrawerMode ? 18.sp : 18,
                             fontWeight: FontWeight.w900,
                             letterSpacing: -0.5,
                           ),
@@ -282,7 +287,7 @@ class _WebSidebar extends StatelessWidget {
                         Text(
                           'نسخة الويب المتجاوبة',
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: isDrawerMode ? 11.sp : 11,
                             fontWeight: FontWeight.w500,
                             color: isDark ? Colors.grey[400] : Colors.grey[600],
                           ),
@@ -299,19 +304,24 @@ class _WebSidebar extends StatelessWidget {
             // User Info Tile
             if (userProfile != null)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: isDrawerMode
+                    ? EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h)
+                    : const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: isDrawerMode
+                      ? EdgeInsets.all(12.r)
+                      : const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.04)
                         : Colors.grey.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius:
+                        BorderRadius.circular(isDrawerMode ? 12.r : 12),
                   ),
                   child: Row(
                     children: [
                       CircleAvatar(
-                        radius: 18,
+                        radius: isDrawerMode ? 18.r : 18,
                         backgroundColor: primaryColor.withValues(alpha: 0.15),
                         child: Text(
                           userProfile.name.isNotEmpty
@@ -320,34 +330,34 @@ class _WebSidebar extends StatelessWidget {
                           style: TextStyle(
                             color: primaryColor,
                             fontWeight: FontWeight.bold,
-                            fontSize: 15,
+                            fontSize: isDrawerMode ? 15.sp : 15,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      SizedBox(width: isDrawerMode ? 10.w : 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               userProfile.name,
-                              style: const TextStyle(
-                                fontSize: 13,
+                              style: TextStyle(
+                                fontSize: isDrawerMode ? 13.sp : 13,
                                 fontWeight: FontWeight.w700,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 2),
+                            SizedBox(height: isDrawerMode ? 2.h : 2),
                             Text(
                               sessionState.isStageAdmin
                                   ? 'أمين مرحلة'
                                   : sessionState.isGradeAdmin
                                       ? 'أمين سنة'
                                       : tr.servantRole,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppConstants.sacredGold,
+                              style: TextStyle(
+                                fontSize: isDrawerMode ? 11.sp : 11,
+                                color: AppColors.sacredGold,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -359,14 +369,17 @@ class _WebSidebar extends StatelessWidget {
                 ),
               ),
 
-            const SizedBox(height: 8),
+            SizedBox(height: isDrawerMode ? 8.h : 8),
 
             // Navigation Destinations List
             Expanded(
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: isDrawerMode
+                    ? EdgeInsets.symmetric(horizontal: 12.w)
+                    : const EdgeInsets.symmetric(horizontal: 12),
                 itemCount: destinations.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 4),
+                separatorBuilder: (_, __) =>
+                    SizedBox(height: isDrawerMode ? 4.h : 4),
                 itemBuilder: (context, index) {
                   final dest = destinations[index];
                   final isSelected = selectedIndex == index;
@@ -375,6 +388,7 @@ class _WebSidebar extends StatelessWidget {
                     destination: dest,
                     isSelected: isSelected,
                     onTap: () => onDestinationSelected(index),
+                    isDrawerMode: isDrawerMode,
                   );
                 },
               ),
@@ -384,21 +398,27 @@ class _WebSidebar extends StatelessWidget {
 
             // Footer Actions: Theme Toggle & Logout
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: isDrawerMode
+                  ? EdgeInsets.all(12.r)
+                  : const EdgeInsets.all(12),
               child: Row(
                 children: [
                   // Theme Mode Button
                   IconButton(
                     icon: Icon(
-                      isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                      size: 20,
+                      isDark
+                          ? Icons.light_mode_rounded
+                          : Icons.dark_mode_rounded,
+                      size: isDrawerMode ? 20.r : 20,
                     ),
                     tooltip: isDark ? 'الوضع الفاتح' : 'الوضع الداكن',
                     onPressed: () {
                       final settings = context.read<SettingsCubit>();
                       final current = settings.state.themeMode;
                       settings.setThemeMode(
-                        current == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark,
+                        current == ThemeMode.dark
+                            ? ThemeMode.light
+                            : ThemeMode.dark,
                       );
                     },
                   ),
@@ -406,16 +426,20 @@ class _WebSidebar extends StatelessWidget {
                   // Logout Button
                   TextButton.icon(
                     style: TextButton.styleFrom(
-                      foregroundColor: AppConstants.errorColor,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
+                      foregroundColor: AppColors.errorColor,
+                      padding: isDrawerMode
+                          ? EdgeInsets.symmetric(
+                              horizontal: 12.w, vertical: 8.h)
+                          : const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
                     ),
-                    icon: const Icon(Icons.logout_rounded, size: 18),
+                    icon: Icon(Icons.logout_rounded,
+                        size: isDrawerMode ? 18.r : 18),
                     label: Text(
                       tr.signOut,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                          fontSize: isDrawerMode ? 13.sp : 13,
+                          fontWeight: FontWeight.w700),
                     ),
                     onPressed: () async {
                       final confirm = await showDialog<bool>(
@@ -430,7 +454,7 @@ class _WebSidebar extends StatelessWidget {
                             ),
                             FilledButton(
                               style: FilledButton.styleFrom(
-                                backgroundColor: AppConstants.errorColor,
+                                backgroundColor: AppColors.errorColor,
                               ),
                               onPressed: () => Navigator.pop(ctx, true),
                               child: Text(tr.signOut),
@@ -458,32 +482,37 @@ class _WebNavItem extends StatelessWidget {
   final WebNavDestination destination;
   final bool isSelected;
   final VoidCallback onTap;
+  final bool isDrawerMode;
 
   const _WebNavItem({
     required this.destination,
     required this.isSelected,
     required this.onTap,
+    this.isDrawerMode = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
+    final borderRadius = BorderRadius.circular(isDrawerMode ? 10.r : 10);
 
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: borderRadius,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: borderRadius,
         hoverColor: primaryColor.withValues(alpha: 0.06),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+          padding: isDrawerMode
+              ? EdgeInsets.symmetric(horizontal: 14.w, vertical: 11.h)
+              : const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
           decoration: BoxDecoration(
             color: isSelected
                 ? primaryColor.withValues(alpha: 0.12)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: borderRadius,
             border: isSelected
                 ? Border.all(
                     color: primaryColor.withValues(alpha: 0.3),
@@ -497,17 +526,17 @@ class _WebNavItem extends StatelessWidget {
                 isSelected
                     ? (destination.selectedIcon ?? destination.icon)
                     : destination.icon,
-                size: 20,
+                size: isDrawerMode ? 20.r : 20,
                 color: isSelected
                     ? primaryColor
                     : theme.iconTheme.color?.withValues(alpha: 0.7),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: isDrawerMode ? 14.w : 14),
               Expanded(
                 child: Text(
                   destination.label,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: isDrawerMode ? 14.sp : 14,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                     color: isSelected
                         ? primaryColor
@@ -518,17 +547,20 @@ class _WebNavItem extends StatelessWidget {
               ),
               if (destination.badge != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  padding: isDrawerMode
+                      ? EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h)
+                      : const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppConstants.sacredGold,
-                    borderRadius: BorderRadius.circular(10),
+                    color: AppColors.sacredGold,
+                    borderRadius:
+                        BorderRadius.circular(isDrawerMode ? 10.r : 10),
                   ),
                   child: Text(
                     destination.badge!,
-                    style: const TextStyle(
-                      fontSize: 11,
+                    style: TextStyle(
+                      fontSize: isDrawerMode ? 11.sp : 11,
                       fontWeight: FontWeight.bold,
-                      color: AppConstants.primaryNavy,
+                      color: AppColors.primaryNavy,
                     ),
                   ),
                 ),

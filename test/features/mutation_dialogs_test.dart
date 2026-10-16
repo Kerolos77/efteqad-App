@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:efteqad/features/admin/presentation/widgets/assign_makhdomeen_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:efteqad/core/localization/app_localizations.dart';
@@ -42,20 +43,23 @@ class DraftReadGate extends VisitDraftStore {
   Future<List<Map<String, dynamic>>> getDrafts(String uid) => result.future;
 }
 
-Widget app(Widget Function(BuildContext) dialog) => MaterialApp(
-  locale: const Locale('en'),
-  supportedLocales: const [Locale('en'), Locale('ar')],
-  localizationsDelegates: const [
-    AppLocalizations.delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-  ],
-  home: Scaffold(
-    body: Builder(
-      builder: (context) => TextButton(
-        onPressed: () => showDialog(context: context, builder: dialog),
-        child: const Text('Open'),
+Widget app(Widget Function(BuildContext) dialog) => ScreenUtilInit(
+  designSize: const Size(800, 600),
+  builder: (context, child) => MaterialApp(
+    locale: const Locale('en'),
+    supportedLocales: const [Locale('en'), Locale('ar')],
+    localizationsDelegates: const [
+      AppLocalizations.delegate,
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
+    home: Scaffold(
+      body: Builder(
+        builder: (context) => TextButton(
+          onPressed: () => showDialog(context: context, builder: dialog),
+          child: const Text('Open'),
+        ),
       ),
     ),
   ),

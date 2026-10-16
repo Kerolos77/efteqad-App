@@ -2,15 +2,17 @@ import 'package:efteqad/core/localization/app_formatters.dart';
 import 'package:efteqad/core/errors/app_failure.dart';
 import 'package:efteqad/core/localization/domain_labels.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../../../core/constants/constants.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/khadem_model.dart';
 import '../../../../core/models/makhdom_model.dart';
 import '../../../../core/models/makhdom_profile_patch.dart';
-import '../../../../core/models/class_model.dart';
 import '../../../../core/services/firestore_service.dart';
 import '../../../../core/services/trusted_mutations.dart';
+import 'makhdom_age_selector.dart';
+import 'makhdom_servant_class_selector.dart';
 
 class AddEditMakhdomDialog extends StatefulWidget {
   final MakhdomModel? initialMakhdom;
@@ -75,7 +77,6 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
   Future<void> _getCurrentLocation() async {
     setState(() => _isLoadingLocation = true);
     try {
-      // تحقق من الأذونات
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -118,7 +119,7 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.tr.locationFetchedSuccess),
-            backgroundColor: AppConstants.successColor,
+            backgroundColor: AppColors.successColor,
           ),
         );
       }
@@ -394,7 +395,7 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.tr.makhdomSavedSuccess),
-            backgroundColor: AppConstants.successColor,
+            backgroundColor: AppColors.successColor,
           ),
         );
       }
@@ -405,7 +406,7 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
             content: Text(
               AppFailure.fromException(e).localizedMessage(context.tr),
             ),
-            backgroundColor: AppConstants.errorColor,
+            backgroundColor: AppColors.errorColor,
           ),
         );
       }
@@ -421,28 +422,28 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.only(top: 14, bottom: 8),
+      padding: EdgeInsets.only(top: 14.h, bottom: 8.h),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: AppConstants.primaryLight),
-          const SizedBox(width: 8),
+          Icon(icon, size: 18.sp, color: AppColors.primaryLight),
+          SizedBox(width: 8.w),
           Text(
             title,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 13.sp,
               fontWeight: FontWeight.bold,
               color: isDark
-                  ? AppConstants.textSecondaryDark
-                  : AppConstants.textSecondary,
+                  ? AppColors.textSecondaryDark
+                  : AppColors.textSecondary,
               letterSpacing: 0.2,
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8.w),
           Expanded(
             child: Divider(
               color: isDark
-                  ? AppConstants.borderDark
-                  : AppConstants.borderLight,
+                  ? AppColors.borderDark
+                  : AppColors.borderLight,
               thickness: 1,
             ),
           ),
@@ -458,44 +459,41 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
         widget.initialMakhdom != null && widget.initialMakhdom!.id.isNotEmpty;
 
     return Dialog(
-      backgroundColor: isDark ? AppConstants.cardDark : Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.94,
+      backgroundColor: isDark ? AppColors.cardDark : Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
+      insetPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
+      child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.88,
+          maxWidth: 580.w,
+          maxHeight: MediaQuery.of(context).size.height * 0.90,
         ),
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 16.h),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // Header
+              // Dialog Header
               Row(
                 children: [
                   Container(
-                    width: 42,
-                    height: 42,
+                    padding: EdgeInsets.all(10.r),
                     decoration: BoxDecoration(
-                      color:
-                          (isEdit
-                                  ? AppConstants.accentBlue
-                                  : AppConstants.primaryLight)
-                              .withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(14),
+                      color: isEdit
+                          ? AppColors.accentBlue.withValues(alpha: 0.12)
+                          : AppColors.primaryLight.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14.r),
                     ),
                     child: Icon(
                       isEdit
-                          ? Icons.edit_note_rounded
+                          ? Icons.person_outline_rounded
                           : Icons.person_add_alt_1_rounded,
                       color: isEdit
-                          ? AppConstants.accentBlue
-                          : AppConstants.primaryLight,
-                      size: 22,
+                          ? AppColors.accentBlue
+                          : AppColors.primaryLight,
+                      size: 24.sp,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 14.w),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -505,51 +503,45 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                               ? context.tr.editMakhdomTitle
                               : context.tr.addMakhdomTitle,
                           style: TextStyle(
-                            fontSize: 17,
+                            fontSize: 18.sp,
                             fontWeight: FontWeight.bold,
                             color: isDark
                                 ? Colors.white
-                                : AppConstants.textPrimary,
+                                : AppColors.textPrimary,
                           ),
                         ),
+                        SizedBox(height: 2.h),
                         Text(
                           isEdit
-                              ? (context
-                                    .tr
-                                    .messageUpdateRecordAndPersonalDetails)
-                              : (context
-                                    .tr
-                                    .messageInsertNewMakhdomToCareRegistry),
+                              ? context.tr.messageUpdateRecordAndPersonalDetails
+                              : context.tr.messageInsertNewMakhdomToCareRegistry,
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 12.sp,
                             color: isDark
-                                ? AppConstants.textMutedDark
-                                : AppConstants.textMuted,
+                                ? AppColors.textMutedDark
+                                : AppColors.textMuted,
                           ),
                         ),
                       ],
                     ),
                   ),
                   IconButton(
+                    icon: Icon(Icons.close_rounded, size: 22.sp),
+                    color: isDark ? Colors.white54 : Colors.black45,
                     onPressed: () => Navigator.pop(context),
-                    icon: Icon(
-                      Icons.close_rounded,
-                      color: isDark
-                          ? AppConstants.textMutedDark
-                          : AppConstants.textMuted,
-                    ),
-                    splashRadius: 20,
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 12.h),
 
-              // Form fields
+              // Form fields in a smooth scrollable view
               Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
-                    children: [
+                child: Form(
+                  key: _formKey,
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      children: [
                       // Section 1: البيانات الشخصية والاتصال
                       _buildSectionHeader(
                         context,
@@ -563,16 +555,16 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                         controller: _nameController,
                         decoration: InputDecoration(
                           labelText: context.tr.fullNameRequiredLabel,
-                          prefixIcon: const Icon(
+                          prefixIcon: Icon(
                             Icons.person_rounded,
-                            size: 20,
+                            size: 20.sp,
                           ),
                         ),
                         validator: (v) => (v == null || v.trim().isEmpty)
                             ? context.tr.fullNameValidation
                             : null,
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10.h),
 
                       // 2. رقم تليفون المخدوم
                       TextFormField(
@@ -582,314 +574,28 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                         textDirection: TextDirection.ltr,
                         decoration: InputDecoration(
                           labelText: context.tr.makhdomPhoneLabel,
-                          prefixIcon: const Icon(Icons.phone_rounded, size: 20),
+                          prefixIcon: Icon(
+                            Icons.phone_rounded,
+                            size: 20.sp,
+                          ),
                         ),
                         validator: (v) => (v == null || v.trim().isEmpty)
                             ? context.tr.phoneRequired
                             : null,
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10.h),
 
-                      // 3. العمر وتاريخ الميلاد (محسوب تلقائياً)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color:
-                              (isDark
-                                      ? AppConstants.surfaceDark
-                                      : const Color(0xFFF1F5F9))
-                                  .withValues(alpha: 0.7),
-                          border: Border.all(
-                            color: isDark
-                                ? AppConstants.borderDark
-                                : AppConstants.borderLight,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(7),
-                                  decoration: BoxDecoration(
-                                    color: AppConstants.primaryLight.withValues(
-                                      alpha: 0.15,
-                                    ),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: const Icon(
-                                    Icons.cake_outlined,
-                                    size: 20,
-                                    color: AppConstants.primaryLight,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Flexible(
-                                            child: Text(
-                                              context.tr.messageAgeYears(
-                                                AppFormatters(
-                                                  Localizations.localeOf(
-                                                    context,
-                                                  ),
-                                                ).formatNumber(
-                                                  (_currentEffectiveAge),
-                                                ),
-                                              ),
-                                              style: TextStyle(
-                                                fontSize: 14.5,
-                                                fontWeight: FontWeight.bold,
-                                                color: isDark
-                                                    ? Colors.white
-                                                    : AppConstants.textPrimary,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 7,
-                                              vertical: 2,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  (_birthDate != null
-                                                          ? AppConstants
-                                                                .successColor
-                                                          : AppConstants
-                                                                .accentBlue)
-                                                      .withValues(alpha: 0.14),
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                            ),
-                                            child: Text(
-                                              _birthDate != null
-                                                  ? context
-                                                        .tr
-                                                        .messageCalculatedPrecisely
-                                                  : context.tr.messageAutomatic,
-                                              style: TextStyle(
-                                                fontSize: 10.5,
-                                                fontWeight: FontWeight.w700,
-                                                color: _birthDate != null
-                                                    ? AppConstants.successColor
-                                                    : AppConstants.accentBlue,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        _birthDate != null
-                                            ? context.tr.birthDateCaption(
-                                                AppFormatters(
-                                                  Localizations.localeOf(
-                                                    context,
-                                                  ),
-                                                ).formatDate(_birthDate),
-                                              )
-                                            : context.tr
-                                                  .messageAgeEstimatedFromSecondaryGrade(
-                                                    (DomainLabels(
-                                                          Localizations.localeOf(
-                                                            context,
-                                                          ),
-                                                        ).gradeName(
-                                                          widget
-                                                                  .initialMakhdom
-                                                                  ?.grade ??
-                                                              AppConstants
-                                                                  .grade1st,
-                                                        ))
-                                                        .toString(),
-                                                  ),
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: isDark
-                                              ? AppConstants.textMutedDark
-                                              : AppConstants.textMuted,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (_birthDate != null)
-                                  IconButton(
-                                    icon: const Icon(Icons.close, size: 18),
-                                    splashRadius: 16,
-                                    tooltip: context
-                                        .tr
-                                        .messageResetToAutomaticCalculation,
-                                    color: AppConstants.textMuted,
-                                    onPressed: _submissionStarted
-                                        ? null
-                                        : () =>
-                                              setState(() => _birthDate = null),
-                                  ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            // شريط سريع لاختيار السن بنقرة واحدة أو تحديد تاريخ دقيق
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              physics: const BouncingScrollPhysics(),
-                              child: Row(
-                                children: [
-                                  ...[14, 15, 16, 17, 18].map((ageVal) {
-                                    final isSelected =
-                                        _currentEffectiveAge == ageVal;
-                                    return Padding(
-                                      padding: const EdgeInsetsDirectional.only(
-                                        start: 6,
-                                      ),
-                                      child: InkWell(
-                                        onTap: () {
-                                          if (_submissionStarted) return;
-                                          final targetYear =
-                                              DateTime.now().year - ageVal;
-                                          setState(() {
-                                            _birthDate = DateTime(
-                                              targetYear,
-                                              1,
-                                              1,
-                                            );
-                                          });
-                                        },
-                                        borderRadius: BorderRadius.circular(10),
-                                        child: AnimatedContainer(
-                                          duration: const Duration(
-                                            milliseconds: 180,
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 5,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: isSelected
-                                                ? AppConstants.primaryLight
-                                                : (isDark
-                                                      ? Colors.white10
-                                                      : Colors.white),
-                                            borderRadius: BorderRadius.circular(
-                                              10,
-                                            ),
-                                            border: Border.all(
-                                              color: isSelected
-                                                  ? AppConstants.primaryLight
-                                                  : (isDark
-                                                        ? Colors.white12
-                                                        : AppConstants
-                                                              .borderLight),
-                                            ),
-                                          ),
-                                          child: Text(
-                                            context.tr.messageYears721(
-                                              AppFormatters(
-                                                Localizations.localeOf(context),
-                                              ).formatNumber((ageVal)),
-                                            ),
-                                            style: TextStyle(
-                                              fontSize: 11.5,
-                                              fontWeight: isSelected
-                                                  ? FontWeight.bold
-                                                  : FontWeight.w500,
-                                              color: isSelected
-                                                  ? Colors.white
-                                                  : (isDark
-                                                        ? Colors.white70
-                                                        : AppConstants
-                                                              .textSecondary),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  }),
-                                  const SizedBox(width: 4),
-                                  InkWell(
-                                    onTap: () async {
-                                      if (_submissionStarted) return;
-                                      final picked = await showDatePicker(
-                                        context: context,
-                                        initialDate:
-                                            _birthDate ??
-                                            DateTime(
-                                              DateTime.now().year -
-                                                  _currentEffectiveAge,
-                                              1,
-                                              1,
-                                            ),
-                                        firstDate: DateTime(1990),
-                                        lastDate: DateTime.now(),
-                                        initialDatePickerMode:
-                                            DatePickerMode.year,
-                                        helpText: context
-                                            .tr
-                                            .messageChooseExactBirthDate,
-                                        confirmText: context.tr.confirm,
-                                        cancelText: context.tr.cancel,
-                                      );
-                                      if (picked != null) {
-                                        setState(() => _birthDate = picked);
-                                      }
-                                    },
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 5,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: isDark
-                                            ? Colors.white10
-                                            : Colors.white,
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                          color: isDark
-                                              ? Colors.white12
-                                              : AppConstants.borderLight,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(
-                                            Icons.calendar_month_outlined,
-                                            size: 14,
-                                            color: AppConstants.accentBlue,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            context.tr.messageExactDate,
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w600,
-                                              color: isDark
-                                                  ? Colors.white70
-                                                  : AppConstants.textSecondary,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                      // السن وتاريخ الميلاد
+                      MakhdomAgeSelector(
+                        birthDate: _birthDate,
+                        currentEffectiveAge: _currentEffectiveAge,
+                        isDark: isDark,
+                        isEditing: isEdit,
+                        defaultGrade: widget.initialMakhdom?.grade ?? AppConstants.grade1st,
+                        disabled: _submissionStarted,
+                        onBirthDateChanged: (val) => setState(() => _birthDate = val),
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10.h),
 
                       // 3 & 4. تليفون الأب والأم
                       Row(
@@ -902,14 +608,14 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                               textDirection: TextDirection.ltr,
                               decoration: InputDecoration(
                                 labelText: context.tr.fatherPhoneInputLabel,
-                                prefixIcon: const Icon(
+                                prefixIcon: Icon(
                                   Icons.phone_android_rounded,
-                                  size: 20,
+                                  size: 20.sp,
                                 ),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8.w),
                           Expanded(
                             child: TextFormField(
                               enabled: !_submissionStarted,
@@ -918,9 +624,9 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                               textDirection: TextDirection.ltr,
                               decoration: InputDecoration(
                                 labelText: context.tr.motherPhoneInputLabel,
-                                prefixIcon: const Icon(
+                                prefixIcon: Icon(
                                   Icons.phone_android_rounded,
-                                  size: 20,
+                                  size: 20.sp,
                                 ),
                               ),
                             ),
@@ -944,30 +650,30 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                               controller: _areaController,
                               decoration: InputDecoration(
                                 labelText: context.tr.residentialAreaLabel,
-                                prefixIcon: const Icon(
+                                prefixIcon: Icon(
                                   Icons.location_city_rounded,
-                                  size: 20,
+                                  size: 20.sp,
                                 ),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8.w),
                           Expanded(
                             child: TextFormField(
                               enabled: !_submissionStarted,
                               controller: _addressController,
                               decoration: InputDecoration(
                                 labelText: context.tr.detailedAddressLabel,
-                                prefixIcon: const Icon(
+                                prefixIcon: Icon(
                                   Icons.home_rounded,
-                                  size: 20,
+                                  size: 20.sp,
                                 ),
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10.h),
 
                       // 7. المدرسة
                       TextFormField(
@@ -975,13 +681,13 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                         controller: _schoolController,
                         decoration: InputDecoration(
                           labelText: context.tr.schoolNameInputLabel,
-                          prefixIcon: const Icon(
+                          prefixIcon: Icon(
                             Icons.school_rounded,
-                            size: 20,
+                            size: 20.sp,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10.h),
 
                       // 8. نوع الثانوية
                       () {
@@ -1005,9 +711,9 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                           initialValue: effectiveVal,
                           decoration: InputDecoration(
                             labelText: context.tr.secondaryTypeInputLabel,
-                            prefixIcon: const Icon(
+                            prefixIcon: Icon(
                               Icons.category_rounded,
-                              size: 20,
+                              size: 20.sp,
                             ),
                           ),
                           items: allTypes.map((t) {
@@ -1038,7 +744,7 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                                 },
                         );
                       }(),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10.h),
 
                       if (_supportsCustomSecondary) ...[
                         TextFormField(
@@ -1049,7 +755,7 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                             labelText: context.tr.secondaryTypeCustomLabel,
                           ),
                         ),
-                        const SizedBox(height: 10),
+                        SizedBox(height: 10.h),
                       ],
                       ListTile(
                         contentPadding: EdgeInsets.zero,
@@ -1061,6 +767,7 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                                     Localizations.localeOf(context),
                                   ).formatDate(_trackingStartDate!),
                                 ),
+                          style: TextStyle(fontSize: 13.sp),
                         ),
                         onTap: _submissionStarted
                             ? null
@@ -1080,7 +787,7 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                                 }
                               },
                         trailing: _trackingStartDate == null
-                            ? const Icon(Icons.date_range)
+                            ? Icon(Icons.date_range, size: 20.sp)
                             : IconButton(
                                 onPressed: _submissionStarted
                                     ? null
@@ -1088,10 +795,10 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                                         _trackingStartDate = null;
                                         _trackingEdited = true;
                                       }),
-                                icon: const Icon(Icons.clear),
+                                icon: Icon(Icons.clear, size: 20.sp),
                               ),
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10.h),
 
                       // 9. لوكيشن البيت
                       TextFormField(
@@ -1100,21 +807,21 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                         textDirection: TextDirection.ltr,
                         decoration: InputDecoration(
                           labelText: context.tr.googleMapsUrlLabel,
-                          prefixIcon: const Icon(Icons.map_rounded, size: 20),
+                          prefixIcon: Icon(Icons.map_rounded, size: 20.sp),
                           suffixIcon: _isLoadingLocation
-                              ? const Padding(
-                                  padding: EdgeInsets.all(12),
+                              ? Padding(
+                                  padding: EdgeInsets.all(12.r),
                                   child: SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
+                                    width: 16.w,
+                                    height: 16.h,
+                                    child: const CircularProgressIndicator(
                                       strokeWidth: 2,
                                     ),
                                   ),
                                 )
                               : IconButton(
-                                  icon: const Icon(Icons.my_location, size: 20),
-                                  color: AppConstants.primaryLight,
+                                  icon: Icon(Icons.my_location, size: 20.sp),
+                                  color: AppColors.primaryLight,
                                   tooltip: context.tr.useCurrentLocation,
                                   onPressed: _submissionStarted
                                       ? null
@@ -1130,208 +837,33 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                         title: context.tr.serviceAndCareSec,
                       ),
 
-                      // اختيار الخادم المسؤول
-                      () {
-                        final isKhademInList =
-                            _selectedKhademId == null ||
-                            widget.khodamList.any(
-                              (k) => k.id == _selectedKhademId,
-                            );
-                        final effectiveKhademId = isKhademInList
-                            ? _selectedKhademId
-                            : null;
-
-                        return DropdownButtonFormField<String>(
-                          isExpanded: true,
-                          initialValue: effectiveKhademId,
-                          decoration: InputDecoration(
-                            labelText: context.tr.assignedServantSelectLabel,
-                            prefixIcon: const Icon(
-                              Icons.person_pin_rounded,
-                              size: 20,
-                            ),
-                          ),
-                          items: [
-                            DropdownMenuItem(
-                              value: null,
-                              child: Text(
-                                context.tr.unassignedNoServantOption,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            ...widget.khodamList.map(
-                              (k) => DropdownMenuItem(
-                                value: k.id,
-                                child: Text(
-                                  k.name,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ),
-                            if (!isKhademInList && _selectedKhademId != null)
-                              DropdownMenuItem(
-                                value: _selectedKhademId,
-                                child: Text(
-                                  _selectedKhademName ??
-                                      context
-                                          .tr
-                                          .messageServantUnavailableInThisList,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                          ],
-                          onChanged: _submissionStarted
-                              ? null
-                              : (val) {
-                                  setState(() {
-                                    _selectedKhademId = val;
-                                    if (val == null) {
-                                      _selectedKhademName = null;
-                                    } else {
-                                      final matches = widget.khodamList.where(
-                                        (element) => element.id == val,
-                                      );
-                                      _selectedKhademName = matches.isNotEmpty
-                                          ? matches.first.name
-                                          : _selectedKhademName;
-                                    }
-                                  });
-                                },
-                        );
-                      }(),
-                      const SizedBox(height: 12),
-
-                      // اختيار الفصل الدراسي (إذا كانت السنة مقسمة لفصول)
-                      StreamBuilder<List<ClassModel>>(
-                        stream: _firestoreService.watchClasses(
-                          serviceId:
-                              widget.initialMakhdom?.serviceId ?? 'thanawy',
-                          gradeId:
-                              widget.initialMakhdom?.grade ?? AppConstants.grade1st,
-                        ),
-                        builder: (context, snap) {
-                          final classes = snap.data ?? [];
-                          if (classes.isEmpty) return const SizedBox.shrink();
-
-                          final isClassInList = _selectedClassId == null ||
-                              classes.any((c) => c.id == _selectedClassId);
-                          final effectiveClassId =
-                              isClassInList ? _selectedClassId : null;
-
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: DropdownButtonFormField<String?>(
-                              isExpanded: true,
-                              initialValue: effectiveClassId,
-                              decoration: const InputDecoration(
-                                labelText: 'الفصل الدراسي (اختياري)',
-                                prefixIcon: Icon(
-                                  Icons.diversity_3_outlined,
-                                  size: 20,
-                                ),
-                              ),
-                              items: [
-                                const DropdownMenuItem<String?>(
-                                  value: null,
-                                  child: Text(
-                                    'بدون فصل محدد (عام للسنة)',
-                                    style: TextStyle(
-                                      color: AppConstants.textMuted,
-                                    ),
-                                  ),
-                                ),
-                                ...classes.map(
-                                  (c) => DropdownMenuItem<String?>(
-                                    value: c.id,
-                                    child: Text(
-                                      c.name,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                              onChanged: _submissionStarted
-                                  ? null
-                                  : (val) {
-                                      setState(() {
-                                        _selectedClassId = val;
-                                        if (val == null) {
-                                          _selectedClassName = null;
-                                        } else {
-                                          final match = classes.where(
-                                            (c) => c.id == val,
-                                          );
-                                          _selectedClassName =
-                                              match.isNotEmpty
-                                                  ? match.first.name
-                                                  : null;
-                                        }
-                                      });
-                                    },
-                            ),
-                          );
+                      // الخادم المسؤول والفصل الدراسي وأخوة الرب
+                      MakhdomServantClassSelector(
+                        isDark: isDark,
+                        disabled: _submissionStarted,
+                        khodamList: widget.khodamList,
+                        selectedKhademId: _selectedKhademId,
+                        selectedKhademName: _selectedKhademName,
+                        onKhademChanged: (id, name) {
+                          setState(() {
+                            _selectedKhademId = id;
+                            _selectedKhademName = name;
+                          });
                         },
+                        firestoreService: _firestoreService,
+                        serviceId: widget.initialMakhdom?.serviceId ?? 'thanawy',
+                        gradeId: widget.initialMakhdom?.grade ?? AppConstants.grade1st,
+                        selectedClassId: _selectedClassId,
+                        onClassChanged: (id, name) {
+                          setState(() {
+                            _selectedClassId = id;
+                            _selectedClassName = name;
+                          });
+                        },
+                        isBrethren: _isBrethren,
+                        onBrethrenChanged: (val) => setState(() => _isBrethren = val),
                       ),
-                      const SizedBox(height: 4),
-
-                      // Switch أخوة الرب بتصميم أنيق
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _isBrethren
-                              ? AppConstants.accentGold.withValues(alpha: 0.1)
-                              : (isDark
-                                    ? AppConstants.surfaceDark
-                                    : AppConstants.surfaceLight),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: _isBrethren
-                                ? AppConstants.accentGold.withValues(alpha: 0.6)
-                                : (isDark
-                                      ? AppConstants.borderDark
-                                      : AppConstants.borderLight),
-                            width: _isBrethren ? 1.5 : 1,
-                          ),
-                        ),
-                        child: SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Row(
-                            children: [
-                              Icon(
-                                _isBrethren
-                                    ? Icons.star_rounded
-                                    : Icons.star_outline_rounded,
-                                color: _isBrethren
-                                    ? AppConstants.accentGold
-                                    : (isDark
-                                          ? Colors.white54
-                                          : Colors.black45),
-                                size: 22,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  context.tr.brethrenSwitchLabel,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          activeThumbColor: AppConstants.accentGold,
-                          value: _isBrethren,
-                          onChanged: _submissionStarted
-                              ? null
-                              : (val) => setState(() => _isBrethren = val),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10.h),
 
                       // رابط الصورة
                       TextFormField(
@@ -1339,13 +871,13 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                         controller: _photoController,
                         decoration: InputDecoration(
                           labelText: context.tr.photoUrlOptionalLabel,
-                          prefixIcon: const Icon(
+                          prefixIcon: Icon(
                             Icons.image_outlined,
-                            size: 20,
+                            size: 20.sp,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10.h),
 
                       // ملاحظات
                       TextFormField(
@@ -1354,15 +886,16 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                         maxLines: 2,
                         decoration: InputDecoration(
                           labelText: context.tr.additionalNotesOptionalLabel,
-                          prefixIcon: const Icon(Icons.notes_rounded, size: 20),
+                          prefixIcon: Icon(Icons.notes_rounded, size: 20.sp),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8.h),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 14),
+            ),
+              SizedBox(height: 14.h),
 
               if (_submissionStarted)
                 Text(context.tr.messageFieldsAreLockedUntilConfirmationRetryTo),
@@ -1374,13 +907,13 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(16.r),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding: EdgeInsets.symmetric(vertical: 14.h),
                         side: BorderSide(
                           color: isDark
-                              ? AppConstants.borderDark
-                              : AppConstants.borderLight,
+                              ? AppColors.borderDark
+                              : AppColors.borderLight,
                         ),
                       ),
                       onPressed: () => Navigator.pop(context),
@@ -1389,47 +922,47 @@ class _AddEditMakhdomDialogState extends State<AddEditMakhdomDialog> {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: isDark
-                              ? AppConstants.textSecondaryDark
-                              : AppConstants.textSecondary,
+                              ? AppColors.textSecondaryDark
+                              : AppColors.textSecondary,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12.w),
                   Expanded(
                     flex: 2,
                     child: SizedBox(
-                      height: 50,
+                      height: 50.h,
                       child: ElevatedButton.icon(
                         onPressed: _isLoading ? null : _handleSave,
                         icon: _isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
+                            ? SizedBox(
+                                width: 20.w,
+                                height: 20.h,
+                                child: const CircularProgressIndicator(
                                   color: Colors.white,
                                   strokeWidth: 2,
                                 ),
                               )
-                            : const Icon(Icons.check_circle_rounded, size: 20),
+                            : Icon(Icons.check_circle_rounded, size: 20.sp),
                         label: Text(
                           _isLoading
                               ? context.tr.saving
                               : (isEdit
                                     ? context.tr.saveChanges
                                     : context.tr.save),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 15,
+                            fontSize: 15.sp,
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: isEdit
-                              ? AppConstants.accentBlue
-                              : AppConstants.primaryLight,
+                              ? AppColors.accentBlue
+                              : AppColors.primaryLight,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(16.r),
                           ),
                           elevation: 0,
                         ),

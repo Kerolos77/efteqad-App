@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:efteqad/core/localization/app_formatters.dart';
-import 'package:efteqad/core/errors/app_failure.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/constants.dart';
+import '../../../../core/errors/app_failure.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/makhdom_model.dart';
 import '../../../../core/models/visit_model.dart';
@@ -10,6 +10,9 @@ import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/firestore_service.dart';
 import '../../../../core/services/visit_draft_store.dart';
 import '../../../../core/services/trusted_mutations.dart';
+import 'visit_date_picker_tile.dart';
+import 'visit_draft_banner.dart';
+import 'visit_type_selector.dart';
 
 class RecordVisitSheet extends StatefulWidget {
   final MakhdomModel makhdom;
@@ -18,6 +21,7 @@ class RecordVisitSheet extends StatefulWidget {
   final FirestoreService? firestoreService;
   final AuthService? authService;
   final VisitDraftStore? draftStore;
+
   const RecordVisitSheet({
     super.key,
     this.firestoreService,
@@ -37,11 +41,11 @@ class RecordVisitSheet extends StatefulWidget {
         context: context,
         builder: (_) => Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          insetPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 580),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(24.r),
               child: SingleChildScrollView(
                 child: RecordVisitSheet(makhdom: makhdom, khademName: khademName),
               ),
@@ -200,7 +204,7 @@ class _RecordVisitSheetState extends State<RecordVisitSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.tr.visitSavedSuccess),
-            backgroundColor: AppConstants.successColor,
+            backgroundColor: AppColors.successColor,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -213,47 +217,12 @@ class _RecordVisitSheetState extends State<RecordVisitSheet> {
             content: Text(
               AppFailure.fromException(e).localizedMessage(context.tr),
             ),
-            backgroundColor: AppConstants.warningColor,
+            backgroundColor: AppColors.warningColor,
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
     }
-  }
-
-  Widget _buildTypeChip(
-    String label,
-    bool isSelected,
-    VoidCallback onTap,
-    bool isDark,
-  ) {
-    return InkWell(
-      onTap: _submittedVisit != null ? null : onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppConstants.primaryLight.withValues(alpha: isDark ? 0.3 : 0.15)
-              : (isDark ? const Color(0xFF131D31) : const Color(0xFFF1F5F9)),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? AppConstants.primaryLight : Colors.transparent,
-            width: 1.5,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-            color: isSelected
-                ? AppConstants.primaryLight
-                : (isDark ? Colors.white70 : AppConstants.textDark),
-          ),
-        ),
-      ),
-    );
   }
 
   @override
@@ -263,21 +232,21 @@ class _RecordVisitSheetState extends State<RecordVisitSheet> {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppConstants.surfaceDark : Colors.white,
+        color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: (kIsWeb && MediaQuery.sizeOf(context).width >= 600)
-            ? BorderRadius.circular(24)
-            : const BorderRadius.vertical(top: Radius.circular(28)),
+            ? BorderRadius.circular(24.r)
+            : BorderRadius.vertical(top: Radius.circular(28.r)),
         border: Border.all(
           color: isDark
-              ? AppConstants.cardBorderDark
-              : AppConstants.cardBorderLight,
+              ? AppColors.cardBorderDark
+              : AppColors.cardBorderLight,
         ),
       ),
       padding: EdgeInsetsDirectional.fromSTEB(
-        20,
-        12,
-        20,
-        MediaQuery.of(context).viewInsets.bottom + 24,
+        20.w,
+        12.h,
+        20.w,
+        MediaQuery.of(context).viewInsets.bottom + 24.h,
       ),
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
@@ -288,32 +257,32 @@ class _RecordVisitSheetState extends State<RecordVisitSheet> {
             // Handle bar
             Center(
               child: Container(
-                width: 44,
-                height: 5,
+                width: 44.w,
+                height: 5.h,
                 decoration: BoxDecoration(
                   color: isDark ? Colors.white24 : Colors.black12,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(10.r),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
 
             // Header
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: EdgeInsets.all(10.r),
                   decoration: BoxDecoration(
-                    color: AppConstants.accentIndigo.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(14),
+                    color: AppColors.accentIndigo.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(14.r),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.add_task,
-                    color: AppConstants.accentIndigo,
-                    size: 22,
+                    color: AppColors.accentIndigo,
+                    size: 22.sp,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12.w),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -321,16 +290,16 @@ class _RecordVisitSheetState extends State<RecordVisitSheet> {
                       Text(
                         context.tr.logVisitTitle,
                         style: TextStyle(
-                          fontSize: 17,
+                          fontSize: 17.sp,
                           fontWeight: FontWeight.w800,
-                          color: isDark ? Colors.white : AppConstants.textDark,
+                          color: isDark ? Colors.white : AppColors.textDark,
                         ),
                       ),
                       Text(
                         widget.makhdom.fullName,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppConstants.textMuted,
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          color: AppColors.textMuted,
                           fontWeight: FontWeight.w600,
                         ),
                         maxLines: 1,
@@ -342,148 +311,39 @@ class _RecordVisitSheetState extends State<RecordVisitSheet> {
               ],
             ),
             if (_draftLoadError != null)
-              Text(
-                context.tr.dataUnavailable,
-                style: const TextStyle(color: AppConstants.errorColor),
+              Padding(
+                padding: EdgeInsets.only(top: 8.h),
+                child: Text(
+                  context.tr.dataUnavailable,
+                  style: TextStyle(
+                    color: AppColors.errorColor,
+                    fontSize: 13.sp,
+                  ),
+                ),
               ),
             if (_hasDraft) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: AppConstants.warningColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: AppConstants.warningColor.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.cloud_off_rounded,
-                      size: 16,
-                      color: AppConstants.warningColor,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        context
-                            .tr
-                            .messageLocalSubmissionLoadedConfirmationIsPending,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppConstants.warningColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              SizedBox(height: 12.h),
+              const VisitDraftBanner(),
             ],
-            const SizedBox(height: 20),
+            SizedBox(height: 20.h),
 
             // Visit type selection
-            Text(
-              context.tr.visitTypeLabel,
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            VisitTypeSelector(
+              selectedType: _visitType ?? 'home',
+              isEnabled: _submittedVisit == null,
+              onTypeSelected: (type) => setState(() => _visitType = type),
             ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _buildTypeChip(
-                  context.tr.visitHome,
-                  _visitType == 'home',
-                  () => setState(() => _visitType = 'home'),
-                  isDark,
-                ),
-                _buildTypeChip(
-                  context.tr.visitPhone,
-                  _visitType == 'phone',
-                  () => setState(() => _visitType = 'phone'),
-                  isDark,
-                ),
-                _buildTypeChip(
-                  context.tr.visitChurch,
-                  _visitType == 'church',
-                  () => setState(() => _visitType = 'church'),
-                  isDark,
-                ),
-                _buildTypeChip(
-                  context.tr.visitOther,
-                  _visitType == 'other',
-                  () => setState(() => _visitType = 'other'),
-                  isDark,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
 
             // Date selection
-            InkWell(
-              onTap: () async {
-                if (_submittedVisit != null) return;
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: _selectedDate,
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime.now(),
-                );
-                if (picked != null) setState(() => _selectedDate = picked);
-              },
-              borderRadius: BorderRadius.circular(14),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF131D31)
-                      : const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: isDark
-                        ? AppConstants.cardBorderDark
-                        : AppConstants.cardBorderLight,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.calendar_today_outlined,
-                      size: 16,
-                      color: AppConstants.primaryLight,
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      context.tr.visitDateLabel(
-                        AppFormatters(
-                          Localizations.localeOf(context),
-                        ).formatDate(_selectedDate),
-                      ),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const Spacer(),
-                    const Icon(
-                      Icons.arrow_drop_down,
-                      color: AppConstants.textMuted,
-                    ),
-                  ],
-                ),
-              ),
+            VisitDatePickerTile(
+              selectedDate: _selectedDate,
+              isEnabled: _submittedVisit == null,
+              onDateSelected: (date) => setState(() => _selectedDate = date),
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: 14.h),
 
-            // تقرير الافتقاد وملاحظات الخادم (الديسكريبشن)
+            // Notes TextField
             TextField(
               enabled: _submittedVisit == null,
               controller: _notesController,
@@ -491,17 +351,21 @@ class _RecordVisitSheetState extends State<RecordVisitSheet> {
               minLines: 2,
               keyboardType: TextInputType.multiline,
               textCapitalization: TextCapitalization.sentences,
+              style: TextStyle(fontSize: 14.sp),
               decoration: InputDecoration(
                 labelText: context.tr.messageVisitNotesAndDiscussion,
+                labelStyle: TextStyle(fontSize: 13.sp),
                 hintText: context
                     .tr
                     .messageRecordVisitDiscussionMeetingDetailsOrPastoral,
-                prefixIcon: const Icon(
+                hintStyle: TextStyle(fontSize: 13.sp),
+                prefixIcon: Icon(
                   Icons.edit_note_rounded,
-                  color: AppConstants.accentIndigo,
+                  color: AppColors.accentIndigo,
+                  size: 22.sp,
                 ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(14.r),
                 ),
                 filled: true,
                 fillColor: isDark
@@ -509,37 +373,45 @@ class _RecordVisitSheetState extends State<RecordVisitSheet> {
                     : const Color(0xFFF8FAFC),
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20.h),
 
             if (_submittedVisit != null)
-              Text(
-                context.tr.messageFieldsAreLockedUntilConfirmationRetryTo631,
+              Padding(
+                padding: EdgeInsets.only(bottom: 12.h),
+                child: Text(
+                  context.tr.messageFieldsAreLockedUntilConfirmationRetryTo631,
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: AppColors.textMuted,
+                  ),
+                ),
               ),
+
             // Save button
             ElevatedButton(
               onPressed: _isSaving || _isLoadingDraft || _draftLoadError != null
                   ? null
                   : _handleSave,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppConstants.primaryNavy,
-                padding: const EdgeInsets.symmetric(vertical: 15),
+                backgroundColor: AppColors.primaryNavy,
+                padding: EdgeInsets.symmetric(vertical: 15.h),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(16.r),
                 ),
               ),
               child: _isSaving
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
+                  ? SizedBox(
+                      width: 22.r,
+                      height: 22.r,
+                      child: const CircularProgressIndicator(
                         color: Colors.white,
                         strokeWidth: 2.2,
                       ),
                     )
                   : Text(
                       context.tr.saveVisitBtn,
-                      style: const TextStyle(
-                        fontSize: 15,
+                      style: TextStyle(
+                        fontSize: 15.sp,
                         fontWeight: FontWeight.w700,
                       ),
                     ),

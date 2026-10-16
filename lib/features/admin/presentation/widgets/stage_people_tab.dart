@@ -1,5 +1,6 @@
 import 'package:efteqad/core/localization/app_formatters.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/constants.dart';
@@ -9,8 +10,11 @@ import '../../../../core/models/makhdom_model.dart';
 import '../../../../core/models/service_model.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/services/firestore_service.dart';
-import '../../../../core/utils/color_generator.dart';
+import 'appoint_head_dialog.dart';
+import 'pending_khadem_card.dart';
 import 'service_setup_dialog.dart';
+import 'stage_grade_head_card.dart';
+import 'stage_servant_tile.dart';
 
 class StagePeopleTab extends StatefulWidget {
   final List<KhademModel> pendingKhodam;
@@ -89,23 +93,23 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
         title: Text(
           ctx.tr.assignServantToGradePrompt,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('${ctx.tr.messageServant580}: ${khadem.name}'),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             ...grades.map((g) {
               final color = _getGradeColor(g.order);
               return ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.school, color: color),
-                title: Text(g.name),
+                leading: Icon(Icons.school, color: color, size: 20.sp),
+                title: Text(g.name, style: TextStyle(fontSize: 14.sp)),
                 onTap: () async {
                   Navigator.pop(ctx);
                   await _firestoreService.assignKhademToGrade(
@@ -127,139 +131,13 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
     required List<KhademModel> gradeKhodam,
     required KhademModel? currentHead,
   }) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: const EdgeInsetsDirectional.fromSTEB(20, 16, 20, 32),
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '${ctx.tr.appointGradeHeadBtn} - $gradeTitle',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              ctx.tr.messageSelectAServantToAppointAsGrade,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppConstants.textMuted,
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (gradeKhodam.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                child: Center(
-                  child: Text(
-                    ctx.tr.messageNoServantsAssignedToYet(
-                      (gradeTitle).toString(),
-                    ),
-                    style: const TextStyle(color: AppConstants.textMuted),
-                  ),
-                ),
-              )
-            else
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.45,
-                ),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: gradeKhodam.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (_, idx) {
-                    final k = gradeKhodam[idx];
-                    final isHead = k.id == currentHead?.id;
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: CircleAvatar(
-                        backgroundColor: ColorGenerator.getColorForId(
-                          k.id,
-                        ).withValues(alpha: 0.15),
-                        child: Text(
-                          k.name.isNotEmpty ? k.name[0] : context.tr.messageS,
-                          style: TextStyle(
-                            color: ColorGenerator.getColorForId(k.id),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      title: Text(
-                        k.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        k.phone,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      trailing: isHead
-                          ? Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppConstants.sacredGold.withValues(
-                                  alpha: 0.2,
-                                ),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                ctx.tr.currentGradeAdmin,
-                                style: TextStyle(
-                                  color: AppConstants.sacredGold,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            )
-                          : OutlinedButton(
-                              onPressed: () async {
-                                Navigator.pop(ctx);
-                                await _firestoreService.setGradeAdmin(
-                                  gradeKey,
-                                  k.id,
-                                );
-                              },
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(
-                                  color: AppConstants.primaryLight,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: Text(
-                                ctx.tr.messageAppointHead,
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                            ),
-                    );
-                  },
-                ),
-              ),
-          ],
-        ),
-      ),
+    AppointHeadDialog.show(
+      context,
+      gradeKey: gradeKey,
+      gradeTitle: gradeTitle,
+      gradeKhodam: gradeKhodam,
+      currentHead: currentHead,
+      firestoreService: _firestoreService,
     );
   }
 
@@ -279,59 +157,59 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
     }
 
     return ListView(
-      padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 85),
+      padding: EdgeInsetsDirectional.fromSTEB(16.w, 12.h, 16.w, 85.h),
       physics: const BouncingScrollPhysics(),
       children: [
         // 0. تنبيه إعداد الخدمة لأول مرة (إن كانت الخدمة جديدة وغير مهيأة)
         if (widget.service != null && widget.service!.grades.isEmpty) ...[
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16.r),
             decoration: BoxDecoration(
-              color: AppConstants.primaryLight.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(16),
+              color: AppColors.primaryLight.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(16.r),
               border: Border.all(
-                color: AppConstants.primaryLight.withValues(alpha: 0.3),
+                color: AppColors.primaryLight.withValues(alpha: 0.3),
               ),
             ),
             child: Column(
               children: [
-                const Icon(
+                Icon(
                   Icons.auto_awesome_rounded,
-                  color: AppConstants.primaryLight,
-                  size: 36,
+                  color: AppColors.primaryLight,
+                  size: 36.sp,
                 ),
-                const SizedBox(height: 8),
-                const Text(
+                SizedBox(height: 8.h),
+                Text(
                   'مرحباً بك! لم يتم إعداد صفوف الخدمة بعد',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15.sp),
                 ),
-                const SizedBox(height: 4),
-                const Text(
+                SizedBox(height: 4.h),
+                Text(
                   'حدد عدد سنوات / صفوف الخدمة وتسمية كل صف لبدء تسكين الخدام والمخدومين',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: AppConstants.textMuted),
+                  style: TextStyle(fontSize: 12.sp, color: AppColors.textMuted),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12.h),
                 ElevatedButton.icon(
                   onPressed: () => ServiceSetupDialog.show(
                     context,
                     service: widget.service!,
                     firestoreService: _firestoreService,
                   ),
-                  icon: const Icon(Icons.tune_rounded, size: 18),
-                  label: const Text('إعداد صفوف الخدمة الآن'),
+                  icon: Icon(Icons.tune_rounded, size: 18.sp),
+                  label: Text('إعداد صفوف الخدمة الآن', style: TextStyle(fontSize: 13.sp)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppConstants.primaryLight,
+                    backgroundColor: AppColors.primaryLight,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(12.r),
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
         ],
 
         // 1. قطاع الخدام الجدد بانتظار التسكين
@@ -339,76 +217,80 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: EdgeInsets.all(6.r),
                 decoration: BoxDecoration(
-                  color: AppConstants.warningColor.withValues(alpha: 0.15),
+                  color: AppColors.warningColor.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.person_add_rounded,
-                  size: 16,
-                  color: AppConstants.warningColor,
+                  size: 16.sp,
+                  color: AppColors.warningColor,
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8.w),
               Text(
                 context.tr.pendingServantsSection,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w800,
-                  fontSize: 14,
+                  fontSize: 14.sp,
                 ),
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                 decoration: BoxDecoration(
-                  color: AppConstants.warningColor,
-                  borderRadius: BorderRadius.circular(10),
+                  color: AppColors.warningColor,
+                  borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: Text(
                   AppFormatters(
                     Localizations.localeOf(context),
                   ).formatNumber(widget.pendingKhodam.length),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
-                    fontSize: 11,
+                    fontSize: 11.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10.h),
           ...widget.pendingKhodam.map(
-            (khadem) => _buildPendingKhademCard(khadem, isDark),
+            (khadem) => PendingKhademCard(
+              khadem: khadem,
+              isDark: isDark,
+              onAssign: () => _openAssignGradeDialog(khadem),
+            ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
         ],
 
         // 2. قطاع أمناء السنين الدراسية (ديناميكي لجميع صفوف الخدمة)
         Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(6),
+              padding: EdgeInsets.all(6.r),
               decoration: BoxDecoration(
-                color: AppConstants.primaryLight.withValues(alpha: 0.15),
+                color: AppColors.primaryLight.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.workspace_premium_rounded,
-                size: 16,
-                color: AppConstants.primaryLight,
+                size: 16.sp,
+                color: AppColors.primaryLight,
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8.w),
             Text(
               context.tr.gradeHeadsSection,
-              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.sp),
             ),
             const Spacer(),
             if (widget.service != null)
               IconButton(
-                icon: const Icon(Icons.tune_rounded, size: 20),
+                icon: Icon(Icons.tune_rounded, size: 20.sp),
                 tooltip: 'تعديل الخدمة والصفوف',
                 onPressed: () => ServiceSetupDialog.show(
                   context,
@@ -418,7 +300,7 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
               ),
           ],
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
 
         // بطاقات أمناء الصفوف ديناميكياً
         ...grades.map((g) {
@@ -431,18 +313,25 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
           } catch (_) {}
 
           return Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: _buildGradeHeadCard(
+            padding: EdgeInsets.only(bottom: 8.h),
+            child: StageGradeHeadCard(
               gradeKey: g.id,
               gradeTitle: g.name,
               headKhadem: headKhadem,
               gradeKhodam: gradeKhodam,
               color: _getGradeColor(g.order),
               isDark: isDark,
+              onTapGrade: () => context.go(AppRoutes.gradeMakhdomeen(g.id)),
+              onAppointHead: () => _openAppointHeadDialog(
+                gradeKey: g.id,
+                gradeTitle: g.name,
+                gradeKhodam: gradeKhodam,
+                currentHead: headKhadem,
+              ),
             ),
           );
         }),
-        const SizedBox(height: 20),
+        SizedBox(height: 20.h),
 
         // 3. فريق الخدام وتوزيع السنين
         Row(
@@ -455,24 +344,28 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
                     : context.tr.messageAssignedSecondaryStageServants,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w800,
-                  fontSize: 14,
+                  fontSize: 14.sp,
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8.w),
             Text(
-              context.tr.messageServants((displayedKhodam.length).toString()),
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppConstants.textMuted,
+              context.tr.messageServants(
+                AppFormatters(
+                  Localizations.localeOf(context),
+                ).formatNumber(displayedKhodam.length),
+              ),
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: AppColors.textMuted,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10.h),
 
         // فلاتر السنين ديناميكياً
         SingleChildScrollView(
@@ -485,11 +378,14 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
                 final count = widget.allKhodam
                     .where((k) => k.grade == g.id)
                     .length;
+                final formattedCount = AppFormatters(
+                  Localizations.localeOf(context),
+                ).formatNumber(count);
                 return Padding(
-                  padding: const EdgeInsetsDirectional.only(start: 8),
+                  padding: EdgeInsetsDirectional.only(start: 8.w),
                   child: _buildGradeFilterChip(
                     g.id,
-                    '${g.name} ($count)',
+                    '${g.name} ($formattedCount)',
                     isDark,
                   ),
                 );
@@ -497,294 +393,37 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
 
         if (displayedKhodam.isEmpty)
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(24.r),
             decoration: BoxDecoration(
-              color: isDark ? AppConstants.surfaceDark : Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              color: isDark ? AppColors.surfaceDark : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
             ),
             child: Center(
               child: Text(
                 context.tr.messageNoServantsAssignedToThisSectionYet,
-                style: const TextStyle(color: AppConstants.textMuted),
+                style: TextStyle(color: AppColors.textMuted, fontSize: 13.sp),
               ),
             ),
           )
         else
           ...displayedKhodam.map((khadem) {
-            final color = ColorGenerator.getColorForId(khadem.id);
             final assignedCount = widget.allMakhdomeen
                 .where((m) => m.assignedKhademId == khadem.id)
                 .length;
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isDark ? AppConstants.surfaceDark : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isDark
-                      ? AppConstants.cardBorderDark
-                      : AppConstants.cardBorderLight,
-                ),
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: color.withValues(alpha: 0.15),
-                    child: Text(
-                      khadem.name.isNotEmpty
-                          ? khadem.name[0]
-                          : context.tr.messageS,
-                      style: TextStyle(
-                        color: color,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                khadem.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13.5,
-                                ),
-                              ),
-                            ),
-                            if (khadem.isGradeAdmin) ...[
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppConstants.sacredGold.withValues(
-                                    alpha: 0.2,
-                                  ),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  context.tr.currentGradeAdmin,
-                                  style: TextStyle(
-                                    color: AppConstants.sacredGold,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          context.tr.messageAssignedStudents730(
-                            (_getGradeLabel(khadem.grade)).toString(),
-                            AppFormatters(
-                              Localizations.localeOf(context),
-                            ).formatNumber((assignedCount)),
-                          ),
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: AppConstants.textMuted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.phone_outlined, size: 18),
-                    color: AppConstants.textMuted,
-                    onPressed: () => _makeCall(khadem.phone),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                    color: AppConstants.textMuted,
-                    tooltip: context.tr.messageChangeGrade732,
-                    onPressed: () => _openAssignGradeDialog(khadem),
-                  ),
-                ],
-              ),
+            return StageServantTile(
+              khadem: khadem,
+              assignedCount: assignedCount,
+              gradeLabel: _getGradeLabel(khadem.grade),
+              isDark: isDark,
+              onMakeCall: () => _makeCall(khadem.phone),
+              onChangeGrade: () => _openAssignGradeDialog(khadem),
             );
           }),
       ],
-    );
-  }
-
-  Widget _buildPendingKhademCard(KhademModel khadem, bool isDark) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? AppConstants.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppConstants.warningColor.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: AppConstants.warningColor.withValues(alpha: 0.15),
-            child: const Icon(
-              Icons.person_add_rounded,
-              color: AppConstants.warningColor,
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  khadem.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  khadem.phone,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppConstants.textMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => _openAssignGradeDialog(khadem),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppConstants.primaryLight,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            ),
-            child: Text(
-              context.tr.messageAssign,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGradeHeadCard({
-    required String gradeKey,
-    required String gradeTitle,
-    required KhademModel? headKhadem,
-    required List<KhademModel> gradeKhodam,
-    required Color color,
-    required bool isDark,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => context.go(AppRoutes.gradeMakhdomeen(gradeKey)),
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: isDark ? AppConstants.surfaceDark : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withValues(alpha: 0.2)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.school, color: color, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          gradeTitle,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13.5,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Icon(
-                          Icons.open_in_new_rounded,
-                          size: 13,
-                          color: color.withValues(alpha: 0.7),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      headKhadem != null
-                          ? headKhadem.name
-                          : context.tr.noGradeHeadAssigned,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: headKhadem != null
-                            ? FontWeight.w600
-                            : FontWeight.normal,
-                        color: headKhadem != null ? null : AppConstants.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          OutlinedButton(
-            onPressed: () => _openAppointHeadDialog(
-              gradeKey: gradeKey,
-              gradeTitle: gradeTitle,
-              gradeKhodam: gradeKhodam,
-              currentHead: headKhadem,
-            ),
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: color),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            ),
-            child: Text(
-              headKhadem != null
-                  ? (context.tr.messageChangeHead)
-                  : (context.tr.messageAppointHead),
-              style: TextStyle(
-                fontSize: 11,
-                color: color,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
@@ -794,28 +433,28 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
       onTap: () => setState(() => _selectedGradeFilter = key),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppConstants.primaryLight
-              : (isDark ? AppConstants.surfaceDark : Colors.white),
-          borderRadius: BorderRadius.circular(12),
+              ? AppColors.primaryLight
+              : (isDark ? AppColors.surfaceDark : Colors.white),
+          borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
             color: isSelected
-                ? AppConstants.primaryLight
+                ? AppColors.primaryLight
                 : (isDark
-                      ? AppConstants.cardBorderDark
-                      : AppConstants.cardBorderLight),
+                      ? AppColors.cardBorderDark
+                      : AppColors.cardBorderLight),
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 12.sp,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             color: isSelected
                 ? Colors.white
-                : (isDark ? Colors.white70 : AppConstants.textDark),
+                : (isDark ? Colors.white70 : AppColors.textDark),
           ),
         ),
       ),

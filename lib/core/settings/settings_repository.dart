@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/firestore_collections.dart';
 
 abstract class SettingsRepository {
   Future<Locale> loadLocale();
@@ -96,7 +97,8 @@ class AccountLocaleRepository {
     if (auth.currentUser?.uid != uid) {
       throw StateError('Account identity changed.');
     }
-    final reference = firestore.collection('khodam').doc(uid);
+    final reference =
+        firestore.collection(FirestoreCollections.khodam).doc(uid);
     await firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(reference);
       if (auth.currentUser?.uid != uid ||

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// A web-optimized card with clean borders, elevation, and optional hover effect.
 class WebCard extends StatefulWidget {
   final Widget child;
-  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry? padding;
   final Color? backgroundColor;
   final VoidCallback? onTap;
   final Widget? header;
@@ -12,7 +13,7 @@ class WebCard extends StatefulWidget {
   const WebCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(20),
+    this.padding,
     this.backgroundColor,
     this.onTap,
     this.header,
@@ -50,7 +51,7 @@ class _WebCardState extends State<WebCard> {
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           color: widget.backgroundColor ?? theme.cardColor,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
             color: _isHovered ? hoveredBorderColor : baseBorderColor,
             width: 1.2,
@@ -67,16 +68,16 @@ class _WebCardState extends State<WebCard> {
         ),
         child: InkWell(
           onTap: widget.onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           child: Padding(
-            padding: widget.padding,
+            padding: widget.padding ?? EdgeInsets.all(20.r),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (widget.header != null) ...[
                   widget.header!,
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                 ],
                 widget.child,
               ],

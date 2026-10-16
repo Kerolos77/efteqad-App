@@ -1,23 +1,31 @@
-import 'package:efteqad/core/localization/app_formatters.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/constants.dart';
+import '../../../../core/localization/app_formatters.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/attendance_session_model.dart';
 import '../../../../core/models/makhdom_model.dart';
 import '../../../../core/services/attendance_analytics_service.dart';
 import '../../../admin/presentation/widgets/makhdom_card.dart';
 import '../../../common/widgets/record_visit_sheet.dart';
+import 'at_risk_alert_banner.dart';
+import 'makhdomeen_filter_bar.dart';
+import 'servant_hero_card.dart';
 
 class MyMakhdomeenTab extends StatefulWidget {
   final List<MakhdomModel> myMakhdomeen;
   final List<AttendanceSessionModel> sessions;
   final VoidCallback? onSwitchToAnalytics;
+  final String? servantName;
+  final Color? khademColor;
 
   const MyMakhdomeenTab({
     super.key,
     required this.myMakhdomeen,
     this.sessions = const [],
     this.onSwitchToAnalytics,
+    this.servantName,
+    this.khademColor,
   });
 
   @override
@@ -31,10 +39,13 @@ class _MyMakhdomeenTabState extends State<MyMakhdomeenTab> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final formatters = AppFormatters(Localizations.localeOf(context));
     final totalCount = widget.myMakhdomeen.length;
     final visitedCount = widget.myMakhdomeen
         .where((m) => m.visitCount > 0)
         .length;
+    final unvisitedCount = totalCount - visitedCount;
+    final brethrenCount = widget.myMakhdomeen.where((m) => m.isBrethrenOfLord).length;
     final percentage = totalCount > 0 ? (visitedCount / totalCount) : 0.0;
 
     final atRiskList = widget.sessions.isNotEmpty
@@ -67,166 +78,86 @@ class _MyMakhdomeenTabState extends State<MyMakhdomeenTab> {
 
     return Column(
       children: [
-        // Header summary bar
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: isDark
-                ? AppConstants.backgroundDark
-                : AppConstants.backgroundLight,
-          ),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    context.tr.messageOfVisited(
-                      AppFormatters(
-                        Localizations.localeOf(context),
-                      ).formatNumber((visitedCount)),
-                      AppFormatters(
-                        Localizations.localeOf(context),
-                      ).formatNumber((totalCount)),
-                    ),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
-                  Text(
-                    '${(percentage * 100).toInt()}%',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                      color: AppConstants.royalGold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: percentage,
-                  minHeight: 6,
-                  backgroundColor: isDark
-                      ? Colors.white10
-                      : const Color(0xFFE2E8F0),
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                    AppConstants.royalGold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // At-risk warning banner
-        if (atRiskList.isNotEmpty)
+        if (widget.servantName != null && widget.khademColor != null)
+          ServantHeroCard(
+            servantName: widget.servantName!,
+            khademColor: widget.khademColor!,
+            visitedCount: visitedCount,
+            totalCount: totalCount,
+            isDark: isDark,
+          )
+        else
           Container(
-            margin: const EdgeInsetsDirectional.fromSTEB(16, 4, 16, 8),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             decoration: BoxDecoration(
-              color: Colors.red.withValues(alpha: isDark ? 0.18 : 0.08),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.redAccent.withValues(alpha: 0.4),
-                width: 1.2,
-              ),
+              color: isDark
+                  ? AppColors.backgroundDark
+                  : AppColors.backgroundLight,
             ),
-            child: Row(
+            child: Column(
               children: [
-                const Icon(
-                  Icons.warning_amber_rounded,
-                  color: Colors.redAccent,
-                  size: 22,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    context.tr.messageAlertBoysNeedUrgentVisitRepeatedAbsence(
-                      AppFormatters(
-                        Localizations.localeOf(context),
-                      ).formatNumber(atRiskList.length),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      context.tr.messageOfVisited(
+                        formatters.formatNumber(visitedCount),
+                        formatters.formatNumber(totalCount),
+                      ),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13.sp,
+                      ),
                     ),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                      color: Colors.redAccent,
+                    Text(
+                      '${(percentage * 100).toInt()}%',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13.sp,
+                        color: AppColors.royalGold,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 6.h),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4.r),
+                  child: LinearProgressIndicator(
+                    value: percentage,
+                    minHeight: 6.h,
+                    backgroundColor: isDark
+                        ? Colors.white10
+                        : const Color(0xFFE2E8F0),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      AppColors.royalGold,
                     ),
                   ),
                 ),
-                if (widget.onSwitchToAnalytics != null)
-                  TextButton(
-                    onPressed: widget.onSwitchToAnalytics,
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    child: Text(
-                      context.tr.messageView,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 12,
-                        color: Colors.redAccent,
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),
+
+        // At-risk warning banner
+        AtRiskAlertBanner(
+          atRiskCount: atRiskList.length,
+          isDark: isDark,
+          onViewAnalytics: widget.onSwitchToAnalytics,
+        ),
 
         // Search & Filter
         if (widget.myMakhdomeen.isNotEmpty) ...[
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              onChanged: (val) => setState(() => _search = val.trim()),
-              decoration: InputDecoration(
-                hintText: context.tr.searchMyMakhdomeen,
-                prefixIcon: const Icon(Icons.search, size: 20),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-              ),
-            ),
+          MakhdomeenFilterBar(
+            searchQuery: _search,
+            onSearchChanged: (val) => setState(() => _search = val.trim()),
+            activeFilter: _filter,
+            onFilterChanged: (key) => setState(() => _filter = key),
+            totalCount: totalCount,
+            unvisitedCount: unvisitedCount,
+            visitedCount: visitedCount,
+            brethrenCount: brethrenCount,
+            isDark: isDark,
           ),
-          const SizedBox(height: 10),
-          SizedBox(
-            height: 40,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                _buildFilterChip(
-                  '${context.tr.all} (${AppFormatters(Localizations.localeOf(context)).formatNumber(totalCount)})',
-                  'all',
-                  isDark,
-                ),
-                _buildFilterChip(
-                  '${context.tr.filterUnvisited} (${AppFormatters(Localizations.localeOf(context)).formatNumber(totalCount - visitedCount)})',
-                  'unvisited',
-                  isDark,
-                ),
-                _buildFilterChip(
-                  '${context.tr.filterVisited} (${AppFormatters(Localizations.localeOf(context)).formatNumber(visitedCount)})',
-                  'visited',
-                  isDark,
-                ),
-                _buildFilterChip(
-                  '${context.tr.filterBrethren} (${AppFormatters(Localizations.localeOf(context)).formatNumber(widget.myMakhdomeen.where((m) => m.isBrethrenOfLord).length)})',
-                  'brethren',
-                  isDark,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
         ],
 
         // Student list
@@ -235,15 +166,15 @@ class _MyMakhdomeenTabState extends State<MyMakhdomeenTab> {
               ? Center(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 16,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24.w,
+                      vertical: 16.h,
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(18),
+                          padding: EdgeInsets.all(18.r),
                           decoration: BoxDecoration(
                             color: isDark
                                 ? Colors.white10
@@ -252,28 +183,28 @@ class _MyMakhdomeenTabState extends State<MyMakhdomeenTab> {
                           ),
                           child: Icon(
                             Icons.person_search_rounded,
-                            size: 40,
+                            size: 40.sp,
                             color: isDark
                                 ? Colors.white38
                                 : Colors.grey.shade400,
                           ),
                         ),
-                        const SizedBox(height: 14),
+                        SizedBox(height: 14.h),
                         Text(
                           context.tr.noMakhdomeenAssignedTitle,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w800,
-                            fontSize: 16,
+                            fontSize: 16.sp,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        SizedBox(height: 6.h),
                         Text(
                           context.tr.noMakhdomeenAssignedSubtitle,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppConstants.textMuted,
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: AppColors.textMuted,
                             height: 1.4,
                           ),
                         ),
@@ -282,67 +213,31 @@ class _MyMakhdomeenTabState extends State<MyMakhdomeenTab> {
                   ),
                 )
               : filtered.isEmpty
-              ? Center(
-                  child: Text(
-                    context.tr.noSearchResults,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: AppConstants.textMuted,
-                    ),
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 24),
-                  itemCount: filtered.length,
-                  itemBuilder: (context, index) {
-                    final m = filtered[index];
-                    return MakhdomCard(
-                      makhdom: m,
-                      onLogVisit: () {
-                        RecordVisitSheet.show(context, makhdom: m);
+                  ? Center(
+                      child: Text(
+                        context.tr.noSearchResults,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textMuted,
+                          fontSize: 13.sp,
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: EdgeInsets.only(bottom: 24.h),
+                      itemCount: filtered.length,
+                      itemBuilder: (context, index) {
+                        final m = filtered[index];
+                        return MakhdomCard(
+                          makhdom: m,
+                          onLogVisit: () {
+                            RecordVisitSheet.show(context, makhdom: m);
+                          },
+                        );
                       },
-                    );
-                  },
-                ),
+                    ),
         ),
       ],
-    );
-  }
-
-  Widget _buildFilterChip(String label, String key, bool isDark) {
-    final isSelected = _filter == key;
-    return GestureDetector(
-      onTap: () => setState(() => _filter = key),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsetsDirectional.only(start: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppConstants.royalGold
-              : (isDark ? AppConstants.surfaceDark : Colors.white),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected
-                ? AppConstants.royalGold
-                : (isDark
-                      ? AppConstants.cardBorderDark
-                      : AppConstants.cardBorderLight),
-          ),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-              color: isSelected
-                  ? Colors.white
-                  : (isDark ? Colors.white70 : AppConstants.textDark),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

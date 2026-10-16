@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../constants/constants.dart';
 import '../errors/app_failure.dart';
 import '../models/snapshot_list.dart';
@@ -75,10 +76,10 @@ class AsyncContent<T> extends StatelessWidget {
     // 1. Loading State
     if (isLoading && data == null) {
       return loadingWidget ??
-          const Center(
+          Center(
             child: Padding(
-              padding: EdgeInsets.all(24.0),
-              child: CircularProgressIndicator(),
+              padding: EdgeInsets.all(24.0.r),
+              child: const CircularProgressIndicator(),
             ),
           );
     }
@@ -140,43 +141,43 @@ class AsyncContent<T> extends StatelessWidget {
   ) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+        padding: EdgeInsets.symmetric(horizontal: 24.0.w, vertical: 32.0.h),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16.r),
               decoration: BoxDecoration(
-                color: AppConstants.errorColor.withValues(alpha: 0.12),
+                color: AppColors.errorColor.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.error_outline_rounded,
-                size: 40,
-                color: AppConstants.errorColor,
+                size: 40.r,
+                color: AppColors.errorColor,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             Text(
               failure.localizedMessage(context.tr),
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700),
             ),
             if (failure.retryable && onRetry != null) ...[
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
               ElevatedButton.icon(
                 onPressed: onRetry,
-                icon: const Icon(Icons.refresh_rounded, size: 18),
+                icon: Icon(Icons.refresh_rounded, size: 18.r),
                 label: Text(context.tr.retryAction),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppConstants.primaryLight,
+                  backgroundColor: AppColors.primaryLight,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12.r),
                   ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 20.w,
+                    vertical: 10.h,
                   ),
                 ),
               ),
@@ -190,30 +191,30 @@ class AsyncContent<T> extends StatelessWidget {
   Widget _buildDefaultEmpty(BuildContext context, bool isDark) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32.0),
+        padding: EdgeInsets.all(32.0.r),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16.r),
               decoration: BoxDecoration(
                 color: isDark ? Colors.white10 : const Color(0xFFF1F5F9),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.inbox_rounded,
-                size: 40,
+                size: 40.r,
                 color: isDark ? Colors.white30 : Colors.grey.shade400,
               ),
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: 14.h),
             Text(
               context.tr.noEventsMatchingFilter,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
+              style: TextStyle(
+                fontSize: 14.sp,
                 fontWeight: FontWeight.w600,
-                color: AppConstants.textMuted,
+                color: AppColors.textMuted,
               ),
             ),
           ],
@@ -229,17 +230,17 @@ class AsyncContent<T> extends StatelessWidget {
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+      padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 16.w),
       color: offline ? Colors.orange.shade800 : Colors.blue.shade700,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             offline ? Icons.wifi_off_rounded : Icons.sync_rounded,
-            size: 14,
+            size: 14.r,
             color: Colors.white,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8.w),
           Expanded(
             child: Text(
               cached
@@ -247,8 +248,8 @@ class AsyncContent<T> extends StatelessWidget {
                   : offline
                   ? context.tr.messageYouAreOffline
                   : context.tr.messageSyncingPendingChanges,
-              style: const TextStyle(
-                fontSize: 12,
+              style: TextStyle(
+                fontSize: 12.sp,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),

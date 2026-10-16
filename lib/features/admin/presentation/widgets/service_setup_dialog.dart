@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/constants.dart';
 import '../../../../core/models/service_model.dart';
 import '../../../../core/services/firestore_service.dart';
+import 'service_grade_input_row.dart';
 
 class ServiceSetupDialog extends StatefulWidget {
   final ServiceModel service;
@@ -69,7 +71,6 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
         );
       }
     } else {
-      // Default to Thanawy if empty
       _applyTemplate('thanawy');
     }
   }
@@ -138,34 +139,31 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
           if (_nameController.text.trim().isEmpty || _nameController.text == 'خدمة جديدة') {
             _nameController.text = 'المرحلة الثانوية';
           }
-          _grades.addAll([
-            _GradeInputItem(
-              id: AppConstants.grade1st,
-              name: 'الصف الأول الثانوي',
-              order: 1,
-            ),
-            _GradeInputItem(
-              id: AppConstants.grade2nd,
-              name: 'الصف الثاني الثانوي',
-              order: 2,
-            ),
-            _GradeInputItem(
-              id: AppConstants.grade3rd,
-              name: 'الصف الثالث الثانوي',
-              order: 3,
-            ),
-          ]);
+          final names = [
+            'الصف الأول الثانوي',
+            'الصف الثاني الثانوي',
+            'الصف الثالث الثانوي',
+          ];
+          for (var i = 0; i < names.length; i++) {
+            _grades.add(
+              _GradeInputItem(
+                id: 'grade_${i + 1}',
+                name: names[i],
+                order: i + 1,
+              ),
+            );
+          }
           break;
 
         case 'gam3a':
           if (_nameController.text.trim().isEmpty || _nameController.text == 'خدمة جديدة') {
-            _nameController.text = 'مرحلة إعداد خدام وخريجين';
+            _nameController.text = 'خدمة شباب وخريجين';
           }
           final names = [
             'الفرقة الأولى',
             'الفرقة الثانية',
             'الفرقة الثالثة',
-            'الفرقة الرابعة',
+            'الفرقة الرابعة / خريجين',
           ];
           for (var i = 0; i < names.length; i++) {
             _grades.add(
@@ -207,21 +205,23 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('برجاء كتابة اسم الخدمة'),
-          backgroundColor: AppConstants.errorColor,
+          content: Text('يرجى إدخال اسم الخدمة'),
+          backgroundColor: AppColors.errorColor,
         ),
       );
       return;
     }
 
-    if (_grades.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('برجاء إضافة سنة دراسية / صف واحد على الأقل'),
-          backgroundColor: AppConstants.errorColor,
-        ),
-      );
-      return;
+    for (var i = 0; i < _grades.length; i++) {
+      if (_grades[i].nameController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('يرجى تحديد اسم للصف رقم ${i + 1} أو حذفه'),
+            backgroundColor: AppColors.errorColor,
+          ),
+        );
+        return;
+      }
     }
 
     setState(() => _isSaving = true);
@@ -229,14 +229,10 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
     try {
       final serviceGrades = <ServiceGrade>[];
       for (var i = 0; i < _grades.length; i++) {
-        final item = _grades[i];
-        final gradeName = item.nameController.text.trim().isNotEmpty
-            ? item.nameController.text.trim()
-            : 'الصف ${i + 1}';
         serviceGrades.add(
           ServiceGrade(
-            id: item.id.isNotEmpty ? item.id : 'grade_${i + 1}',
-            name: gradeName,
+            id: _grades[i].id.isNotEmpty ? _grades[i].id : 'grade_${i + 1}',
+            name: _grades[i].nameController.text.trim(),
             order: i + 1,
           ),
         );
@@ -258,7 +254,7 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('تم حفظ وتحديث إعدادات الخدمة بنجاح'),
-            backgroundColor: AppConstants.successColor,
+            backgroundColor: AppColors.successColor,
           ),
         );
       }
@@ -268,7 +264,7 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('حدث خطأ أثناء الحفظ: $e'),
-            backgroundColor: AppConstants.errorColor,
+            backgroundColor: AppColors.errorColor,
           ),
         );
       }
@@ -280,13 +276,13 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
       backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      insetPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 580, maxHeight: 720),
+        constraints: BoxConstraints(maxWidth: 580.w, maxHeight: 720.h),
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: EdgeInsets.all(18.r),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -294,34 +290,34 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: EdgeInsets.all(10.r),
                     decoration: BoxDecoration(
-                      color: AppConstants.primaryLight.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(14),
+                      color: AppColors.primaryLight.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(14.r),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.settings_suggest_rounded,
-                      color: AppConstants.primaryLight,
-                      size: 26,
+                      color: AppColors.primaryLight,
+                      size: 26.sp,
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  SizedBox(width: 14.w),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'تخصيص وإعداد الخدمة',
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 18.sp,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
                           'حدد اسم الخدمة وعدد السنوات وأسماء كل صف',
                           style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? Colors.white60 : AppConstants.textMuted,
+                            fontSize: 12.sp,
+                            color: isDark ? Colors.white60 : AppColors.textMuted,
                           ),
                         ),
                       ],
@@ -333,7 +329,7 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20.h),
 
               // Scrollable Body
               Expanded(
@@ -341,39 +337,39 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
                   physics: const BouncingScrollPhysics(),
                   children: [
                     // 1. Service Name Field
-                    const Text(
+                    Text(
                       'اسم الخدمة',
-                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.sp),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8.h),
                     TextField(
                       controller: _nameController,
                       enabled: !_isSaving,
                       decoration: InputDecoration(
                         hintText: 'مثال: المرحلة الابتدائية، المرحلة الإعدادية...',
-                        prefixIcon: const Icon(Icons.church_rounded, size: 20),
+                        prefixIcon: Icon(Icons.church_rounded, size: 20.sp),
                         filled: true,
                         fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(12.r),
                           borderSide: BorderSide(
                             color: isDark ? Colors.white12 : Colors.black12,
                           ),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
                       ),
                     ),
-                    const SizedBox(height: 18),
+                    SizedBox(height: 18.h),
 
                     // 2. Quick Templates
-                    const Text(
+                    Text(
                       'نماذج سريعة للتعبئة',
-                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.sp),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8.h),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                      spacing: 8.w,
+                      runSpacing: 8.h,
                       children: [
                         _buildTemplateChip(
                           label: 'ابتدائي (6 سنين)',
@@ -401,107 +397,69 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20.h),
 
                     // 3. Grades List Header
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            const Text(
-                              'الصفوف والسنوات الدراسية',
-                              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppConstants.primaryLight.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(10),
+                        Expanded(
+                          child: Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8.w,
+                            runSpacing: 4.h,
+                            children: [
+                              Text(
+                                'الصفوف والسنوات الدراسية',
+                                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.sp),
                               ),
-                              child: Text(
-                                '${_grades.length} صفوف',
-                                style: const TextStyle(
-                                  color: AppConstants.primaryLight,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryLight.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(10.r),
+                                ),
+                                child: Text(
+                                  '${_grades.length} صفوف',
+                                  style: TextStyle(
+                                    color: AppColors.primaryLight,
+                                    fontSize: 11.sp,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                         TextButton.icon(
                           onPressed: _isSaving ? null : _addGrade,
-                          icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
-                          label: const Text('إضافة صف', style: TextStyle(fontSize: 12)),
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          icon: Icon(Icons.add_circle_outline_rounded, size: 18.sp),
+                          label: Text('إضافة صف', style: TextStyle(fontSize: 12.sp)),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8.h),
 
                     // 4. Grades Items
                     ..._grades.asMap().entries.map((entry) {
                       final idx = entry.key;
                       final grade = entry.value;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isDark ? Colors.white10 : Colors.black12,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 14,
-                                backgroundColor: AppConstants.primaryLight.withValues(alpha: 0.15),
-                                child: Text(
-                                  '${idx + 1}',
-                                  style: const TextStyle(
-                                    color: AppConstants.primaryLight,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: TextField(
-                                  controller: grade.nameController,
-                                  enabled: !_isSaving,
-                                  decoration: InputDecoration(
-                                    isDense: true,
-                                    border: InputBorder.none,
-                                    hintText: 'اسم الصف (مثال: الصف الأول الابتدائي)',
-                                    hintStyle: TextStyle(
-                                      fontSize: 13,
-                                      color: isDark ? Colors.white38 : AppConstants.textMuted,
-                                    ),
-                                  ),
-                                  style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                              if (_grades.length > 1)
-                                IconButton(
-                                  icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                                  color: AppConstants.errorColor.withValues(alpha: 0.7),
-                                  tooltip: 'حذف هذا الصف',
-                                  onPressed: _isSaving ? null : () => _removeGrade(idx),
-                                ),
-                            ],
-                          ),
-                        ),
+                      return ServiceGradeInputRow(
+                        index: idx,
+                        controller: grade.nameController,
+                        isSaving: _isSaving,
+                        isDark: isDark,
+                        canDelete: _grades.length > 1,
+                        onDelete: () => _removeGrade(idx),
                       );
                     }),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
 
               // Action Buttons
               Row(
@@ -510,36 +468,39 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
                     child: OutlinedButton(
                       onPressed: _isSaving ? null : () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: EdgeInsets.symmetric(vertical: 13.h),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
                       ),
                       child: const Text('إلغاء'),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12.w),
                   Expanded(
                     flex: 2,
                     child: ElevatedButton.icon(
                       onPressed: _isSaving ? null : _save,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppConstants.primaryLight,
+                        backgroundColor: AppColors.primaryLight,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: EdgeInsets.symmetric(vertical: 13.h),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
                       ),
                       icon: _isSaving
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
+                          ? SizedBox(
+                              width: 18.w,
+                              height: 18.h,
+                              child: const CircularProgressIndicator(
                                 strokeWidth: 2,
                                 color: Colors.white,
                               ),
                             )
-                          : const Icon(Icons.save_rounded, size: 18),
-                      label: Text(
-                        _isSaving ? 'جاري الحفظ...' : 'حفظ إعدادات الخدمة',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                          : Icon(Icons.save_rounded, size: 18.sp),
+                      label: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          _isSaving ? 'جاري الحفظ...' : 'حفظ إعدادات الخدمة',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
                   ),
@@ -560,12 +521,12 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
   }) {
     return InkWell(
       onTap: _isSaving ? null : onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(10.r),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 7.h),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(10.r),
           border: Border.all(
             color: isDark ? Colors.white12 : const Color(0xFFE2E8F0),
           ),
@@ -573,12 +534,12 @@ class _ServiceSetupDialogState extends State<ServiceSetupDialog> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 15, color: AppConstants.primaryLight),
-            const SizedBox(width: 6),
+            Icon(icon, size: 15.sp, color: AppColors.primaryLight),
+            SizedBox(width: 6.w),
             Text(
               label,
               style: TextStyle(
-                fontSize: 11.5,
+                fontSize: 11.5.sp,
                 fontWeight: FontWeight.w600,
                 color: isDark ? Colors.white70 : const Color(0xFF334155),
               ),

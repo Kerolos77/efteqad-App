@@ -1,6 +1,6 @@
-import 'package:efteqad/core/errors/app_failure.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/constants.dart';
 import '../../../../core/localization/app_localizations.dart';
@@ -15,6 +15,7 @@ import '../../../../core/widgets/paged_content.dart';
 import '../../../../core/utils/calendar_dates.dart';
 import '../../../../core/localization/app_formatters.dart';
 import '../../models/history_analysis.dart';
+import '../widgets/edit_visit_notes_dialog.dart';
 import '../widgets/history_filters.dart';
 import '../widgets/history_header.dart';
 import '../widgets/history_kpis.dart';
@@ -88,12 +89,12 @@ class _MakhdomHistoryScreenState extends State<MakhdomHistoryScreen> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(
+            Icon(
               Icons.check_circle_outline,
               color: Colors.white,
-              size: 18,
+              size: 18.sp,
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8.w),
             Expanded(
               child: Text(
                 '${context.tr.copyPhoneSuccess} ($label: $text)',
@@ -103,9 +104,9 @@ class _MakhdomHistoryScreenState extends State<MakhdomHistoryScreen> {
           ],
         ),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
         duration: const Duration(seconds: 2),
-        backgroundColor: AppConstants.primaryLight,
+        backgroundColor: AppColors.primaryLight,
       ),
     );
   }
@@ -124,10 +125,10 @@ class _MakhdomHistoryScreenState extends State<MakhdomHistoryScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: AppConstants.sacredGold,
+              primary: AppColors.sacredGold,
               onPrimary: Colors.black,
               surface: Theme.of(context).brightness == Brightness.dark
-                  ? AppConstants.surfaceDark
+                  ? AppColors.surfaceDark
                   : Colors.white,
             ),
           ),
@@ -167,150 +168,12 @@ class _MakhdomHistoryScreenState extends State<MakhdomHistoryScreen> {
       (_from == null || !date.isBefore(_from!)) &&
       date.isBefore(calendarDay(_to, 1));
 
-  /// حوار تعديل أو إضافة ملاحظات ديسكريبشن الافتقاد
   Future<void> _showEditVisitNotesDialog(VisitModel visit) async {
-    final controller = TextEditingController(text: visit.notes ?? '');
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    bool isSaving = false;
-
-    await showDialog(
-      context: context,
-      builder: (dialogCtx) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: isDark ? AppConstants.surfaceDark : Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              title: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppConstants.sacredGold.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.edit_note_rounded,
-                      color: AppConstants.sacredGold,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      context.tr.editVisitNotesTitle,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.tr.editVisitNotesSubtitle,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      color: isDark ? Colors.white70 : AppConstants.textMuted,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: controller,
-                    maxLines: 4,
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      hintText: context.tr.editVisitNotesHint,
-                      hintStyle: const TextStyle(fontSize: 12.5),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      filled: true,
-                      fillColor: isDark
-                          ? Colors.black26
-                          : const Color(0xFFF8FAFC),
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogCtx).pop(),
-                  child: Text(context.tr.cancel),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppConstants.sacredGold,
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: isSaving
-                      ? null
-                      : () async {
-                          final messenger = ScaffoldMessenger.of(context);
-                          final tr = context.tr;
-                          setDialogState(() => isSaving = true);
-                          try {
-                            final newNotes = controller.text.trim();
-                            await _firestoreService.updateVisitNotes(
-                              visitId: visit.id,
-                              notes: newNotes,
-                              makhdomId: widget.makhdom.id,
-                            );
-                            if (mounted && dialogCtx.mounted) {
-                              Navigator.of(dialogCtx).pop();
-                              messenger.showSnackBar(
-                                SnackBar(
-                                  content: Text(tr.visitNotesUpdatedSuccess),
-                                  behavior: SnackBarBehavior.floating,
-                                  backgroundColor: AppConstants.successColor,
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            if (mounted) {
-                              messenger.showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    AppFailure.fromException(
-                                      e,
-                                    ).localizedMessage(tr),
-                                  ),
-                                  behavior: SnackBarBehavior.floating,
-                                  backgroundColor: AppConstants.errorColor,
-                                ),
-                              );
-                            }
-                          } finally {
-                            if (dialogCtx.mounted) {
-                              setDialogState(() => isSaving = false);
-                            }
-                          }
-                        },
-                  child: isSaving
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(
-                          context.tr.save,
-                          style: const TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                ),
-              ],
-            );
-          },
-        );
-      },
+    await EditVisitNotesDialog.show(
+      context,
+      visit: visit,
+      makhdomId: widget.makhdom.id,
+      firestoreService: _firestoreService,
     );
   }
 
@@ -355,29 +218,29 @@ class _MakhdomHistoryScreenState extends State<MakhdomHistoryScreen> {
 
     return Scaffold(
       backgroundColor: isDark
-          ? AppConstants.backgroundDark
-          : AppConstants.backgroundLight,
+          ? AppColors.backgroundDark
+          : AppColors.backgroundLight,
       appBar: AppBar(
         title: Text(
           context.tr.historyAction,
-          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18.sp),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.date_range_rounded, size: 22),
+            icon: Icon(Icons.date_range_rounded, size: 22.sp),
             tooltip: context.tr.filterCustomDate,
             onPressed: _pickCustomDateRange,
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppConstants.sacredGold,
+        backgroundColor: AppColors.sacredGold,
         foregroundColor: Colors.black,
         elevation: 4,
-        icon: const Icon(Icons.add_task_rounded, size: 20),
+        icon: Icon(Icons.add_task_rounded, size: 20.sp),
         label: Text(
           context.tr.logNewVisitButton,
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5.sp),
         ),
         onPressed: () async {
           await RecordVisitSheet.show(context, makhdom: widget.makhdom);
@@ -432,7 +295,7 @@ class _MakhdomHistoryScreenState extends State<MakhdomHistoryScreen> {
                             slivers: [
                               SliverToBoxAdapter(
                                 child: Padding(
-                                  padding: const EdgeInsets.all(16),
+                                  padding: EdgeInsets.all(16.r),
                                   child: Text(
                                     _from == null
                                         ? context.tr.filterAllTime
@@ -505,8 +368,8 @@ class _MakhdomHistoryScreenState extends State<MakhdomHistoryScreen> {
                               ),
 
                               // مسافة سفلية للزر العائم
-                              const SliverToBoxAdapter(
-                                child: SizedBox(height: 80),
+                              SliverToBoxAdapter(
+                                child: SizedBox(height: 80.h),
                               ),
                             ],
                           ),

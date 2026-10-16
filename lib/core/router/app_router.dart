@@ -16,7 +16,7 @@ import '../models/task_model.dart';
 import 'route_resource_loader.dart';
 import '../errors/app_failure.dart';
 import '../repositories/attendance_repository.dart';
-import '../services/attendance_roster_repository.dart';
+import '../repositories/attendance_roster_repository.dart';
 import 'router_services.dart';
 import '../services/firestore_service.dart';
 import '../session/session_cubit.dart';
@@ -889,7 +889,7 @@ class _GradeShellScaffoldState extends State<_GradeShellScaffold> {
             floatingActionButton: navigationShell.currentIndex == 0
                 ? FloatingActionButton.extended(
                     onPressed: () => _openAddMakhdomDialog(context, khodamList),
-                    backgroundColor: AppConstants.primaryLight,
+                    backgroundColor: AppColors.primaryLight,
                     icon: const Icon(
                       Icons.person_add_rounded,
                       color: Colors.white,
@@ -936,7 +936,7 @@ class _GradeShellScaffoldState extends State<_GradeShellScaffold> {
                   padding: const EdgeInsetsDirectional.only(end: 4),
                   child: TextButton.icon(
                     style: TextButton.styleFrom(
-                      foregroundColor: AppConstants.sacredGold,
+                      foregroundColor: AppColors.sacredGold,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
                         vertical: 6,
@@ -1087,7 +1087,7 @@ class _GradeShellScaffoldState extends State<_GradeShellScaffold> {
           floatingActionButton: navigationShell.currentIndex == 0
               ? FloatingActionButton.extended(
                   onPressed: () => _openAddMakhdomDialog(context, khodamList),
-                  backgroundColor: AppConstants.primaryLight,
+                  backgroundColor: AppColors.primaryLight,
                   icon: const Icon(
                     Icons.person_add_rounded,
                     color: Colors.white,

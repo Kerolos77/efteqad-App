@@ -1,15 +1,17 @@
-import 'package:efteqad/core/errors/app_failure.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/session/session_cubit.dart';
-import '../../../../core/session/session_state.dart';
-import '../../../../core/router/app_routes.dart';
 import '../../../../core/constants/constants.dart';
+import '../../../../core/errors/app_failure.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/repositories/auth_repository.dart';
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/services/firestore_service.dart';
+import '../../../../core/session/session_cubit.dart';
+import '../../../../core/session/session_state.dart';
 import '../../../../core/utils/color_generator.dart';
+import '../widgets/auth_widgets.dart';
 
 class PendingAssignmentScreen extends StatefulWidget {
   const PendingAssignmentScreen({super.key});
@@ -67,7 +69,11 @@ class _PendingAssignmentScreenState extends State<PendingAssignmentScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.tr.profileUpdatedSuccess),
-            backgroundColor: AppConstants.successColor,
+            backgroundColor: AppColors.successColor,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.r),
+            ),
           ),
         );
       }
@@ -78,7 +84,11 @@ class _PendingAssignmentScreenState extends State<PendingAssignmentScreen> {
             content: Text(
               AppFailure.fromException(e).localizedMessage(context.tr),
             ),
-            backgroundColor: AppConstants.errorColor,
+            backgroundColor: AppColors.errorColor,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.r),
+            ),
           ),
         );
       }
@@ -93,9 +103,16 @@ class _PendingAssignmentScreenState extends State<PendingAssignmentScreen> {
       if (mounted) context.go(AppRoutes.loginPath);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(context.tr.dataUnavailable)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.tr.dataUnavailable),
+            backgroundColor: AppColors.errorColor,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+          ),
+        );
       }
     }
   }
@@ -116,8 +133,8 @@ class _PendingAssignmentScreenState extends State<PendingAssignmentScreen> {
     final userColor = ColorGenerator.getColorForId(user.email ?? user.uid);
 
     return BlocBuilder<SessionCubit, SessionState>(
-      builder: (context, session) {
-        final khadem = session.profile;
+      builder: (context, sessionState) {
+        final khadem = sessionState.profile;
 
         // مزامنة الحقول عند أول جلب من فايرستور
         if (!_initialized && khadem != null) {
@@ -126,281 +143,58 @@ class _PendingAssignmentScreenState extends State<PendingAssignmentScreen> {
           if (khadem.phone.isNotEmpty) _phoneController.text = khadem.phone;
         }
 
+        final displayName = (khadem?.name.isNotEmpty ?? false)
+            ? khadem!.name
+            : (user.displayName ?? '');
+
         return Scaffold(
           backgroundColor: isDark
-              ? AppConstants.backgroundDark
-              : AppConstants.backgroundLight,
+              ? AppColors.backgroundDark
+              : AppColors.backgroundLight,
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
             actions: [
               IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.logout_rounded,
-                  color: AppConstants.errorColor,
+                  color: AppColors.errorColor,
+                  size: 22.r,
                 ),
                 tooltip: context.tr.signOut,
                 onPressed: _handleSignOut,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8.w),
             ],
           ),
           body: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
               physics: const BouncingScrollPhysics(),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 480),
+                constraints: BoxConstraints(maxWidth: 480.w),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // أيقونة الخادم باللون المخصص
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: userColor.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: userColor, width: 2.5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: userColor.withValues(alpha: 0.2),
-                            blurRadius: 20,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          (khadem?.name.isNotEmpty ?? false)
-                              ? khadem!.name[0]
-                              : (user.displayName?.isNotEmpty ?? false
-                                    ? user.displayName![0]
-                                    : context.tr.messageS),
-                          style: TextStyle(
-                            fontSize: 34,
-                            fontWeight: FontWeight.w900,
-                            color: userColor,
-                          ),
-                        ),
-                      ),
+                    // أيقونة الخادم وعنوان الترحيب
+                    PendingServantAvatar(
+                      displayName: displayName,
+                      email: user.email ?? '',
+                      userColor: userColor,
                     ),
-                    const SizedBox(height: 18),
-
-                    // عنوان الترحيب
-                    Text(
-                      context.tr.pendingWelcome,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      user.email ?? '',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppConstants.textMuted,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24.h),
 
                     // بطاقة حالة الانتظار (Status Hero Card)
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppConstants.surfaceDark : Colors.white,
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(
-                          color: AppConstants.accentGold.withValues(
-                            alpha: 0.35,
-                          ),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(
-                              alpha: isDark ? 0.3 : 0.04,
-                            ),
-                            blurRadius: 16,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: AppConstants.accentGold.withValues(
-                                    alpha: 0.15,
-                                  ),
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                child: const Icon(
-                                  Icons.hourglass_top_rounded,
-                                  color: AppConstants.accentGold,
-                                  size: 24,
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      context.tr.pendingStatusTitle,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 14.5,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppConstants.accentGold
-                                            .withValues(alpha: 0.15),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        context.tr.pendingRoleLabel,
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppConstants.accentGold,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 14),
-                          Text(
-                            context.tr.pendingStatusDesc,
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              height: 1.5,
-                              color: isDark
-                                  ? AppConstants.textMutedDark
-                                  : AppConstants.textMuted,
-                            ),
-                            textAlign: TextAlign.start,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
+                    const PendingStatusCard(),
+                    SizedBox(height: 24.h),
 
                     // استمارة تأكيد الاسم ورقم الهاتف
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppConstants.surfaceDark : Colors.white,
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(
-                          color: isDark
-                              ? AppConstants.cardBorderDark
-                              : AppConstants.cardBorderLight,
-                        ),
-                      ),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.tr.completeProfilePrompt,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-
-                            // حقل الاسم
-                            TextFormField(
-                              controller: _nameController,
-                              decoration: InputDecoration(
-                                labelText: context.tr.servantFullNameLabel,
-                                prefixIcon: const Icon(
-                                  Icons.person_outline,
-                                  size: 20,
-                                ),
-                              ),
-                              validator: (val) {
-                                if (val == null || val.trim().isEmpty) {
-                                  return context.tr.servantNameRequired;
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 14),
-
-                            // حقل التليفون
-                            TextFormField(
-                              controller: _phoneController,
-                              keyboardType: TextInputType.phone,
-                              textDirection: TextDirection.ltr,
-                              decoration: InputDecoration(
-                                labelText: context.tr.servantPhoneLabel,
-                                prefixIcon: const Icon(
-                                  Icons.phone_outlined,
-                                  size: 20,
-                                ),
-                              ),
-                              validator: (val) {
-                                if (val == null || val.trim().isEmpty) {
-                                  return context.tr.servantPhoneRequired;
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 18),
-
-                            // زر حفظ البيانات
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton.icon(
-                                onPressed: _isSaving
-                                    ? null
-                                    : _handleSaveProfile,
-                                icon: _isSaving
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Icon(
-                                        Icons.check_circle_outline,
-                                        size: 18,
-                                      ),
-                                label: Text(context.tr.updateAndSave),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppConstants.primaryLight,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 14,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                    PendingProfileForm(
+                      formKey: _formKey,
+                      nameController: _nameController,
+                      phoneController: _phoneController,
+                      isSaving: _isSaving,
+                      onSave: _handleSaveProfile,
                     ),
                   ],
                 ),

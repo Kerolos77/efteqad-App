@@ -32,3 +32,39 @@ bool canManageGradeAttendance(
   if (session.isGradeAdmin) return session.grade == grade;
   return session.isServant && (grade == 'all' || session.grade == grade);
 }
+
+bool canAuthorizeAttendanceSession({
+  required SessionState session,
+  required TaskModel task,
+  required String sessionGrade,
+  required bool isDirectSession,
+}) {
+  if (isDirectSession) {
+    return canManageGradeAttendance(session, sessionGrade, session.userId);
+  }
+  if (!task.isCompleted && task.status == 'active') {
+    return canManageGradeAttendance(session, sessionGrade, session.userId) ||
+        canManageAttendance(session, task, session.userId);
+  }
+  return canManageAttendance(session, task, session.userId);
+}
+
+bool canReopenAttendanceSession({
+  required SessionState session,
+  required TaskModel task,
+  required String sessionGrade,
+}) {
+  return session.isActive &&
+      task.status != 'cancelled' &&
+      (session.isStageAdmin ||
+          (session.isGradeAdmin && session.grade == sessionGrade));
+}
+
+bool isAttendanceAdminUser({
+  required SessionState session,
+  required String sessionGrade,
+}) {
+  return session.isActive &&
+      (session.isStageAdmin ||
+          (session.isGradeAdmin && session.grade == sessionGrade));
+}

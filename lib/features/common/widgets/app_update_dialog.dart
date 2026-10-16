@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/constants/constants.dart';
 import '../../../core/services/app_version_service.dart';
 import '../../../core/services/shorebird_updater_service.dart';
+import 'version_pill.dart';
 
 class AppUpdateDialog extends StatelessWidget {
   final AppVersionInfo versionInfo;
@@ -45,57 +47,57 @@ class AppUpdateDialog extends StatelessWidget {
       canPop: !isMandatory,
       child: AlertDialog(
         backgroundColor: isDark
-            ? AppConstants.surfaceDark
-            : AppConstants.surfaceLight,
+            ? AppColors.surfaceDark
+            : AppColors.surfaceLight,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(22.r),
           side: BorderSide(
-            color: AppConstants.sacredGold.withValues(alpha: 0.45),
+            color: AppColors.sacredGold.withValues(alpha: 0.45),
             width: 1.4,
           ),
         ),
-        titlePadding: const EdgeInsets.fromLTRB(20, 22, 20, 8),
-        contentPadding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        titlePadding: EdgeInsets.fromLTRB(20.w, 22.h, 20.w, 8.h),
+        contentPadding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 16.h),
+        actionsPadding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
         title: Column(
           children: [
             Container(
-              width: 60,
-              height: 60,
+              width: 60.r,
+              height: 60.r,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [AppConstants.primaryNavy, AppConstants.primaryLight],
+                  colors: [AppColors.primaryNavy, AppColors.primaryLight],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(18.r),
                 border: Border.all(
-                  color: AppConstants.sacredGold.withValues(alpha: 0.6),
+                  color: AppColors.sacredGold.withValues(alpha: 0.6),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppConstants.sacredGold.withValues(alpha: 0.2),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    color: AppColors.sacredGold.withValues(alpha: 0.2),
+                    blurRadius: 12.r,
+                    offset: Offset(0, 4.h),
                   ),
                 ],
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.system_update_rounded,
-                color: AppConstants.sacredGold,
-                size: 32,
+                color: AppColors.sacredGold,
+                size: 32.r,
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
             Text(
               isMandatory
                   ? 'تحديث هام ومطلوب للتطبيق'
                   : 'يتوفر إصدار جديد من تطبيق الراعي',
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w900,
-                fontSize: 17,
+                fontSize: 17.sp,
               ),
             ),
           ],
@@ -106,79 +108,79 @@ class AppUpdateDialog extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
+                padding: EdgeInsets.symmetric(
+                  horizontal: 14.w,
+                  vertical: 10.h,
                 ),
                 decoration: BoxDecoration(
                   color: isDark
                       ? Colors.white.withValues(alpha: 0.05)
                       : const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(14.r),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildVersionPill(
+                    VersionPill(
                       label: 'إصدارك الحالي',
                       version: 'v$currentVersion',
-                      color: AppConstants.textMuted,
+                      color: AppColors.textMuted,
                     ),
-                    const Icon(
+                    Icon(
                       Icons.arrow_back_rounded,
-                      color: AppConstants.sacredGold,
-                      size: 20,
+                      color: AppColors.sacredGold,
+                      size: 20.r,
                     ),
-                    _buildVersionPill(
+                    VersionPill(
                       label: 'الإصدار الجديد',
                       version: 'v${versionInfo.latestVersion}',
-                      color: AppConstants.successColor,
+                      color: AppColors.successColor,
                     ),
                   ],
                 ),
               ),
               if (versionInfo.releaseNotes != null &&
                   versionInfo.releaseNotes!.isNotEmpty) ...[
-                const SizedBox(height: 14),
-                const Text(
+                SizedBox(height: 14.h),
+                Text(
                   'ما الجديد في هذا الإصدار:',
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
-                    fontSize: 13,
-                    color: AppConstants.sacredGold,
+                    fontSize: 13.sp,
+                    color: AppColors.sacredGold,
                   ),
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: 6.h),
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(12.r),
                   decoration: BoxDecoration(
-                    color: AppConstants.sacredGold.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
+                    color: AppColors.sacredGold.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
-                      color: AppConstants.sacredGold.withValues(alpha: 0.25),
+                      color: AppColors.sacredGold.withValues(alpha: 0.25),
                     ),
                   ),
                   child: Text(
                     versionInfo.releaseNotes!,
-                    style: const TextStyle(
-                      fontSize: 12.5,
+                    style: TextStyle(
+                      fontSize: 12.5.sp,
                       height: 1.45,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
               ],
-              const SizedBox(height: 12),
+              SizedBox(height: 12.h),
               Text(
                 isMandatory
                     ? 'يرجى تحميل أحدث إصدار من الصفحة الرسمية للتطبيق للمتابعة.'
                     : 'يمكنك الآن تحميل النسخة الجديدة مباشرة من صفحة التحميل الرسمية للتطبيق.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 12.sp,
                   color: isDark
-                      ? AppConstants.textMutedDark
-                      : AppConstants.textMuted,
+                      ? AppColors.textMutedDark
+                      : AppColors.textMuted,
                 ),
               ),
             ],
@@ -194,27 +196,33 @@ class AppUpdateDialog extends StatelessWidget {
                     versionInfo.downloadUrl,
                   );
                 },
-                icon: const Icon(Icons.download_rounded, size: 20),
-                label: const Text(
+                icon: Icon(Icons.download_rounded, size: 20.r),
+                label: Text(
                   'فتح صفحة التحميل وتنزيل التحديث',
-                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13.5),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 13.5.sp,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppConstants.sacredGold,
-                  foregroundColor: AppConstants.primaryNavy,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  backgroundColor: AppColors.sacredGold,
+                  foregroundColor: AppColors.primaryNavy,
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12.r),
                   ),
                 ),
               ),
               if (!isMandatory) ...[
-                const SizedBox(height: 6),
+                SizedBox(height: 6.h),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text(
+                  child: Text(
                     'تذكيري لاحقاً',
-                    style: TextStyle(fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.sp,
+                    ),
                   ),
                 ),
               ],
@@ -222,42 +230,6 @@ class AppUpdateDialog extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildVersionPill({
-    required String label,
-    required String version,
-    required Color color,
-  }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11,
-            color: AppConstants.textMuted,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 3),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            version,
-            style: TextStyle(
-              fontWeight: FontWeight.w900,
-              fontSize: 13,
-              color: color,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -311,7 +283,7 @@ class _AppVersionUpdateGuardState extends State<AppVersionUpdateGuard> {
                 'تم تنزيل تحديث لحظي جديد بنجاح! سيتم تطبيقه عند إعادة فتح التطبيق.',
                 style: TextStyle(fontWeight: FontWeight.w700),
               ),
-              backgroundColor: AppConstants.primaryNavy,
+              backgroundColor: AppColors.primaryNavy,
               duration: Duration(seconds: 5),
             ),
           );
@@ -335,32 +307,32 @@ class _AppVersionUpdateGuardState extends State<AppVersionUpdateGuard> {
     return Column(
       children: [
         Material(
-          color: AppConstants.primaryNavy,
+          color: AppColors.primaryNavy,
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  color: AppConstants.sacredGold.withValues(alpha: 0.45),
+                  color: AppColors.sacredGold.withValues(alpha: 0.45),
                 ),
               ),
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.system_update_rounded,
-                  color: AppConstants.sacredGold,
-                  size: 18,
+                  color: AppColors.sacredGold,
+                  size: 18.r,
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8.w),
                 Expanded(
                   child: Text(
                     'يتوفر إصدار جديد من التطبيق (v${_versionInfo.latestVersion})',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,
-                      fontSize: 12,
+                      fontSize: 12.sp,
                     ),
                   ),
                 ),
@@ -368,22 +340,22 @@ class _AppVersionUpdateGuardState extends State<AppVersionUpdateGuard> {
                   onPressed: () => AppVersionService.shared.openDownloadPage(
                     _versionInfo.downloadUrl,
                   ),
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.download_rounded,
-                    size: 15,
-                    color: AppConstants.sacredGold,
+                    size: 15.r,
+                    color: AppColors.sacredGold,
                   ),
-                  label: const Text(
+                  label: Text(
                     'تنزيل التحديث',
                     style: TextStyle(
-                      color: AppConstants.sacredGold,
+                      color: AppColors.sacredGold,
                       fontWeight: FontWeight.w900,
-                      fontSize: 12,
+                      fontSize: 12.sp,
                     ),
                   ),
                   style: TextButton.styleFrom(
                     visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: EdgeInsets.symmetric(horizontal: 8.w),
                   ),
                 ),
               ],
@@ -395,4 +367,3 @@ class _AppVersionUpdateGuardState extends State<AppVersionUpdateGuard> {
     );
   }
 }
-

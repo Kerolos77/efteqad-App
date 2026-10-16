@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/page_result.dart';
 import '../models/snapshot_list.dart';
 import '../localization/app_localizations.dart';
@@ -103,12 +104,15 @@ class _PagedContentState<T> extends State<PagedContent<T>> {
       items,
       _more
           ? Padding(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12.r),
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
                   : TextButton(
                       onPressed: _load,
-                      child: Text(context.tr.loadMore),
+                      child: Text(
+                        context.tr.loadMore,
+                        style: TextStyle(fontSize: 14.sp),
+                      ),
                     ),
             )
           : null,

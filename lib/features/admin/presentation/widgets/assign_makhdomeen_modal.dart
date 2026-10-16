@@ -1,6 +1,7 @@
 import 'package:efteqad/core/localization/app_formatters.dart';
 import 'package:efteqad/core/errors/app_failure.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/constants.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/khadem_model.dart';
@@ -8,6 +9,8 @@ import '../../../../core/models/makhdom_model.dart';
 import '../../../../core/services/firestore_service.dart';
 import '../../../../core/services/trusted_mutations.dart';
 import '../../../../core/utils/color_generator.dart';
+import 'assign_conflict_warning_dialog.dart';
+import 'assign_makhdom_list_item.dart';
 
 class AssignMakhdomeenModal extends StatefulWidget {
   final FirestoreService? firestoreService;
@@ -75,7 +78,6 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
       }
       return;
     }
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // المخدومين الجدد الذين تم تحديدهم وهم مربوطين بالفعل بخادم آخر
     final conflictingMakhdomeen = widget.allMakhdomeen.where((m) {
@@ -88,171 +90,16 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
     }).toList();
 
     if (_submittedSelection == null && conflictingMakhdomeen.isNotEmpty) {
-      final bool? confirm = await showDialog<bool>(
-        context: context,
-        builder: (dialogCtx) {
-          return AlertDialog(
-            backgroundColor: isDark ? AppConstants.cardDark : Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppConstants.warningColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.warning_amber_rounded,
-                    color: AppConstants.warningColor,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    context.tr.conflictWarningTitle,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.tr.conflictWarningTransferCount(
-                      conflictingMakhdomeen.length,
-                      widget.targetKhadem.name,
-                    ),
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: isDark
-                          ? AppConstants.textMutedDark
-                          : AppConstants.textMuted,
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppConstants.warningColor.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppConstants.warningColor.withValues(
-                          alpha: 0.25,
-                        ),
-                      ),
-                    ),
-                    child: Column(
-                      children: conflictingMakhdomeen.map((m) {
-                        final currentKhademColor = ColorGenerator.getColorForId(
-                          m.assignedKhademId,
-                        );
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 5),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.arrow_left_rounded,
-                                size: 20,
-                                color: AppConstants.warningColor,
-                              ),
-                              Expanded(
-                                child: Text(
-                                  m.fullName,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: currentKhademColor.withValues(
-                                    alpha: 0.12,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: currentKhademColor.withValues(
-                                      alpha: 0.4,
-                                    ),
-                                  ),
-                                ),
-                                child: Text(
-                                  m.assignedKhademName ??
-                                      context.tr.otherServant,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: currentKhademColor,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    context.tr.confirmTransferQuestion,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogCtx, false),
-                child: Text(
-                  context.tr.cancel,
-                  style: TextStyle(
-                    color: isDark
-                        ? AppConstants.textMutedDark
-                        : AppConstants.textMuted,
-                  ),
-                ),
-              ),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppConstants.warningColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: () => Navigator.pop(dialogCtx, true),
-                child: Text(
-                  context.tr.conflictTransferBtn,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          );
-        },
+      final bool? confirm = await AssignConflictWarningDialog.show(
+        context,
+        conflictingMakhdomeen: conflictingMakhdomeen,
+        targetKhademName: widget.targetKhadem.name,
       );
 
       if (confirm != true) return;
     }
 
     if (!mounted) return;
-    // حفظ التعديلات في فايرستور
     FocusScope.of(context).unfocus();
     setState(() {
       if (_submittedSelection == null) {
@@ -270,6 +117,7 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
       }
       _isSaving = true;
     });
+
     try {
       _firestoreService.checkMutationIdentity(_submittedUid);
       for (final unassignedId in _submittedRemovals!) {
@@ -304,7 +152,7 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.tr.assignmentsSavedSuccess),
-            backgroundColor: AppConstants.successColor,
+            backgroundColor: AppColors.successColor,
           ),
         );
       }
@@ -315,7 +163,7 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
             content: Text(
               AppFailure.fromException(e).localizedMessage(context.tr),
             ),
-            backgroundColor: AppConstants.errorColor,
+            backgroundColor: AppColors.errorColor,
           ),
         );
       }
@@ -338,52 +186,52 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.90,
       decoration: BoxDecoration(
-        color: isDark ? AppConstants.cardDark : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        color: isDark ? AppColors.cardDark : Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
       ),
       child: Column(
         children: [
           // شريط السحب العلوي (Apple drag handle)
           Container(
-            margin: const EdgeInsets.only(top: 12, bottom: 8),
-            width: 40,
-            height: 4,
+            margin: EdgeInsets.only(top: 12.h, bottom: 8.h),
+            width: 40.w,
+            height: 4.h,
             decoration: BoxDecoration(
               color: isDark ? Colors.white24 : Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(10.r),
             ),
           ),
 
           // الهيدر الحديث مع كارت الخادم
           Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(20, 8, 20, 12),
+            padding: EdgeInsetsDirectional.fromSTEB(20.w, 8.h, 20.w, 12.h),
             child: Row(
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 44.w,
+                  height: 44.h,
                   decoration: BoxDecoration(
                     color: targetColor.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(14.r),
                     border: Border.all(
                       color: targetColor.withValues(alpha: 0.35),
-                      width: 1.5,
+                      width: 1.5.w,
                     ),
                   ),
                   child: Center(
                     child: Text(
                       widget.targetKhadem.name.isNotEmpty
                           ? widget.targetKhadem.name[0]
-                          : (context.tr.messageS),
+                          : context.tr.messageS,
                       style: TextStyle(
                         color: targetColor,
                         fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                        fontSize: 18.sp,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12.w),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -391,34 +239,34 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
                       Text(
                         context.tr.messageAssignMakhdomeenToServant,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 12.sp,
                           color: isDark
-                              ? AppConstants.textMutedDark
-                              : AppConstants.textMuted,
+                              ? AppColors.textMutedDark
+                              : AppColors.textMuted,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2.h),
                       Text(
                         widget.targetKhadem.name,
                         style: TextStyle(
-                          fontSize: 17,
+                          fontSize: 17.sp,
                           fontWeight: FontWeight.bold,
                           color: isDark
                               ? Colors.white
-                              : AppConstants.textPrimary,
+                              : AppColors.textPrimary,
                         ),
                       ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 6.h,
                   ),
                   decoration: BoxDecoration(
                     color: targetColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
                       color: targetColor.withValues(alpha: 0.3),
                     ),
@@ -428,15 +276,15 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
                     children: [
                       Icon(
                         Icons.check_circle_rounded,
-                        size: 15,
+                        size: 15.sp,
                         color: targetColor,
                       ),
-                      const SizedBox(width: 6),
+                      SizedBox(width: 6.w),
                       Text(
                         '${_selectedIds.length} / ${AppFormatters(Localizations.localeOf(context)).formatNumber(widget.allMakhdomeen.length)}',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          fontSize: 13.sp,
                           color: targetColor,
                         ),
                       ),
@@ -449,49 +297,49 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
 
           // حقل البحث الذكي
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
             child: TextField(
               controller: _searchController,
               onChanged: (val) => setState(() => _searchQuery = val.trim()),
               decoration: InputDecoration(
                 hintText: context.tr.searchByNameOrArea,
-                prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                prefixIcon: Icon(Icons.search_rounded, size: 20.sp),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear_rounded, size: 18),
+                        icon: Icon(Icons.clear_rounded, size: 18.sp),
                         onPressed: () {
                           _searchController.clear();
                           setState(() => _searchQuery = '');
                         },
                       )
                     : null,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16.w,
+                  vertical: 12.h,
                 ),
                 filled: true,
                 fillColor: isDark
-                    ? AppConstants.surfaceDark
-                    : AppConstants.surfaceLight,
+                    ? AppColors.surfaceDark
+                    : AppColors.surfaceLight,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(14.r),
                   borderSide: BorderSide(
                     color: isDark
-                        ? AppConstants.borderDark
-                        : AppConstants.borderLight,
+                        ? AppColors.borderDark
+                        : AppColors.borderLight,
                   ),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(14.r),
                   borderSide: BorderSide(
                     color: isDark
-                        ? AppConstants.borderDark
-                        : AppConstants.borderLight,
+                        ? AppColors.borderDark
+                        : AppColors.borderLight,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: targetColor, width: 1.5),
+                  borderRadius: BorderRadius.circular(14.r),
+                  borderSide: BorderSide(color: targetColor, width: 1.5.w),
                 ),
               ),
             ),
@@ -499,23 +347,23 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
 
           if (_submittedSelection != null)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
               child: Text(
                 context.tr.messageSelectionIsLockedUntilConfirmationRetryTo,
               ),
             ),
           // شريط إجراءات سريعة (تحديد الكل / إلغاء تحديد الكل)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
             child: Row(
               children: [
                 Text(
                   context.tr.resultsCount(filteredList.length),
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 12.sp,
                     color: isDark
-                        ? AppConstants.textMutedDark
-                        : AppConstants.textMuted,
+                        ? AppColors.textMutedDark
+                        : AppColors.textMuted,
                   ),
                 ),
                 const Spacer(),
@@ -529,13 +377,13 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
                   child: Text(
                     context.tr.selectAll,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 12.sp,
                       fontWeight: FontWeight.bold,
                       color: targetColor,
                     ),
                   ),
                 ),
-                const SizedBox(width: 14),
+                SizedBox(width: 14.w),
                 GestureDetector(
                   onTap: () {
                     if (_submittedSelection != null) return;
@@ -548,10 +396,10 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
                   child: Text(
                     context.tr.deselectAll,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 12.sp,
                       color: isDark
-                          ? AppConstants.textMutedDark
-                          : AppConstants.textMuted,
+                          ? AppColors.textMutedDark
+                          : AppColors.textMuted,
                     ),
                   ),
                 ),
@@ -559,7 +407,7 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
             ),
           ),
 
-          const SizedBox(height: 4),
+          SizedBox(height: 4.h),
 
           // قائمة المخدومين كبطاقات أنيقة تفاعلية
           Expanded(
@@ -570,39 +418,37 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
                       children: [
                         Icon(
                           Icons.search_off_rounded,
-                          size: 40,
+                          size: 40.sp,
                           color: isDark ? Colors.white30 : Colors.grey.shade400,
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8.h),
                         Text(
                           context.tr.noSearchResults,
                           style: TextStyle(
                             color: isDark
-                                ? AppConstants.textMutedDark
-                                : AppConstants.textMuted,
+                                ? AppColors.textMutedDark
+                                : AppColors.textMuted,
                           ),
                         ),
                       ],
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 6,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 6.h,
                     ),
                     itemCount: filteredList.length,
                     itemBuilder: (context, index) {
                       final makhdom = filteredList[index];
                       final isSelected = _selectedIds.contains(makhdom.id);
-                      final isWithOtherKhadem =
-                          makhdom.assignedKhademId != null &&
-                          makhdom.assignedKhademId!.isNotEmpty &&
-                          makhdom.assignedKhademId != widget.targetKhadem.id;
-                      final otherKhademColor = ColorGenerator.getColorForId(
-                        makhdom.assignedKhademId,
-                      );
 
-                      return InkWell(
+                      return AssignMakhdomListItem(
+                        makhdom: makhdom,
+                        isSelected: isSelected,
+                        isDark: isDark,
+                        targetColor: targetColor,
+                        targetKhademId: widget.targetKhadem.id,
                         onTap: () {
                           if (_submittedSelection != null) return;
                           setState(() {
@@ -613,178 +459,6 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
                             }
                           });
                         },
-                        borderRadius: BorderRadius.circular(16),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          margin: const EdgeInsets.symmetric(vertical: 4),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? targetColor.withValues(
-                                    alpha: isDark ? 0.12 : 0.06,
-                                  )
-                                : (isDark
-                                      ? AppConstants.surfaceDark
-                                      : Colors.white),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isSelected
-                                  ? targetColor.withValues(alpha: 0.5)
-                                  : (isDark
-                                        ? AppConstants.borderDark
-                                        : AppConstants.borderLight),
-                              width: isSelected ? 1.5 : 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              // أيقونة الاختيار الحديثة (Circle check)
-                              Container(
-                                width: 24,
-                                height: 24,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: isSelected
-                                      ? targetColor
-                                      : Colors.transparent,
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? targetColor
-                                        : (isDark
-                                              ? Colors.white30
-                                              : Colors.grey.shade400),
-                                    width: 2,
-                                  ),
-                                ),
-                                child: isSelected
-                                    ? const Icon(
-                                        Icons.check_rounded,
-                                        size: 16,
-                                        color: Colors.white,
-                                      )
-                                    : null,
-                              ),
-                              const SizedBox(width: 14),
-
-                              // تفاصيل المخدوم
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            makhdom.fullName,
-                                            style: TextStyle(
-                                              fontWeight: isSelected
-                                                  ? FontWeight.bold
-                                                  : FontWeight.w600,
-                                              fontSize: 14,
-                                              color: isDark
-                                                  ? Colors.white
-                                                  : AppConstants.textPrimary,
-                                            ),
-                                          ),
-                                        ),
-                                        if (isWithOtherKhadem)
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 3,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: otherKhademColor
-                                                  .withValues(alpha: 0.12),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              border: Border.all(
-                                                color: otherKhademColor
-                                                    .withValues(alpha: 0.35),
-                                              ),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons
-                                                      .person_pin_circle_rounded,
-                                                  size: 12,
-                                                  color: otherKhademColor,
-                                                ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  makhdom.assignedKhademName ??
-                                                      context.tr.otherServant,
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: otherKhademColor,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Wrap(
-                                      crossAxisAlignment:
-                                          WrapCrossAlignment.center,
-                                      spacing: 8,
-                                      children: [
-                                        if (makhdom.area.isNotEmpty)
-                                          Text(
-                                            makhdom.area,
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              color: isDark
-                                                  ? AppConstants.textMutedDark
-                                                  : AppConstants.textMuted,
-                                            ),
-                                          ),
-                                        if (makhdom.phone.isNotEmpty)
-                                          Text(
-                                            makhdom.phone,
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              color: isDark
-                                                  ? AppConstants.textMutedDark
-                                                  : AppConstants.textMuted,
-                                            ),
-                                          ),
-                                        if (makhdom.isBrethrenOfLord)
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6,
-                                              vertical: 1,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppConstants.accentGold
-                                                  .withValues(alpha: 0.14),
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                            ),
-                                            child: Text(
-                                              context.tr.brethrenBadge,
-                                              style: const TextStyle(
-                                                fontSize: 10,
-                                                color: AppConstants.accentGold,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                       );
                     },
                   ),
@@ -792,55 +466,55 @@ class _AssignMakhdomeenModalState extends State<AssignMakhdomeenModal> {
 
           // شريط الحفظ العائم في الأسفل (Floating bottom dock)
           Container(
-            padding: const EdgeInsetsDirectional.fromSTEB(20, 14, 20, 24),
+            padding: EdgeInsetsDirectional.fromSTEB(20.w, 14.h, 20.w, 24.h),
             decoration: BoxDecoration(
-              color: isDark ? AppConstants.surfaceDark : Colors.white,
+              color: isDark ? AppColors.surfaceDark : Colors.white,
               border: Border(
                 top: BorderSide(
                   color: isDark
-                      ? AppConstants.borderDark
-                      : AppConstants.borderLight,
+                      ? AppColors.borderDark
+                      : AppColors.borderLight,
                 ),
               ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -4),
+                  blurRadius: 10.r,
+                  offset: Offset(0, -4.h),
                 ),
               ],
             ),
             child: SizedBox(
               width: double.infinity,
-              height: 50,
+              height: 50.h,
               child: ElevatedButton.icon(
                 onPressed: _isSaving ? null : _handleSave,
                 icon: _isSaving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
+                    ? SizedBox(
+                        width: 20.w,
+                        height: 20.h,
+                        child: const CircularProgressIndicator(
                           color: Colors.white,
                           strokeWidth: 2,
                         ),
                       )
-                    : const Icon(Icons.check_circle_rounded, size: 20),
+                    : Icon(Icons.check_circle_rounded, size: 20.sp),
                 label: Text(
                   _isSaving
                       ? context.tr.saving
                       : context.tr.saveAssignmentsWithCount(
                           _selectedIds.length,
                         ),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 15,
+                    fontSize: 15.sp,
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: targetColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(16.r),
                   ),
                   elevation: 0,
                 ),

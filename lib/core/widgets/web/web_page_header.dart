@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../responsive/responsive_breakpoints.dart';
 
 /// A standard responsive header for Web pages featuring:
@@ -25,7 +26,7 @@ class WebPageHeader extends StatelessWidget {
     final isDesktop = context.isDesktopScreen;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      padding: EdgeInsets.symmetric(vertical: 16.0.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -45,7 +46,7 @@ class WebPageHeader extends StatelessWidget {
                         ),
                       ),
                       if (description != null) ...[
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4.h),
                         Text(
                           description!,
                           style: theme.textTheme.bodyMedium?.copyWith(
@@ -57,10 +58,10 @@ class WebPageHeader extends StatelessWidget {
                   ),
                 ),
                 if (actions != null) ...[
-                  const SizedBox(width: 16),
+                  SizedBox(width: 16.w),
                   Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
+                    spacing: 12.w,
+                    runSpacing: 12.h,
                     children: actions!,
                   ),
                 ],
@@ -71,20 +72,23 @@ class WebPageHeader extends StatelessWidget {
               title,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w900,
+                fontSize: 18.sp,
               ),
             ),
             if (description != null) ...[
-              const SizedBox(height: 4),
+              SizedBox(height: 4.h),
               Text(
                 description!,
-                style: theme.textTheme.bodySmall,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 12.sp,
+                ),
               ),
             ],
             if (actions != null && actions!.isNotEmpty) ...[
-              const SizedBox(height: 12),
+              SizedBox(height: 12.h),
               Wrap(
-                spacing: 8,
-                runSpacing: 8,
+                spacing: 8.w,
+                runSpacing: 8.h,
                 children: actions!,
               ),
             ],
@@ -92,7 +96,7 @@ class WebPageHeader extends StatelessWidget {
 
           // Bottom Area: Search Bar
           if (searchBar != null) ...[
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             searchBar!,
           ],
         ],

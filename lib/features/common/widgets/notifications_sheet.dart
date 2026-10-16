@@ -1,13 +1,14 @@
-import 'package:efteqad/core/localization/app_formatters.dart';
 import 'package:flutter/material.dart';
-import '../../../../core/constants/constants.dart';
-import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/errors/app_failure.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/session/session_cubit.dart';
-import '../../../../core/services/firestore_service.dart';
-import 'notification_list.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../core/constants/constants.dart';
+import '../../../../core/errors/app_failure.dart';
+import '../../../../core/localization/app_formatters.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/router/router_services.dart';
+import '../../../../core/services/firestore_service.dart';
+import '../../../../core/session/session_cubit.dart';
+import 'notification_list.dart';
 
 class NotificationBellButton extends StatelessWidget {
   const NotificationBellButton({super.key});
@@ -25,7 +26,7 @@ class NotificationBellButton extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return IconButton(
-            icon: const Icon(Icons.error_outline_rounded),
+            icon: Icon(Icons.error_outline_rounded, size: 24.r),
             tooltip: AppFailure.fromException(
               snapshot.error!,
             ).localizedMessage(context.tr),
@@ -33,14 +34,14 @@ class NotificationBellButton extends StatelessWidget {
           );
         }
         if (!snapshot.hasData) {
-          return const SizedBox(
-            width: 48,
-            height: 48,
+          return SizedBox(
+            width: 48.r,
+            height: 48.r,
             child: Center(
               child: SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                width: 16.r,
+                height: 16.r,
+                child: const CircularProgressIndicator(strokeWidth: 2),
               ),
             ),
           );
@@ -51,23 +52,23 @@ class NotificationBellButton extends StatelessWidget {
           alignment: Alignment.center,
           children: [
             IconButton(
-              icon: const Icon(Icons.notifications_outlined),
+              icon: Icon(Icons.notifications_outlined, size: 24.r),
               tooltip: context.tr.messageNotifications,
               onPressed: () => NotificationsSheet.show(context),
             ),
             if (unreadCount > 0)
               Positioned(
-                top: 8,
-                right: 8,
+                top: 8.h,
+                right: 8.w,
                 child: Container(
-                  padding: const EdgeInsets.all(4),
+                  padding: EdgeInsets.all(4.r),
                   decoration: const BoxDecoration(
-                    color: AppConstants.errorColor,
+                    color: AppColors.errorColor,
                     shape: BoxShape.circle,
                   ),
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
+                  constraints: BoxConstraints(
+                    minWidth: 16.r,
+                    minHeight: 16.r,
                   ),
                   child: Text(
                     unreadCount > 9
@@ -75,9 +76,9 @@ class NotificationBellButton extends StatelessWidget {
                         : AppFormatters(
                             Localizations.localeOf(context),
                           ).formatNumber(unreadCount),
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
-                      fontSize: 9,
+                      fontSize: 9.sp,
                       fontWeight: FontWeight.w900,
                     ),
                     textAlign: TextAlign.center,
@@ -129,51 +130,51 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
         maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
       decoration: BoxDecoration(
-        color: isDark ? AppConstants.surfaceDark : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // Drag Handle
           Container(
-            margin: const EdgeInsets.only(top: 12, bottom: 8),
-            width: 44,
-            height: 5,
+            margin: EdgeInsets.only(top: 12.h, bottom: 8.h),
+            width: 44.w,
+            height: 5.h,
             decoration: BoxDecoration(
               color: isDark ? Colors.white24 : Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(10.r),
             ),
           ),
 
           // Header
           Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(20, 8, 20, 14),
+            padding: EdgeInsetsDirectional.fromSTEB(20.w, 8.h, 20.w, 14.h),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: EdgeInsets.all(8.r),
                       decoration: BoxDecoration(
-                        color: AppConstants.primaryLight.withValues(
+                        color: AppColors.primaryLight.withValues(
                           alpha: 0.15,
                         ),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(12.r),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.notifications_active_rounded,
-                        color: AppConstants.primaryLight,
-                        size: 20,
+                        color: AppColors.primaryLight,
+                        size: 20.r,
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10.w),
                     Text(
                       context.tr.messageNotificationsCenter616,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w900,
-                        fontSize: 16,
+                        fontSize: 16.sp,
                       ),
                     ),
                   ],
@@ -203,8 +204,8 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
                   },
                   child: Text(
                     context.tr.messageMarkAllRead,
-                    style: const TextStyle(
-                      fontSize: 12,
+                    style: TextStyle(
+                      fontSize: 12.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

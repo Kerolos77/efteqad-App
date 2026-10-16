@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/constants.dart';
 import '../../../../core/localization/app_localizations.dart';
@@ -47,57 +48,69 @@ class RouteErrorScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(title), centerTitle: true),
+      appBar: AppBar(
+        title: Text(
+          title,
+          style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+      ),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: EdgeInsets.all(24.0.r),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 96,
-                height: 96,
+                width: 96.r,
+                height: 96.r,
                 decoration: BoxDecoration(
-                  color: AppConstants.sacredGold.withValues(alpha: 0.15),
+                  color: AppColors.sacredGold.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 48, color: AppConstants.sacredGold),
+                child: Icon(icon, size: 48.r, color: AppColors.sacredGold),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
               Text(
                 title,
-                style: const TextStyle(
-                  fontSize: 22,
+                style: TextStyle(
+                  fontSize: 22.sp,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12.h),
               Text(
                 description,
-                style: const TextStyle(fontSize: 15, color: Colors.grey),
+                style: TextStyle(fontSize: 15.sp, color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: 32.h),
               Wrap(
                 alignment: WrapAlignment.center,
-                spacing: 12,
-                runSpacing: 8,
+                spacing: 12.w,
+                runSpacing: 8.h,
                 children: [
                   if (onRetry != null) ...[
                     OutlinedButton.icon(
                       onPressed: onRetry,
-                      icon: const Icon(Icons.refresh_rounded),
-                      label: Text(context.tr.messageRetry),
+                      icon: Icon(Icons.refresh_rounded, size: 18.r),
+                      label: Text(
+                        context.tr.messageRetry,
+                        style: TextStyle(fontSize: 14.sp),
+                      ),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: 16.w),
                   ],
                   FilledButton.icon(
                     onPressed: () {
                       context.go(AppRoutes.bootstrapPath);
                     },
-                    icon: const Icon(Icons.home_rounded),
-                    label: Text(context.tr.messageGoHome),
+                    icon: Icon(Icons.home_rounded, size: 18.r),
+                    label: Text(
+                      context.tr.messageGoHome,
+                      style: TextStyle(fontSize: 14.sp),
+                    ),
                   ),
                 ],
               ),

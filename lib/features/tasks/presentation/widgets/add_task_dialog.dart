@@ -1,13 +1,16 @@
-import 'package:efteqad/core/localization/app_formatters.dart';
-import 'package:efteqad/core/errors/app_failure.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import '../../../../core/constants/constants.dart';
+import '../../../../core/errors/app_failure.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/khadem_model.dart';
 import '../../../../core/models/task_model.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/firestore_service.dart';
 import '../../../../core/services/trusted_mutations.dart';
+import 'add_task_header.dart';
+import 'task_due_date_picker.dart';
 
 class AddTaskDialog extends StatefulWidget {
   final List<KhademModel> availableKhodam;
@@ -16,6 +19,7 @@ class AddTaskDialog extends StatefulWidget {
 
   final FirestoreService? firestoreService;
   final AuthService? authService;
+
   const AddTaskDialog({
     super.key,
     this.firestoreService,
@@ -127,7 +131,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(successText),
-            backgroundColor: AppConstants.successColor,
+            backgroundColor: AppColors.successColor,
           ),
         );
       }
@@ -140,7 +144,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(failure.localizedMessage(context.tr)),
-            backgroundColor: AppConstants.errorColor,
+            backgroundColor: AppColors.errorColor,
           ),
         );
       }
@@ -154,13 +158,13 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      backgroundColor: isDark ? AppConstants.surfaceDark : Colors.white,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+      backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+      insetPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),
         child: Padding(
-          padding: const EdgeInsets.all(22),
+          padding: EdgeInsets.all(22.r),
           child: Form(
             key: _formKey,
             child: SingleChildScrollView(
@@ -175,40 +179,8 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                           .tr
                           .messageSubmissionIsLockedUntilConfirmationRetryTo,
                     ),
-                  // الهيدر
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppConstants.primaryLight.withValues(
-                            alpha: 0.12,
-                          ),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Icon(
-                          Icons.assignment_add,
-                          color: AppConstants.primaryLight,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Text(
-                          context.tr.addTaskTitle,
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, size: 20),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
+                  AddTaskHeader(onClose: () => Navigator.pop(context)),
+                  SizedBox(height: 20.h),
 
                   // عنوان المهمة
                   TextFormField(
@@ -216,7 +188,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                     controller: _titleController,
                     decoration: InputDecoration(
                       labelText: context.tr.taskTitleLabel,
-                      prefixIcon: const Icon(Icons.title_rounded, size: 20),
+                      prefixIcon: Icon(Icons.title_rounded, size: 20.sp),
                     ),
                     validator: (val) {
                       if (val == null || val.trim().isEmpty) {
@@ -225,7 +197,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14.h),
 
                   // نوع المهمة
                   DropdownButtonFormField<String>(
@@ -234,7 +206,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                     initialValue: _taskType,
                     decoration: InputDecoration(
                       labelText: context.tr.taskTypeLabel,
-                      prefixIcon: const Icon(Icons.category_outlined, size: 20),
+                      prefixIcon: Icon(Icons.category_outlined, size: 20.sp),
                     ),
                     items: [
                       DropdownMenuItem(
@@ -271,118 +243,28 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                                           context.tr.taskTypeAttendanceQoddas) {
                                     _titleController.text =
                                         _taskType ==
-                                            AppConstants
-                                                .taskTypeAttendanceQoddas
-                                        ? context.tr.taskTypeAttendanceQoddas
-                                        : context.tr.taskTypeAttendanceKhedma;
+                                                AppConstants
+                                                    .taskTypeAttendanceQoddas
+                                            ? context.tr.taskTypeAttendanceQoddas
+                                            : context.tr.taskTypeAttendanceKhedma;
                                   }
                                 }
                               });
                             }
                           },
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14.h),
 
                   // تاريخ الاستحقاق / يوم الجمعة
-                  InkWell(
-                    onTap: () async {
-                      if (_submittedTask != null) return;
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _dueDate ?? _getNextFriday(),
-                        firstDate: DateTime.now().subtract(
-                          const Duration(days: 7),
-                        ),
-                        lastDate: DateTime.now().add(const Duration(days: 365)),
-                        selectableDayPredicate:
-                            _taskType.startsWith('attendance')
-                            ? (DateTime day) => day.weekday == DateTime.friday
-                            : null,
-                      );
-                      if (picked != null) setState(() => _dueDate = picked);
-                    },
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? const Color(0xFF131D31)
-                            : const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isDark
-                              ? AppConstants.cardBorderDark
-                              : AppConstants.cardBorderLight,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            _taskType.startsWith('attendance')
-                                ? Icons.event_available_rounded
-                                : Icons.calendar_today_outlined,
-                            size: 18,
-                            color: AppConstants.primaryLight,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              _dueDate != null
-                                  ? context.tr.messageDate(
-                                      (AppFormatters(
-                                            Localizations.localeOf(context),
-                                          ).formatDate(
-                                            _dueDate!,
-                                            format: 'yyyy-MM-dd',
-                                          ))
-                                          .toString(),
-                                    )
-                                  : context.tr.messageSelectDueDateOptional,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: _dueDate != null
-                                    ? FontWeight.bold
-                                    : FontWeight.w500,
-                                color: _dueDate != null
-                                    ? (isDark
-                                          ? Colors.white
-                                          : AppConstants.textDark)
-                                    : AppConstants.textMuted,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          if (_taskType.startsWith('attendance'))
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppConstants.primaryLight.withValues(
-                                  alpha: 0.15,
-                                ),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                AppFormatters(
-                                  Localizations.localeOf(context),
-                                ).formatWeekday(_dueDate ?? _getNextFriday()),
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppConstants.primaryLight,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
+                  TaskDueDatePicker(
+                    dueDate: _dueDate,
+                    taskType: _taskType,
+                    isDark: isDark,
+                    enabled: _submittedTask == null,
+                    nextFriday: _getNextFriday(),
+                    onDateSelected: (picked) => setState(() => _dueDate = picked),
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14.h),
 
                   // اختيار الخادم المكلف
                   DropdownButtonFormField<String>(
@@ -391,7 +273,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                     initialValue: _selectedKhademId,
                     decoration: InputDecoration(
                       labelText: context.tr.taskAssigneeLabel,
-                      prefixIcon: const Icon(Icons.person_outline, size: 20),
+                      prefixIcon: Icon(Icons.person_outline, size: 20.sp),
                     ),
                     items: widget.availableKhodam.map((khadem) {
                       return DropdownMenuItem(
@@ -410,7 +292,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                             }
                           },
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14.h),
 
                   // تفاصيل المهمة
                   TextFormField(
@@ -422,7 +304,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                       alignLabelWithHint: true,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h),
 
                   // أزرار الحفظ والإلغاء
                   Row(
@@ -432,24 +314,24 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                         onPressed: () => Navigator.pop(context),
                         child: Text(context.tr.cancel),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8.w),
                       ElevatedButton(
                         onPressed: _isSaving ? null : _handleSave,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppConstants.primaryLight,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
+                          backgroundColor: AppColors.primaryLight,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 20.w,
+                            vertical: 12.h,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(14.r),
                           ),
                         ),
                         child: _isSaving
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
+                            ? SizedBox(
+                                width: 16.w,
+                                height: 16.h,
+                                child: const CircularProgressIndicator(
                                   strokeWidth: 2,
                                   color: Colors.white,
                                 ),

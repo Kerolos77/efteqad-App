@@ -117,7 +117,7 @@ class ExcelService {
     final excel = Excel.decodeBytes(bytes);
     if (excel.tables.isEmpty) {
       throw AppFailure(
-        code: 'excel-empty',
+        code: AppFailure.codeExcelEmpty,
         message: 'Workbook contains no sheets.',
       );
     }
@@ -150,7 +150,7 @@ class ExcelService {
 
     if (table == null || table.rows.isEmpty) {
       throw AppFailure(
-        code: 'excel-empty',
+        code: AppFailure.codeExcelEmpty,
         message: 'Workbook contains no rows.',
       );
     }
@@ -289,7 +289,7 @@ class ExcelService {
     ]);
     if (colName == -1 && colPhone == -1) {
       throw AppFailure(
-        code: 'excel-columns',
+        code: AppFailure.codeExcelColumns,
         message: 'Required columns missing.',
       );
     }
@@ -538,7 +538,7 @@ class ExcelService {
 
     if (bytes == null) {
       throw AppFailure(
-        code: 'excel-unreadable',
+        code: AppFailure.codeExcelUnreadable,
         message: 'Workbook bytes unavailable.',
       );
     }

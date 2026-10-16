@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/constants.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../core/models/service_model.dart';
 import '../../../core/router/app_routes.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../core/session/session_cubit.dart';
 import '../../../core/router/router_services.dart';
 import '../../../core/services/app_version_service.dart';
+import '../../../core/services/firestore_service.dart';
+import '../../../core/session/session_cubit.dart';
 import '../../../core/utils/color_generator.dart';
 import '../../../main.dart';
-import '../../../core/models/service_model.dart';
-import '../../../core/services/firestore_service.dart';
 import '../../admin/presentation/widgets/service_setup_dialog.dart';
+import 'app_drawer_header.dart';
+import 'app_drawer_tile.dart';
 import 'app_update_dialog.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -24,14 +27,16 @@ class AppDrawer extends StatelessWidget {
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.r),
+        ),
         title: Row(
           children: [
-            const Icon(Icons.logout_rounded, color: AppConstants.errorColor),
-            const SizedBox(width: 8),
+            Icon(Icons.logout_rounded, color: AppColors.errorColor, size: 22.r),
+            SizedBox(width: 8.w),
             Text(
               context.tr.signOutConfirmTitle,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
             ),
           ],
         ),
@@ -43,9 +48,9 @@ class AppDrawer extends StatelessWidget {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: AppConstants.errorColor,
+              backgroundColor: AppColors.errorColor,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(12.r),
               ),
             ),
             onPressed: () => Navigator.pop(ctx, true),
@@ -90,140 +95,31 @@ class AppDrawer extends StatelessWidget {
         );
 
         return Drawer(
-          backgroundColor: isDark ? AppConstants.backgroundDark : Colors.white,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.horizontal(left: Radius.circular(28)),
+          backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.horizontal(
+              left: Radius.circular(28.r),
+            ),
           ),
           child: SafeArea(
             child: Column(
               children: [
-                // الهيدر العصري بنمط Apple / Notion
-                Container(
-                  padding: const EdgeInsetsDirectional.fromSTEB(20, 20, 20, 20),
-                  margin: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppConstants.surfaceDark
-                        : AppConstants.backgroundLight,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isDark
-                          ? AppConstants.cardBorderDark
-                          : AppConstants.cardBorderLight,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color:
-                              (isAdmin ? AppConstants.accentGold : khademColor)
-                                  .withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isAdmin
-                                ? AppConstants.accentGold
-                                : khademColor,
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Center(
-                          child: isAdmin
-                              ? const Icon(
-                                  Icons.shield_rounded,
-                                  color: AppConstants.accentGold,
-                                  size: 26,
-                                )
-                              : Text(
-                                  (user?.name != null && user!.name.isNotEmpty)
-                                      ? user.name[0]
-                                      : context.tr.messageS,
-                                  style: TextStyle(
-                                    color: khademColor,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 20,
-                                  ),
-                                ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    isAdmin
-                                        ? context.tr.headServant
-                                        : (user?.name ?? context.tr.servant),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 16,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 7,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        (isAdmin
-                                                ? AppConstants.accentGold
-                                                : AppConstants.primaryLight)
-                                            .withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    isAdmin
-                                        ? context.tr.adminRole
-                                        : context.tr.servantRole,
-                                    style: TextStyle(
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.w800,
-                                      color: isAdmin
-                                          ? AppConstants.accentGold
-                                          : AppConstants.primaryLight,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              user?.email ?? AppConstants.constAdminEmail,
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                color: isDark
-                                    ? AppConstants.textMutedDark
-                                    : AppConstants.textMuted,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                // الهيدر العصري
+                AppDrawerHeader(
+                  isAdmin: isAdmin,
+                  user: user,
+                  isDark: isDark,
+                  khademColor: khademColor,
                 ),
-
-                const SizedBox(height: 8),
+                SizedBox(height: 8.h),
 
                 // قائمة الخيارات والتنقل
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    padding: EdgeInsets.symmetric(horizontal: 14.w),
                     children: [
                       if (isAdmin) ...[
-                        _buildDrawerTile(
+                        AppDrawerTile(
                           icon: Icons.dashboard_outlined,
                           title: context.tr.mainDashboard,
                           onTap: () {
@@ -245,10 +141,10 @@ class AppDrawer extends StatelessWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  _buildDrawerTile(
+                                  AppDrawerTile(
                                     icon: Icons.tune_rounded,
                                     title: 'تخصيص الخدمة والصفوف',
-                                    color: AppConstants.sacredGold,
+                                    color: AppColors.sacredGold,
                                     onTap: () {
                                       Navigator.pop(context);
                                       ServiceSetupDialog.show(
@@ -268,18 +164,18 @@ class AppDrawer extends StatelessWidget {
                                         dividerColor: Colors.transparent,
                                       ),
                                       child: ExpansionTile(
-                                        tilePadding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
+                                        tilePadding: EdgeInsets.symmetric(
+                                          horizontal: 16.w,
                                           vertical: 0,
                                         ),
-                                        leading: const Icon(
+                                        leading: Icon(
                                           Icons.school_outlined,
-                                          size: 20,
+                                          size: 20.r,
                                         ),
                                         title: Text(
                                           'صفوف الخدمة (${service.grades.length})',
-                                          style: const TextStyle(
-                                            fontSize: 13,
+                                          style: TextStyle(
+                                            fontSize: 13.sp,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
@@ -287,18 +183,18 @@ class AppDrawer extends StatelessWidget {
                                           return ListTile(
                                             dense: true,
                                             contentPadding:
-                                                const EdgeInsetsDirectional.only(
-                                              start: 36,
-                                              end: 16,
+                                                EdgeInsetsDirectional.only(
+                                              start: 36.w,
+                                              end: 16.w,
                                             ),
-                                            leading: const Icon(
+                                            leading: Icon(
                                               Icons.arrow_right_rounded,
-                                              size: 20,
+                                              size: 20.r,
                                             ),
                                             title: Text(
                                               g.name,
-                                              style: const TextStyle(
-                                                fontSize: 12.5,
+                                              style: TextStyle(
+                                                fontSize: 12.5.sp,
                                               ),
                                             ),
                                             onTap: () {
@@ -316,7 +212,7 @@ class AppDrawer extends StatelessWidget {
                             },
                           ),
                         if (onOpenExcel != null)
-                          _buildDrawerTile(
+                          AppDrawerTile(
                             icon: Icons.table_chart_outlined,
                             title: context.tr.excelTools,
                             onTap: () {
@@ -326,7 +222,7 @@ class AppDrawer extends StatelessWidget {
                             isDark: isDark,
                           ),
                       ] else ...[
-                        _buildDrawerTile(
+                        AppDrawerTile(
                           icon: Icons.people_alt_outlined,
                           title: context.tr.myGroupAndVisits,
                           onTap: () {
@@ -336,7 +232,7 @@ class AppDrawer extends StatelessWidget {
                           },
                           isDark: isDark,
                         ),
-                        _buildDrawerTile(
+                        AppDrawerTile(
                           icon: Icons.person_outline_rounded,
                           title: context.tr.servantProfile,
                           onTap: () {
@@ -346,7 +242,7 @@ class AppDrawer extends StatelessWidget {
                           isDark: isDark,
                         ),
                       ],
-                      _buildDrawerTile(
+                      AppDrawerTile(
                         icon: Icons.how_to_reg_outlined,
                         title: 'الحضور والغياب',
                         onTap: () {
@@ -356,10 +252,10 @@ class AppDrawer extends StatelessWidget {
                         },
                         isDark: isDark,
                       ),
-                      _buildDrawerTile(
+                      AppDrawerTile(
                         icon: Icons.assessment_outlined,
                         title: 'مركز التقارير وتصدير البيانات',
-                        color: AppConstants.sacredGold,
+                        color: AppColors.sacredGold,
                         onTap: () {
                           Navigator.pop(context);
                           context.push(AppRoutes.reportsPath);
@@ -367,21 +263,21 @@ class AppDrawer extends StatelessWidget {
                         isDark: isDark,
                       ),
 
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6.h),
                       Divider(
                         color: isDark
-                            ? AppConstants.cardBorderDark
-                            : AppConstants.cardBorderLight,
-                        indent: 8,
-                        endIndent: 8,
+                            ? AppColors.cardBorderDark
+                            : AppColors.cardBorderLight,
+                        indent: 8.w,
+                        endIndent: 8.w,
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6.h),
 
                       // زر التبديل السريع للمظهر (الداكن / الفاتح)
                       _buildThemeToggleTile(context, isDark),
 
                       // صفحة الإعدادات الشاملة
-                      _buildDrawerTile(
+                      AppDrawerTile(
                         icon: Icons.settings_outlined,
                         title: context.tr.generalSettings,
                         onTap: () {
@@ -392,10 +288,10 @@ class AppDrawer extends StatelessWidget {
                       ),
 
                       // التحقق من التحديثات وصفحة تحميل التطبيق
-                      _buildDrawerTile(
+                      AppDrawerTile(
                         icon: Icons.system_update_rounded,
                         title: 'تحديث التطبيق / التحميل',
-                        color: AppConstants.sacredGold,
+                        color: AppColors.sacredGold,
                         onTap: () async {
                           final rootNavigator = Navigator.of(
                             context,
@@ -420,7 +316,7 @@ class AppDrawer extends StatelessWidget {
                                 content: Text(
                                   'أنت على أحدث إصدار (v${AppConstants.appVersion}) — تم فتح صفحة التحميل',
                                 ),
-                                backgroundColor: AppConstants.successColor,
+                                backgroundColor: AppColors.successColor,
                               ),
                             );
                           }
@@ -429,10 +325,10 @@ class AppDrawer extends StatelessWidget {
                       ),
 
                       // تسجيل الخروج
-                      _buildDrawerTile(
+                      AppDrawerTile(
                         icon: Icons.logout_rounded,
                         title: context.tr.signOut,
-                        color: AppConstants.errorColor,
+                        color: AppColors.errorColor,
                         onTap: () => _handleLogout(context),
                         isDark: isDark,
                       ),
@@ -440,11 +336,11 @@ class AppDrawer extends StatelessWidget {
                   ),
                 ),
 
-                // الفوتر الكنسي الأنيق
+                // الفوتر
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 16,
-                    horizontal: 20,
+                  padding: EdgeInsets.symmetric(
+                    vertical: 16.h,
+                    horizontal: 20.w,
                   ),
                   child: Column(
                     children: [
@@ -453,27 +349,27 @@ class AppDrawer extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.add,
-                            size: 14,
+                            size: 14.r,
                             color: isDark ? Colors.white38 : Colors.black38,
                           ),
-                          const SizedBox(width: 4),
+                          SizedBox(width: 4.w),
                           Text(
                             context.tr.shepherdVerseShort,
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 11.sp,
                               fontWeight: FontWeight.w600,
                               color: isDark
-                                  ? AppConstants.textMutedDark
-                                  : AppConstants.textMuted,
+                                  ? AppColors.textMutedDark
+                                  : AppColors.textMuted,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4.h),
                       Text(
                         '${context.tr.appName} ${context.tr.version(AppConstants.appVersion)}',
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 10.sp,
                           color: isDark ? Colors.white24 : Colors.black26,
                         ),
                       ),
@@ -488,53 +384,24 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildDrawerTile({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    required bool isDark,
-    Color? color,
-  }) {
-    final itemColor = color ?? (isDark ? Colors.white : AppConstants.textDark);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: ListTile(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        leading: Icon(
-          icon,
-          color: color ?? (isDark ? Colors.white70 : AppConstants.primaryNavy),
-          size: 22,
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontSize: 13.5,
-            fontWeight: FontWeight.w600,
-            color: itemColor,
-          ),
-        ),
-        onTap: onTap,
-        dense: true,
-      ),
-    );
-  }
-
   Widget _buildThemeToggleTile(BuildContext context, bool isDark) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: EdgeInsets.symmetric(vertical: 3.h),
       child: ListTile(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14.r),
+        ),
         leading: Icon(
           isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
-          color: isDark ? Colors.amber : AppConstants.primaryLight,
-          size: 22,
+          color: isDark ? Colors.amber : AppColors.primaryLight,
+          size: 22.r,
         ),
         title: Text(
           isDark ? context.tr.darkMode : context.tr.lightMode,
           style: TextStyle(
-            fontSize: 13.5,
+            fontSize: 13.5.sp,
             fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : AppConstants.textDark,
+            color: isDark ? Colors.white : AppColors.textDark,
           ),
         ),
         trailing: Switch(

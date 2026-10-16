@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/constants.dart';
 import '../../models/report_type.dart';
 
@@ -19,26 +20,26 @@ class ReportTypeCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final primaryColor = isDark ? AppConstants.sacredGold : AppConstants.primaryLight;
+    final primaryColor = isDark ? AppColors.sacredGold : AppColors.primaryLight;
     final borderColor = isSelected
         ? primaryColor
         : (isDark ? Colors.white12 : Colors.grey.shade300);
 
     final bgColor = isSelected
         ? (isDark
-            ? AppConstants.sacredGold.withValues(alpha: 0.12)
-            : AppConstants.primaryLight.withValues(alpha: 0.08))
+            ? AppColors.sacredGold.withValues(alpha: 0.12)
+            : AppColors.primaryLight.withValues(alpha: 0.08))
         : (isDark ? const Color(0xFF1E293B) : Colors.white);
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(14.r),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(14.r),
           border: Border.all(
             color: borderColor,
             width: isSelected ? 2.0 : 1.0,
@@ -47,8 +48,8 @@ class ReportTypeCard extends StatelessWidget {
               ? [
                   BoxShadow(
                     color: primaryColor.withValues(alpha: 0.15),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
+                    blurRadius: 8.r,
+                    offset: Offset(0, 3.h),
                   ),
                 ]
               : null,
@@ -56,7 +57,7 @@ class ReportTypeCard extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: EdgeInsets.all(10.r),
               decoration: BoxDecoration(
                 color: isSelected
                     ? primaryColor
@@ -65,13 +66,13 @@ class ReportTypeCard extends StatelessWidget {
               ),
               child: Icon(
                 type.icon,
-                size: 22,
+                size: 22.sp,
                 color: isSelected
                     ? (isDark ? Colors.black87 : Colors.white)
                     : (isDark ? Colors.white70 : Colors.grey.shade700),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,8 +83,9 @@ class ReportTypeCard extends StatelessWidget {
                         child: Text(
                           type.title,
                           style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                            fontSize: 14.sp,
+                            fontWeight:
+                                isSelected ? FontWeight.bold : FontWeight.w600,
                             color: isDark ? Colors.white : Colors.black87,
                           ),
                           maxLines: 1,
@@ -93,18 +95,23 @@ class ReportTypeCard extends StatelessWidget {
                       if (type == ReportType.brethrenOfLord ||
                           type == ReportType.servantPerformanceCard)
                         Container(
-                          margin: const EdgeInsetsDirectional.only(start: 6),
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          margin: EdgeInsetsDirectional.only(start: 6.w),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6.w,
+                            vertical: 2.h,
+                          ),
                           decoration: BoxDecoration(
                             color: type == ReportType.brethrenOfLord
                                 ? Colors.red.withValues(alpha: 0.15)
                                 : Colors.amber.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(6.r),
                           ),
                           child: Text(
-                            type == ReportType.brethrenOfLord ? 'سري' : 'للأمناء',
+                            type == ReportType.brethrenOfLord
+                                ? 'سري'
+                                : 'للأمناء',
                             style: TextStyle(
-                              fontSize: 10,
+                              fontSize: 10.sp,
                               fontWeight: FontWeight.bold,
                               color: type == ReportType.brethrenOfLord
                                   ? Colors.red
@@ -114,11 +121,11 @@ class ReportTypeCard extends StatelessWidget {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 3),
+                  SizedBox(height: 3.h),
                   Text(
                     type.description,
                     style: TextStyle(
-                      fontSize: 11.5,
+                      fontSize: 11.5.sp,
                       color: isDark ? Colors.white60 : Colors.grey.shade600,
                     ),
                     maxLines: 2,
@@ -129,11 +136,11 @@ class ReportTypeCard extends StatelessWidget {
             ),
             if (isSelected)
               Container(
-                margin: const EdgeInsetsDirectional.only(start: 8),
+                margin: EdgeInsetsDirectional.only(start: 8.w),
                 child: Icon(
                   Icons.check_circle_rounded,
                   color: primaryColor,
-                  size: 20,
+                  size: 20.sp,
                 ),
               ),
           ],

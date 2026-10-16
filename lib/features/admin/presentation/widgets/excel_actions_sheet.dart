@@ -1,6 +1,7 @@
 import 'package:efteqad/core/localization/app_formatters.dart';
 import 'package:efteqad/core/errors/app_failure.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../../core/constants/constants.dart';
 import '../../../../core/localization/app_localizations.dart';
@@ -9,6 +10,8 @@ import '../../../../core/models/makhdom_model.dart';
 import '../../../../core/models/excel_import_result.dart';
 import '../../../../core/services/excel_service.dart';
 import '../../../../core/services/firestore_service.dart';
+import 'excel_action_tile.dart';
+import 'excel_import_confirm_dialog.dart';
 
 class ExcelActionsSheet extends StatefulWidget {
   final List<MakhdomModel> currentMakhdomeen;
@@ -64,7 +67,7 @@ class _ExcelActionsSheetState extends State<ExcelActionsSheet> {
             content: Text(
               AppFailure.fromException(e).localizedMessage(context.tr),
             ),
-            backgroundColor: AppConstants.errorColor,
+            backgroundColor: AppColors.errorColor,
           ),
         );
       }
@@ -97,11 +100,9 @@ class _ExcelActionsSheetState extends State<ExcelActionsSheet> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  context.tr.messageCouldNotImportAnyRowsDueTo(
-                    (errorSummary).toString(),
-                  ),
+                  context.tr.messageCouldNotImportAnyRowsDueTo(errorSummary),
                 ),
-                backgroundColor: AppConstants.errorColor,
+                backgroundColor: AppColors.errorColor,
                 duration: const Duration(seconds: 5),
               ),
             );
@@ -118,99 +119,10 @@ class _ExcelActionsSheetState extends State<ExcelActionsSheet> {
       if (!mounted) return;
       final gradeLabel = _getGradeLabel(widget.grade);
 
-      final bool? confirm = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Text(ctx.tr.excelConfirmImportTitle),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.tr.messageTargetGrade((gradeLabel).toString()),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppConstants.primaryLight,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(ctx.tr.excelConfirmImportPrompt(result.rows.length)),
-                if (result.hasErrors) ...[
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppConstants.errorColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      context.tr.messageRowsExcluded(
-                        AppFormatters(
-                          Localizations.localeOf(context),
-                        ).formatNumber((result.rowErrors.length)),
-                        (result.rowErrors
-                                .map((e) => "${e.rowIndex}: ${e.errorMessage}")
-                                .join('\n'))
-                            .toString(),
-                      ),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppConstants.errorColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-                if (result.hasWarnings) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppConstants.warningColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: result.warnings
-                          .map(
-                            (w) => Padding(
-                              padding: const EdgeInsets.only(bottom: 2.0),
-                              child: Text(
-                                '• $w',
-                                style: const TextStyle(
-                                  fontSize: 11.5,
-                                  color: AppConstants.warningColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(ctx.tr.cancel),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppConstants.successColor,
-              ),
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(ctx.tr.excelImportNowBtn),
-            ),
-          ],
-        ),
+      final bool? confirm = await ExcelImportConfirmDialog.show(
+        context,
+        gradeLabel: gradeLabel,
+        result: result,
       );
 
       if (confirm == true) {
@@ -223,10 +135,10 @@ class _ExcelActionsSheetState extends State<ExcelActionsSheet> {
                 _statusText = context.tr.messageSavingToFirebase564(
                   AppFormatters(
                     Localizations.localeOf(context),
-                  ).formatNumber((done)),
+                  ).formatNumber(done),
                   AppFormatters(
                     Localizations.localeOf(context),
-                  ).formatNumber((total)),
+                  ).formatNumber(total),
                 );
               });
             }
@@ -248,8 +160,8 @@ class _ExcelActionsSheetState extends State<ExcelActionsSheet> {
               ),
               backgroundColor:
                   outcome.rejected.isEmpty && result.rowErrors.isEmpty
-                  ? AppConstants.successColor
-                  : AppConstants.warningColor,
+                  ? AppColors.successColor
+                  : AppColors.warningColor,
             ),
           );
         }
@@ -261,7 +173,7 @@ class _ExcelActionsSheetState extends State<ExcelActionsSheet> {
             content: Text(
               AppFailure.fromException(e).localizedMessage(context.tr),
             ),
-            backgroundColor: AppConstants.errorColor,
+            backgroundColor: AppColors.errorColor,
           ),
         );
       }
@@ -281,9 +193,7 @@ class _ExcelActionsSheetState extends State<ExcelActionsSheet> {
       await ExcelService.exportMakhdomeen(
         widget.currentMakhdomeen,
         labels: labels,
-        title: context.tr.messageStudents726(
-          (_getGradeLabel(widget.grade)).toString(),
-        ),
+        title: context.tr.messageStudents726(_getGradeLabel(widget.grade)),
       );
       if (mounted) Navigator.pop(context);
     } catch (e) {
@@ -293,7 +203,7 @@ class _ExcelActionsSheetState extends State<ExcelActionsSheet> {
             content: Text(
               AppFailure.fromException(e).localizedMessage(context.tr),
             ),
-            backgroundColor: AppConstants.errorColor,
+            backgroundColor: AppColors.errorColor,
           ),
         );
       }
@@ -307,14 +217,14 @@ class _ExcelActionsSheetState extends State<ExcelActionsSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsetsDirectional.fromSTEB(20, 12, 20, 32),
+      padding: EdgeInsetsDirectional.fromSTEB(20.w, 12.h, 20.w, 32.h),
       decoration: BoxDecoration(
-        color: isDark ? AppConstants.surfaceDark : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
         border: Border.all(
           color: isDark
-              ? AppConstants.cardBorderDark
-              : AppConstants.cardBorderLight,
+              ? AppColors.cardBorderDark
+              : AppColors.cardBorderLight,
         ),
       ),
       child: Column(
@@ -323,48 +233,48 @@ class _ExcelActionsSheetState extends State<ExcelActionsSheet> {
         children: [
           Center(
             child: Container(
-              width: 44,
-              height: 5,
+              width: 44.w,
+              height: 5.h,
               decoration: BoxDecoration(
                 color: isDark ? Colors.white24 : Colors.black12,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(10.r),
               ),
             ),
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18.h),
 
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: EdgeInsets.all(10.r),
                 decoration: BoxDecoration(
-                  color: AppConstants.successColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(14),
+                  color: AppColors.successColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(14.r),
                 ),
-                child: const FaIcon(
+                child: FaIcon(
                   FontAwesomeIcons.fileExcel,
-                  color: AppConstants.successColor,
-                  size: 22,
+                  color: AppColors.successColor,
+                  size: 22.sp,
                 ),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: 14.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       '${context.tr.excelSheetTitle} (${_getGradeLabel(widget.grade)})',
-                      style: const TextStyle(
-                        fontSize: 16,
+                      style: TextStyle(
+                        fontSize: 16.sp,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2.h),
                     Text(
                       context.tr.messageBulkDataManagementAndSheetExports,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppConstants.textMuted,
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppColors.textMuted,
                       ),
                     ),
                   ],
@@ -372,15 +282,15 @@ class _ExcelActionsSheetState extends State<ExcelActionsSheet> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
 
           if (_isLoading)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
+              padding: EdgeInsets.symmetric(vertical: 24.h),
               child: Column(
                 children: [
                   const CircularProgressIndicator(),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12.h),
                   Text(
                     _statusText ?? (context.tr.messageProcessing),
                     style: const TextStyle(fontWeight: FontWeight.bold),
@@ -389,30 +299,30 @@ class _ExcelActionsSheetState extends State<ExcelActionsSheet> {
               ),
             )
           else ...[
-            _buildActionTile(
+            ExcelActionTile(
               icon: Icons.download_for_offline_outlined,
-              iconColor: AppConstants.primaryLight,
+              iconColor: AppColors.primaryLight,
               title: context.tr.excelDownloadTemplate,
               subtitle: context.tr.excelDownloadTemplateDesc,
               isDark: isDark,
               onTap: _handleDownloadTemplate,
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10.h),
 
-            _buildActionTile(
+            ExcelActionTile(
               icon: Icons.upload_file_outlined,
-              iconColor: AppConstants.successColor,
+              iconColor: AppColors.successColor,
               title: context.tr.excelImportMakhdomeen,
               subtitle:
                   '${context.tr.excelImportMakhdomeenDesc} (${_getGradeLabel(widget.grade)})',
               isDark: isDark,
               onTap: _handleUploadExcel,
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10.h),
 
-            _buildActionTile(
+            ExcelActionTile(
               icon: Icons.share_outlined,
-              iconColor: AppConstants.accentGold,
+              iconColor: AppColors.accentGold,
               title:
                   '${context.tr.excelExportMakhdomeen} (${AppFormatters(Localizations.localeOf(context)).formatNumber(widget.currentMakhdomeen.length)})',
               subtitle: context.tr.excelExportMakhdomeenDesc,
@@ -421,73 +331,6 @@ class _ExcelActionsSheetState extends State<ExcelActionsSheet> {
             ),
           ],
         ],
-      ),
-    );
-  }
-
-  Widget _buildActionTile({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String subtitle,
-    required bool isDark,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF131D31) : const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isDark
-                ? AppConstants.cardBorderDark
-                : AppConstants.cardBorderLight,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: iconColor, size: 20),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13.5,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppConstants.textMuted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 13,
-              color: isDark ? Colors.white38 : AppConstants.textMuted,
-            ),
-          ],
-        ),
       ),
     );
   }

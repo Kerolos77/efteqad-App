@@ -1,5 +1,6 @@
 import 'package:efteqad/core/localization/app_formatters.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/constants.dart';
 import '../../../../core/localization/app_localizations.dart';
 
@@ -66,15 +67,15 @@ class HistoryFilters extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(12),
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
-        color: isDark ? AppConstants.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(18.r),
         border: Border.all(
           color: isDark
-              ? AppConstants.cardBorderDark
-              : AppConstants.cardBorderLight,
+              ? AppColors.cardBorderDark
+              : AppColors.cardBorderLight,
         ),
       ),
       child: Column(
@@ -91,34 +92,34 @@ class HistoryFilters extends StatelessWidget {
                 final label = _getFilterLabel(context, type);
 
                 return Padding(
-                  padding: const EdgeInsetsDirectional.only(start: 6),
+                  padding: EdgeInsetsDirectional.only(start: 6.w),
                   child: FilterChip(
                     label: Text(
                       count > 0
                           ? '$label (${AppFormatters(Localizations.localeOf(context)).formatNumber(count)})'
                           : label,
                       style: TextStyle(
-                        fontSize: 11.5,
+                        fontSize: 11.5.sp,
                         fontWeight: isSelected
                             ? FontWeight.w900
                             : FontWeight.w700,
                         color: isSelected
                             ? Colors.black
-                            : (isDark ? Colors.white70 : AppConstants.textDark),
+                            : (isDark ? Colors.white70 : AppColors.textDark),
                       ),
                     ),
                     selected: isSelected,
                     onSelected: (_) => onFilterChanged(type),
-                    selectedColor: AppConstants.sacredGold,
+                    selectedColor: AppColors.sacredGold,
                     backgroundColor: isDark
                         ? Colors.white10
                         : const Color(0xFFF1F5F9),
                     checkmarkColor: Colors.black,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(10.r),
                       side: BorderSide(
                         color: isSelected
-                            ? AppConstants.sacredGold
+                            ? AppColors.sacredGold
                             : (isDark ? Colors.white12 : Colors.grey.shade300),
                       ),
                     ),
@@ -127,7 +128,7 @@ class HistoryFilters extends StatelessWidget {
               }).toList(),
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
 
           // 2. فلاتر النطاق الزمني
           SingleChildScrollView(
@@ -139,12 +140,12 @@ class HistoryFilters extends StatelessWidget {
                 final label = _getDateRangeLabel(context, range);
 
                 return Padding(
-                  padding: const EdgeInsetsDirectional.only(start: 6),
+                  padding: EdgeInsetsDirectional.only(start: 6.w),
                   child: ChoiceChip(
                     label: Text(
                       label,
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 11.sp,
                         fontWeight: isSelected
                             ? FontWeight.w800
                             : FontWeight.w600,
@@ -152,7 +153,7 @@ class HistoryFilters extends StatelessWidget {
                             ? Colors.white
                             : (isDark
                                   ? Colors.white60
-                                  : AppConstants.textMuted),
+                                  : AppColors.textMuted),
                       ),
                     ),
                     selected: isSelected,
@@ -163,13 +164,13 @@ class HistoryFilters extends StatelessWidget {
                         onDateRangeChanged(range);
                       }
                     },
-                    selectedColor: AppConstants.primaryLight,
+                    selectedColor: AppColors.primaryLight,
                     backgroundColor: Colors.transparent,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(8.r),
                       side: BorderSide(
                         color: isSelected
-                            ? AppConstants.primaryLight
+                            ? AppColors.primaryLight
                             : (isDark ? Colors.white12 : Colors.grey.shade300),
                       ),
                     ),

@@ -1,5 +1,6 @@
 import 'package:efteqad/core/localization/app_formatters.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/constants.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../models/history_analysis.dart';
@@ -19,20 +20,20 @@ class HistoryKpis extends StatelessWidget {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14.r),
       decoration: BoxDecoration(
-        color: isDark ? AppConstants.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(18.r),
         border: Border.all(
           color: isDark
-              ? AppConstants.cardBorderDark
-              : AppConstants.cardBorderLight,
+              ? AppColors.cardBorderDark
+              : AppColors.cardBorderLight,
         ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 10.r,
+            offset: Offset(0, 4.h),
           ),
         ],
       ),
@@ -42,19 +43,19 @@ class HistoryKpis extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(7),
+                padding: EdgeInsets.all(7.r),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: isDark ? 0.2 : 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(10.r),
                 ),
-                child: Icon(icon, size: 16, color: color),
+                child: Icon(icon, size: 16.sp, color: color),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8.w),
               Expanded(
                 child: Text(
                   value,
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 18.sp,
                     fontWeight: FontWeight.w900,
                     color: color,
                   ),
@@ -62,22 +63,22 @@ class HistoryKpis extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10.h),
           Text(
             title,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 12.sp,
               fontWeight: FontWeight.w800,
-              color: isDark ? Colors.white : AppConstants.textDark,
+              color: isDark ? Colors.white : AppColors.textDark,
             ),
           ),
-          const SizedBox(height: 2),
+          SizedBox(height: 2.h),
           Text(
             subtitle,
             style: TextStyle(
-              fontSize: 10.5,
+              fontSize: 10.5.sp,
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white54 : AppConstants.textMuted,
+              color: isDark ? Colors.white54 : AppColors.textMuted,
             ),
           ),
         ],
@@ -93,7 +94,7 @@ class HistoryKpis extends StatelessWidget {
         : '${AppFormatters(Localizations.localeOf(context)).formatNumber(value, decimalDigits: 0)}%';
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
       child: Column(
         children: [
           // شبكة الـ KPIs الرئيسية
@@ -102,8 +103,8 @@ class HistoryKpis extends StatelessWidget {
               crossAxisCount: MediaQuery.textScalerOf(context).scale(1) > 1.3
                   ? 1
                   : 2,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
+              mainAxisSpacing: 10.h,
+              crossAxisSpacing: 10.w,
               mainAxisExtent: MediaQuery.textScalerOf(context).scale(200),
             ),
             shrinkWrap: true,
@@ -122,11 +123,11 @@ class HistoryKpis extends StatelessWidget {
                 color:
                     analysis.overallAttendanceRate != null &&
                         analysis.overallAttendanceRate! >= 75
-                    ? AppConstants.successColor
+                    ? AppColors.successColor
                     : (analysis.overallAttendanceRate != null &&
                               analysis.overallAttendanceRate! >= 40
-                          ? AppConstants.accentGold
-                          : AppConstants.errorColor),
+                          ? AppColors.accentGold
+                          : AppColors.errorColor),
               ),
 
               // 2. إجمالي الافتقادات
@@ -140,7 +141,7 @@ class HistoryKpis extends StatelessWidget {
                       )
                     : context.tr.noVisitsYet,
                 icon: Icons.volunteer_activism_rounded,
-                color: AppConstants.sacredGold,
+                color: AppColors.sacredGold,
               ),
 
               // 3. الغياب المتتالي
@@ -159,8 +160,8 @@ class HistoryKpis extends StatelessWidget {
                           : context.tr.warningAbsenceAlert),
                 icon: Icons.event_busy_rounded,
                 color: analysis.consecutiveAbsences >= 2
-                    ? AppConstants.errorColor
-                    : AppConstants.successColor,
+                    ? AppColors.errorColor
+                    : AppColors.successColor,
               ),
 
               // 4. حضور القداس مقابل الخدمة
@@ -179,54 +180,54 @@ class HistoryKpis extends StatelessWidget {
                         ),
                       ),
                 icon: Icons.church_rounded,
-                color: AppConstants.primaryLight,
+                color: AppColors.primaryLight,
               ),
             ],
           ),
 
           // 5. بطاقة الارتباط الإحصائي للزيارة (دون ادعاء سببية)
           if (analysis.correlationDifference != null) ...[
-            const SizedBox(height: 10),
+            SizedBox(height: 10.h),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12.r),
               decoration: BoxDecoration(
                 color: isDark
-                    ? AppConstants.surfaceDark
+                    ? AppColors.surfaceDark
                     : const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(14.r),
                 border: Border.all(
                   color: isDark
-                      ? AppConstants.cardBorderDark
+                      ? AppColors.cardBorderDark
                       : Colors.grey.shade300,
                 ),
               ),
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: EdgeInsets.all(8.r),
                     decoration: BoxDecoration(
-                      color: AppConstants.sacredGold.withValues(alpha: 0.15),
+                      color: AppColors.sacredGold.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.analytics_outlined,
-                      size: 18,
-                      color: AppConstants.sacredGold,
+                      size: 18.sp,
+                      color: AppColors.sacredGold,
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10.w),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           context.tr.visitationCorrelationTitle,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w800,
-                            fontSize: 12,
+                            fontSize: 12.sp,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        SizedBox(height: 2.h),
                         Text(
                           context.tr.visitationCorrelationBody(
                             analysis.correlationDifference! >= 0
@@ -239,10 +240,10 @@ class HistoryKpis extends StatelessWidget {
                                   ),
                           ),
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 11.sp,
                             color: isDark
                                 ? Colors.white70
-                                : AppConstants.textMuted,
+                                : AppColors.textMuted,
                           ),
                         ),
                       ],
@@ -254,23 +255,23 @@ class HistoryKpis extends StatelessWidget {
           ],
 
           if (!hasData) ...[
-            const SizedBox(height: 10),
+            SizedBox(height: 10.h),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
               decoration: BoxDecoration(
                 color: Colors.blue.withValues(alpha: isDark ? 0.15 : 0.08),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(10.r),
                 border: Border.all(color: Colors.blue.withValues(alpha: 0.25)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, size: 16, color: Colors.blue),
-                  const SizedBox(width: 8),
+                  Icon(Icons.info_outline, size: 16.sp, color: Colors.blue),
+                  SizedBox(width: 8.w),
                   Expanded(
                     child: Text(
                       context.tr.insufficientHistoryDataHint,
-                      style: const TextStyle(
-                        fontSize: 11,
+                      style: TextStyle(
+                        fontSize: 11.sp,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

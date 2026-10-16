@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/localization/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/session/session_cubit.dart';
@@ -24,7 +25,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.tr.messageNotificationsCenter),
+        title: Text(
+          context.tr.messageNotificationsCenter,
+          style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         actions: [
           if (userId != null)
@@ -50,8 +54,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               },
               child: Text(
                 context.tr.messageMarkAllRead,
-                style: const TextStyle(
-                  fontSize: 12,
+                style: TextStyle(
+                  fontSize: 13.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),

@@ -1,19 +1,20 @@
-import 'package:efteqad/core/localization/app_formatters.dart';
 import 'package:efteqad/core/errors/app_failure.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/constants.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/khadem_model.dart';
 import '../../../../core/models/makhdom_model.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/session/session_cubit.dart';
 import '../../../../core/router/router_services.dart';
 import '../../../../core/services/firestore_service.dart';
-import '../../../../core/utils/color_generator.dart';
+import '../../../../core/session/session_cubit.dart';
 import '../../../common/widgets/record_visit_sheet.dart';
 import 'add_edit_makhdom_dialog.dart';
 import 'assign_makhdomeen_modal.dart';
+import 'grade_makhdomeen_filter_bar.dart';
 import 'makhdom_card.dart';
+import 'servant_assignment_banner.dart';
 
 class GradeMakhdomeenTab extends StatefulWidget {
   final String grade;
@@ -76,7 +77,7 @@ class _GradeMakhdomeenTabState extends State<GradeMakhdomeenTab> {
               await _firestoreService.deleteMakhdom(makhdom.id);
             },
             style: TextButton.styleFrom(
-              foregroundColor: AppConstants.errorColor,
+              foregroundColor: AppColors.errorColor,
             ),
             child: Text(ctx.tr.delete),
           ),
@@ -117,14 +118,14 @@ class _GradeMakhdomeenTabState extends State<GradeMakhdomeenTab> {
                           error,
                         ).localizedMessage(context.tr),
                       ),
-                      backgroundColor: AppConstants.errorColor,
+                      backgroundColor: AppColors.errorColor,
                     ),
                   );
                 }
               }
             },
             style: TextButton.styleFrom(
-              foregroundColor: AppConstants.errorColor,
+              foregroundColor: AppColors.errorColor,
             ),
             child: Text(ctx.tr.messageUnassign),
           ),
@@ -204,159 +205,24 @@ class _GradeMakhdomeenTabState extends State<GradeMakhdomeenTab> {
 
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 16, 12),
-          decoration: BoxDecoration(
-            color: isDark
-                ? AppConstants.backgroundDark
-                : AppConstants.backgroundLight,
-          ),
-          child: Column(
-            children: [
-              TextField(
-                onChanged: (val) => setState(() => _searchQuery = val.trim()),
-                decoration: InputDecoration(
-                  hintText: context.tr.searchAdminHint,
-                  prefixIcon: const Icon(Icons.search_rounded, size: 22),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear, size: 18),
-                          onPressed: () => setState(() => _searchQuery = ''),
-                        )
-                      : null,
-                ),
-              ),
-              if (availableClasses.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  child: Row(
-                    children: [
-                      _buildClassFilterChip(
-                        id: null,
-                        name: 'كل الفصول',
-                        count: widget.allMakhdomeen.length,
-                      ),
-                      ...availableClasses.entries.map((entry) {
-                        final count = widget.allMakhdomeen
-                            .where((m) => m.classId == entry.key)
-                            .length;
-                        return Padding(
-                          padding: const EdgeInsetsDirectional.only(start: 6),
-                          child: _buildClassFilterChip(
-                            id: entry.key,
-                            name: entry.value,
-                            count: count,
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
-                ),
-              ],
-              const SizedBox(height: 10),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                child: Row(
-                  children: [
-                    _buildKhademFilterChip(
-                      id: null,
-                      name: context.tr.all,
-                      count: widget.allMakhdomeen.length,
-                      color: AppConstants.primaryLight,
-                    ),
-                    if (currentUser != null && myAssignedCount > 0) ...[
-                      const SizedBox(width: 8),
-                      _buildKhademFilterChip(
-                        id: currentUser.id,
-                        name: '⭐ ${context.tr.filterMyMakhdomeen}',
-                        count: myAssignedCount,
-                        color: AppConstants.accentIndigo,
-                      ),
-                    ],
-                    const SizedBox(width: 8),
-                    _buildKhademFilterChip(
-                      id: 'unassigned',
-                      name: context.tr.filterUnassigned,
-                      count: widget.allMakhdomeen
-                          .where((m) => !m.isAssigned)
-                          .length,
-                      color: AppConstants.errorColor,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildKhademFilterChip(
-                      id: 'brethren',
-                      name: context.tr.filterBrethren,
-                      count: widget.allMakhdomeen
-                          .where((m) => m.isBrethrenOfLord)
-                          .length,
-                      color: AppConstants.accentGold,
-                    ),
-                    const SizedBox(width: 8),
-                    ...widget.khodamList
-                        .where(
-                          (k) =>
-                              k.id != currentUser?.id || myAssignedCount == 0,
-                        )
-                        .map((khadem) {
-                          final count = widget.allMakhdomeen
-                              .where((m) => m.assignedKhademId == khadem.id)
-                              .length;
-                          return Padding(
-                            padding: const EdgeInsetsDirectional.only(start: 8),
-                            child: _buildKhademFilterChip(
-                              id: khadem.id,
-                              name: khadem.name,
-                              count: count,
-                              color: ColorGenerator.getColorForId(khadem.id),
-                            ),
-                          );
-                        }),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        GradeMakhdomeenFilterBar(
+          searchQuery: _searchQuery,
+          onSearchChanged: (val) => setState(() => _searchQuery = val.trim()),
+          availableClasses: availableClasses,
+          selectedClassFilterId: _selectedClassFilterId,
+          onClassFilterChanged: (id) => setState(() => _selectedClassFilterId = id),
+          selectedKhademFilterId: _selectedKhademFilterId,
+          onKhademFilterChanged: (id) => setState(() => _selectedKhademFilterId = id),
+          allMakhdomeen: widget.allMakhdomeen,
+          khodamList: widget.khodamList,
+          currentUser: currentUser,
+          myAssignedCount: myAssignedCount,
+          isDark: isDark,
         ),
         if (currentSelectedKhadem != null)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            margin: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 8),
-            decoration: BoxDecoration(
-              color: ColorGenerator.getColorForId(
-                currentSelectedKhadem.id,
-              ).withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.assignment_ind_rounded,
-                  size: 18,
-                  color: ColorGenerator.getColorForId(currentSelectedKhadem.id),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    context.tr.servantGroupHeader(currentSelectedKhadem.name),
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.bold,
-                      color: ColorGenerator.getColorForId(
-                        currentSelectedKhadem.id,
-                      ),
-                    ),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () =>
-                      _openAssignModalForSelectedKhadem(currentSelectedKhadem!),
-                  child: Text(context.tr.assignChildrenBtn),
-                ),
-              ],
-            ),
+          ServantAssignmentBanner(
+            khadem: currentSelectedKhadem,
+            onAssignPressed: () => _openAssignModalForSelectedKhadem(currentSelectedKhadem!),
           ),
         Expanded(
           child: filteredList.isEmpty
@@ -366,19 +232,22 @@ class _GradeMakhdomeenTabState extends State<GradeMakhdomeenTab> {
                     children: [
                       Icon(
                         Icons.search_off_rounded,
-                        size: 50,
+                        size: 50.sp,
                         color: isDark ? Colors.white24 : Colors.grey.shade300,
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12.h),
                       Text(
                         context.tr.noSearchResults,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
                 )
               : ListView.builder(
-                  padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 16, 85),
+                  padding: EdgeInsetsDirectional.fromSTEB(16.w, 8.h, 16.w, 85.h),
                   itemCount: filteredList.length,
                   itemBuilder: (context, index) {
                     final makhdom = filteredList[index];
@@ -395,147 +264,6 @@ class _GradeMakhdomeenTabState extends State<GradeMakhdomeenTab> {
                 ),
         ),
       ],
-    );
-  }
-
-  Widget _buildKhademFilterChip({
-    required String? id,
-    required String name,
-    required int count,
-    required Color color,
-  }) {
-    final isSelected = _selectedKhademFilterId == id;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return GestureDetector(
-      onTap: () =>
-          setState(() => _selectedKhademFilterId = isSelected ? null : id),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? color
-              : (isDark ? AppConstants.surfaceDark : Colors.white),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected
-                ? color
-                : (isDark
-                      ? AppConstants.cardBorderDark
-                      : AppConstants.cardBorderLight),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              name,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected
-                    ? Colors.white
-                    : (isDark ? Colors.white70 : AppConstants.textDark),
-              ),
-            ),
-            const SizedBox(width: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? Colors.white.withValues(alpha: 0.25)
-                    : color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                AppFormatters(
-                  Localizations.localeOf(context),
-                ).formatNumber(count),
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.bold,
-                  color: isSelected ? Colors.white : color,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildClassFilterChip({
-    required String? id,
-    required String name,
-    required int count,
-  }) {
-    final isSelected = _selectedClassFilterId == id;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return GestureDetector(
-      onTap: () =>
-          setState(() => _selectedClassFilterId = isSelected ? null : id),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppConstants.sacredGold
-              : (isDark ? AppConstants.surfaceDark : Colors.white),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isSelected
-                ? AppConstants.sacredGold
-                : (isDark
-                      ? AppConstants.cardBorderDark
-                      : AppConstants.cardBorderLight),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.diversity_3_rounded,
-              size: 13,
-              color: isSelected
-                  ? Colors.black87
-                  : (isDark ? Colors.white60 : AppConstants.textMuted),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              name,
-              style: TextStyle(
-                fontSize: 11.5,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                color: isSelected
-                    ? Colors.black87
-                    : (isDark ? Colors.white70 : AppConstants.textDark),
-              ),
-            ),
-            const SizedBox(width: 5),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? Colors.black.withValues(alpha: 0.12)
-                    : AppConstants.sacredGold.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                AppFormatters(
-                  Localizations.localeOf(context),
-                ).formatNumber(count),
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: isSelected ? Colors.black87 : AppConstants.sacredGold,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

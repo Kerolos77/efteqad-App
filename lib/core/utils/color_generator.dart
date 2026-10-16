@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class ColorGenerator {
+  ColorGenerator._();
+
   // قائمة ألوان مميزة وثابتة ومريحة للعين
   static const List<Color> _palette = [
     Color(0xFF2563EB), // أزرق

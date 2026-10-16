@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'firebase_options.dart';
 import 'core/constants/constants.dart';
@@ -206,23 +207,34 @@ class _EfteqadAppState extends State<EfteqadApp> {
       child: BlocBuilder<SettingsCubit, SettingsState>(
         builder: (context, settingsState) {
           if (!settingsState.isLoaded) return const SizedBox.shrink();
-          return MaterialApp.router(
-            title: '${AppConstants.appName} - منظومة الافتقاد والخدمة',
-            onGenerateTitle: (ctx) => '${ctx.tr.appName} - منظومة الافتقاد والخدمة',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: settingsState.themeMode,
-            themeAnimationDuration: Duration.zero,
-            locale: settingsState.locale,
-            supportedLocales: const [Locale('ar', 'EG'), Locale('en', 'US')],
-            localizationsDelegates: const [
-              GeneratedAppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            routerConfig: _router,
+          return ScreenUtilInit(
+            designSize: const Size(390, 844),
+            minTextAdapt: true,
+            splitScreenMode: true,
+            builder: (context, child) {
+              return MaterialApp.router(
+                title: '${AppConstants.appName} - منظومة الافتقاد والخدمة',
+                onGenerateTitle: (ctx) =>
+                    '${ctx.tr.appName} - منظومة الافتقاد والخدمة',
+                debugShowCheckedModeBanner: false,
+                theme: AppTheme.lightTheme,
+                darkTheme: AppTheme.darkTheme,
+                themeMode: settingsState.themeMode,
+                themeAnimationDuration: Duration.zero,
+                locale: settingsState.locale,
+                supportedLocales: const [
+                  Locale('ar', 'EG'),
+                  Locale('en', 'US'),
+                ],
+                localizationsDelegates: const [
+                  GeneratedAppLocalizations.delegate,
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                routerConfig: _router,
+              );
+            },
           );
         },
       ),

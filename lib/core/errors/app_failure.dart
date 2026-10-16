@@ -1,10 +1,26 @@
-import 'package:cloud_functions/cloud_functions.dart';
-import '../localization/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+
+import '../localization/app_localizations.dart';
 
 /// Represents a standardized application failure across network, database,
 /// permissions, decoding, and auth layers.
 class AppFailure implements Exception {
+  // Standard Error Code Constants
+  static const String codePermissionDenied = 'permission-denied';
+  static const String codeNetworkError = 'network-error';
+  static const String codeNotFound = 'not-found';
+  static const String codeDecodeError = 'decode-error';
+  static const String codeUnauthenticated = 'unauthenticated';
+  static const String codeUnknown = 'unknown';
+  static const String codeExcelEmpty = 'excel-empty';
+  static const String codeExcelColumns = 'excel-columns';
+  static const String codeExcelUnreadable = 'excel-unreadable';
+  static const String codeAttendanceFinalized = 'attendance-finalized';
+  static const String codePendingSaves = 'pending-saves';
+  static const String codeStageAdminRequiresSuccessor =
+      'stage-admin-requires-successor';
+
   final String code;
   final String message;
   final bool retryable;
@@ -26,8 +42,8 @@ class AppFailure implements Exception {
     StackTrace? stackTrace,
   }) {
     return AppFailure(
-      code: 'permission-denied',
-      message: message ?? 'Application diagnostic',
+      code: codePermissionDenied,
+      message: message ?? 'Permission denied.',
       retryable: false,
       cause: cause,
       stackTrace: stackTrace,
@@ -41,8 +57,8 @@ class AppFailure implements Exception {
     StackTrace? stackTrace,
   }) {
     return AppFailure(
-      code: 'network-error',
-      message: message ?? 'Application diagnostic',
+      code: codeNetworkError,
+      message: message ?? 'Network connection failed.',
       retryable: true,
       cause: cause,
       stackTrace: stackTrace,
@@ -56,8 +72,8 @@ class AppFailure implements Exception {
     StackTrace? stackTrace,
   }) {
     return AppFailure(
-      code: 'not-found',
-      message: message ?? 'Application diagnostic',
+      code: codeNotFound,
+      message: message ?? 'Requested resource was not found.',
       retryable: false,
       cause: cause,
       stackTrace: stackTrace,
@@ -71,8 +87,8 @@ class AppFailure implements Exception {
     StackTrace? stackTrace,
   }) {
     return AppFailure(
-      code: 'decode-error',
-      message: message ?? 'Application diagnostic',
+      code: codeDecodeError,
+      message: message ?? 'Failed to decode data.',
       retryable: false,
       cause: cause,
       stackTrace: stackTrace,
@@ -89,7 +105,7 @@ class AppFailure implements Exception {
         error.details is Map &&
         (error.details as Map)['reason'] == 'STAGE_ADMIN_REQUIRES_SUCCESSOR') {
       return AppFailure(
-        code: 'stage-admin-requires-successor',
+        code: codeStageAdminRequiresSuccessor,
         message: 'Active successor required.',
         cause: error,
         stackTrace: stackTrace,
@@ -99,23 +115,27 @@ class AppFailure implements Exception {
       switch (error.code) {
         case 'permission-denied':
           return AppFailure.permissionDenied(
-            message: 'Application diagnostic',
+            message: error.message ?? 'Permission denied.',
             cause: error,
             stackTrace: stackTrace,
           );
         case 'unavailable':
         case 'deadline-exceeded':
           return AppFailure.network(
-            message: 'Application diagnostic',
+            message: error.message ?? 'Network connection failed.',
             cause: error,
             stackTrace: stackTrace,
           );
         case 'not-found':
-          return AppFailure.notFound(cause: error, stackTrace: stackTrace);
+          return AppFailure.notFound(
+            message: error.message ?? 'Requested resource was not found.',
+            cause: error,
+            stackTrace: stackTrace,
+          );
         case 'unauthenticated':
           return AppFailure(
-            code: 'unauthenticated',
-            message: 'Application diagnostic',
+            code: codeUnauthenticated,
+            message: error.message ?? 'User is unauthenticated.',
             retryable: false,
             cause: error,
             stackTrace: stackTrace,
@@ -123,7 +143,7 @@ class AppFailure implements Exception {
         default:
           return AppFailure(
             code: error.code,
-            message: error.message ?? 'Application diagnostic',
+            message: error.message ?? 'Application error occurred.',
             retryable: true,
             cause: error,
             stackTrace: stackTrace,
@@ -131,9 +151,14 @@ class AppFailure implements Exception {
       }
     }
 
-    if (error.runtimeType.toString() == 'SocketException') {
+    final errorString = error.toString().toLowerCase();
+    if (errorString.contains('socketexception') ||
+        errorString.contains('network') ||
+        errorString.contains('connection refused') ||
+        errorString.contains('connection reset') ||
+        errorString.contains('clientexception')) {
       return AppFailure.network(
-        message: 'Application diagnostic',
+        message: 'Network connection failed.',
         cause: error,
         stackTrace: stackTrace,
       );
@@ -141,14 +166,14 @@ class AppFailure implements Exception {
 
     if (error is FormatException || error is TypeError) {
       return AppFailure.decode(
-        message: 'Application diagnostic',
+        message: 'Failed to parse data format.',
         cause: error,
         stackTrace: stackTrace,
       );
     }
 
     return AppFailure(
-      code: 'unknown',
+      code: codeUnknown,
       message: error.toString(),
       retryable: true,
       cause: error,
@@ -158,21 +183,21 @@ class AppFailure implements Exception {
 
   String localizedMessage(GeneratedAppLocalizations tr) {
     final normalized = code.toLowerCase();
-    if (normalized == 'excel-empty') return tr.excelEmptyFailure;
-    if (normalized == 'excel-columns') return tr.excelColumnsFailure;
-    if (normalized == 'excel-unreadable') return tr.excelReadFailure;
-    if (normalized == 'attendance-finalized') {
+    if (normalized == codeExcelEmpty) return tr.excelEmptyFailure;
+    if (normalized == codeExcelColumns) return tr.excelColumnsFailure;
+    if (normalized == codeExcelUnreadable) return tr.excelReadFailure;
+    if (normalized == codeAttendanceFinalized) {
       return tr.attendanceFinalizedFailure;
     }
-    if (normalized == 'pending-saves') return tr.pendingSavesFailure;
-    if (normalized == 'permission-denied') return tr.failurePermissionDenied;
-    if (normalized == 'network-error' ||
+    if (normalized == codePendingSaves) return tr.pendingSavesFailure;
+    if (normalized == codePermissionDenied) return tr.failurePermissionDenied;
+    if (normalized == codeNetworkError ||
         normalized == 'unavailable' ||
         normalized == 'deadline-exceeded') {
       return tr.failureNetwork;
     }
-    if (normalized == 'not-found') return tr.failureNotFound;
-    if (normalized == 'decode-error') return tr.failureDecode;
+    if (normalized == codeNotFound) return tr.failureNotFound;
+    if (normalized == codeDecodeError) return tr.failureDecode;
     if ({
       'invalid-credential',
       'wrong-password',
@@ -180,11 +205,11 @@ class AppFailure implements Exception {
     }.contains(normalized)) {
       return tr.loginFailedCheckCredentials;
     }
-    if (normalized == 'unauthenticated' ||
+    if (normalized == codeUnauthenticated ||
         normalized == 'requires-recent-login') {
       return tr.failureAuthentication;
     }
-    if (normalized == 'stage-admin-requires-successor') {
+    if (normalized == codeStageAdminRequiresSuccessor) {
       return tr.stageSuccessorRequired;
     }
     return tr.dataUnavailable;
