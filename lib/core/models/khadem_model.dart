@@ -10,7 +10,8 @@ class KhademModel {
   final int assignedCount;
   final String role; // 'stageAdmin', 'gradeAdmin', 'servant', 'pending'
   final String? grade; // '1st', '2nd', '3rd', or null
-  final String status; // 'active', 'pending'
+  final String status; // 'active', 'pending', 'rejected'
+  final String? rejectionReason; // Reason why application was rejected by Stage Admin
   final String? locale;
   final String? fcmToken; // FCM push token for device
   final String? serviceId; // Service ID (e.g. ebtedai, thanawy)
@@ -27,6 +28,7 @@ class KhademModel {
     this.role = AppConstants.rolePending,
     this.grade,
     this.status = AppConstants.rolePending,
+    this.rejectionReason,
     this.locale,
     this.fcmToken,
     this.serviceId,
@@ -36,11 +38,13 @@ class KhademModel {
 
   bool get isStageAdmin => role == AppConstants.roleStageAdmin;
   bool get isGradeAdmin => role == AppConstants.roleGradeAdmin;
+  bool get isRejected => status == 'rejected';
   bool get isPending =>
       role == AppConstants.rolePending ||
       status == AppConstants.rolePending ||
+      status == 'rejected' ||
       (role != AppConstants.roleStageAdmin && grade == null);
-  bool get isActive => !isPending;
+  bool get isActive => !isPending && !isRejected;
 
   KhademModel copyWith({
     String? id,
@@ -52,6 +56,7 @@ class KhademModel {
     String? role,
     String? grade,
     String? status,
+    String? rejectionReason,
     String? locale,
     String? fcmToken,
     String? serviceId,
@@ -68,6 +73,7 @@ class KhademModel {
       role: role ?? this.role,
       grade: grade ?? this.grade,
       status: status ?? this.status,
+      rejectionReason: rejectionReason ?? this.rejectionReason,
       locale: locale ?? this.locale,
       fcmToken: fcmToken ?? this.fcmToken,
       serviceId: serviceId ?? this.serviceId,
@@ -86,6 +92,7 @@ class KhademModel {
       'role': role,
       'grade': grade,
       'status': status,
+      if (rejectionReason != null) 'rejectionReason': rejectionReason,
       'locale': locale,
       'fcmToken': fcmToken,
       if (serviceId != null) 'serviceId': serviceId,
@@ -127,6 +134,7 @@ class KhademModel {
           ((role == AppConstants.roleStageAdmin || map['grade'] != null)
               ? 'active'
               : AppConstants.rolePending),
+      rejectionReason: map['rejectionReason'] as String?,
       locale: map['locale'] is String ? map['locale'] as String : null,
       fcmToken: map['fcmToken'],
       serviceId: parsedServiceId,

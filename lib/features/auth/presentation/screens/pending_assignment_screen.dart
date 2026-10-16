@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/constants.dart';
 import '../../../../core/errors/app_failure.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/models/service_model.dart';
 import '../../../../core/repositories/auth_repository.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/services/firestore_service.dart';
@@ -27,6 +28,7 @@ class _PendingAssignmentScreenState extends State<PendingAssignmentScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
+  String? _selectedServiceId;
 
   bool _isSaving = false;
   bool _initialized = false;
@@ -35,15 +37,14 @@ class _PendingAssignmentScreenState extends State<PendingAssignmentScreen> {
   void initState() {
     super.initState();
     final session = context.read<SessionCubit>();
+    final profile = session.state.profile;
     _nameController = TextEditingController(
-      text:
-          session.state.profile?.name ??
-          session.authIdentity?.displayName ??
-          '',
+      text: profile?.name ?? session.authIdentity?.displayName ?? '',
     );
     _phoneController = TextEditingController(
-      text: session.state.profile?.phone ?? '',
+      text: profile?.phone ?? '',
     );
+    _selectedServiceId = profile?.serviceId;
   }
 
   @override
@@ -53,7 +54,7 @@ class _PendingAssignmentScreenState extends State<PendingAssignmentScreen> {
     super.dispose();
   }
 
-  Future<void> _handleSaveProfile() async {
+  Future<void> _handleSaveProfile(bool isRejected) async {
     if (!_formKey.currentState!.validate()) return;
     final userId = context.read<SessionCubit>().state.userId;
     if (userId == null) return;
@@ -64,11 +65,17 @@ class _PendingAssignmentScreenState extends State<PendingAssignmentScreen> {
         id: userId,
         name: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
+        serviceId: _selectedServiceId,
+        resubmitPending: true,
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.tr.profileUpdatedSuccess),
+            content: Text(
+              isRejected
+                  ? 'تم إعادة تقديم طلبك بنجاح وسيقوم أمين الخدمة بمراجعته.'
+                  : context.tr.profileUpdatedSuccess,
+            ),
             backgroundColor: AppColors.successColor,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -132,75 +139,101 @@ class _PendingAssignmentScreenState extends State<PendingAssignmentScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final userColor = ColorGenerator.getColorForId(user.email ?? user.uid);
 
-    return BlocBuilder<SessionCubit, SessionState>(
-      builder: (context, sessionState) {
-        final khadem = sessionState.profile;
+    return StreamBuilder<List<ServiceModel>>(
+      stream: _firestoreService.watchAllServices(),
+      builder: (context, servicesSnap) {
+        final services = servicesSnap.data ?? [];
 
-        // مزامنة الحقول عند أول جلب من فايرستور
-        if (!_initialized && khadem != null) {
-          _initialized = true;
-          if (khadem.name.isNotEmpty) _nameController.text = khadem.name;
-          if (khadem.phone.isNotEmpty) _phoneController.text = khadem.phone;
-        }
+        return BlocBuilder<SessionCubit, SessionState>(
+          builder: (context, sessionState) {
+            final khadem = sessionState.profile;
 
-        final displayName = (khadem?.name.isNotEmpty ?? false)
-            ? khadem!.name
-            : (user.displayName ?? '');
+            // مزامنة الحقول عند أول جلب من فايرستور
+            if (!_initialized && khadem != null) {
+              _initialized = true;
+              if (khadem.name.isNotEmpty) _nameController.text = khadem.name;
+              if (khadem.phone.isNotEmpty) _phoneController.text = khadem.phone;
+              if (khadem.serviceId != null && khadem.serviceId!.isNotEmpty) {
+                _selectedServiceId = khadem.serviceId;
+              }
+            }
 
-        return Scaffold(
-          backgroundColor: isDark
-              ? AppColors.backgroundDark
-              : AppColors.backgroundLight,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            actions: [
-              IconButton(
-                icon: Icon(
-                  Icons.logout_rounded,
-                  color: AppColors.errorColor,
-                  size: 22.r,
-                ),
-                tooltip: context.tr.signOut,
-                onPressed: _handleSignOut,
-              ),
-              SizedBox(width: 8.w),
-            ],
-          ),
-          body: Center(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-              physics: const BouncingScrollPhysics(),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: 480.w),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // أيقونة الخادم وعنوان الترحيب
-                    PendingServantAvatar(
-                      displayName: displayName,
-                      email: user.email ?? '',
-                      userColor: userColor,
+            final displayName = (khadem?.name.isNotEmpty ?? false)
+                ? khadem!.name
+                : (user.displayName ?? '');
+
+            String? serviceName;
+            if (_selectedServiceId != null) {
+              final match = services.where((s) => s.id == _selectedServiceId).firstOrNull;
+              serviceName = match?.name;
+            }
+
+            return Scaffold(
+              backgroundColor: isDark
+                  ? AppColors.backgroundDark
+                  : AppColors.backgroundLight,
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                actions: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.logout_rounded,
+                      color: AppColors.errorColor,
+                      size: 22.r,
                     ),
-                    SizedBox(height: 24.h),
+                    tooltip: context.tr.signOut,
+                    onPressed: _handleSignOut,
+                  ),
+                  SizedBox(width: 8.w),
+                ],
+              ),
+              body: Center(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                  physics: const BouncingScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: 480.w),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // أيقونة الخادم وعنوان الترحيب
+                        PendingServantAvatar(
+                          displayName: displayName,
+                          email: user.email ?? '',
+                          userColor: userColor,
+                        ),
+                        SizedBox(height: 20.h),
 
-                    // بطاقة حالة الانتظار (Status Hero Card)
-                    const PendingStatusCard(),
-                    SizedBox(height: 24.h),
+                        // بطاقة حالة الانتظار (Status Hero Card مع تفاصيل الخدمة أو الرفض)
+                        PendingStatusCard(
+                          khadem: khadem,
+                          serviceName: serviceName,
+                        ),
+                        SizedBox(height: 20.h),
 
-                    // استمارة تأكيد الاسم ورقم الهاتف
-                    PendingProfileForm(
-                      formKey: _formKey,
-                      nameController: _nameController,
-                      phoneController: _phoneController,
-                      isSaving: _isSaving,
-                      onSave: _handleSaveProfile,
+                        // استمارة تأكيد الاسم ورقم الهاتف والخدمة الإلزامية
+                        PendingProfileForm(
+                          formKey: _formKey,
+                          nameController: _nameController,
+                          phoneController: _phoneController,
+                          selectedServiceId: _selectedServiceId,
+                          services: services,
+                          onServiceChanged: (val) {
+                            setState(() => _selectedServiceId = val);
+                          },
+                          isSaving: _isSaving,
+                          isRejected: khadem?.isRejected ?? false,
+                          onSave: () => _handleSaveProfile(khadem?.isRejected ?? false),
+                        ),
+                        SizedBox(height: 24.h),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );

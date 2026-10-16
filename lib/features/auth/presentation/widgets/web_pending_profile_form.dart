@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/constants.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/models/service_model.dart';
 import '../../../../core/responsive/responsive_breakpoints.dart';
 
 /// Web profile completion form for newly registered servants.
@@ -9,8 +10,12 @@ class WebPendingProfileForm extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController nameController;
   final TextEditingController phoneController;
+  final String? selectedServiceId;
+  final List<ServiceModel> services;
+  final ValueChanged<String?> onServiceChanged;
   final String userEmail;
   final bool isSaving;
+  final bool isRejected;
   final VoidCallback onSave;
 
   const WebPendingProfileForm({
@@ -18,8 +23,12 @@ class WebPendingProfileForm extends StatelessWidget {
     required this.formKey,
     required this.nameController,
     required this.phoneController,
+    required this.selectedServiceId,
+    required this.services,
+    required this.onServiceChanged,
     required this.userEmail,
     required this.isSaving,
+    this.isRejected = false,
     required this.onSave,
   });
 
@@ -55,7 +64,7 @@ class WebPendingProfileForm extends StatelessWidget {
                 ),
                 SizedBox(width: isDesktop ? 8 : 8.w),
                 Text(
-                  tr.completeProfilePrompt,
+                  isRejected ? 'تعديل البيانات وإعادة التقديم' : 'استكمال بيانات الخادم الإلزامية',
                   style: TextStyle(
                     fontSize: isDesktop ? 14 : 14.sp,
                     fontWeight: FontWeight.w800,
@@ -79,7 +88,8 @@ class WebPendingProfileForm extends StatelessWidget {
             TextFormField(
               controller: nameController,
               decoration: InputDecoration(
-                labelText: tr.servantFullNameLabel,
+                labelText: 'الاسم بالكامل (ثلاثي) *',
+                hintText: 'مثال: مينا مجدي فوزي',
                 prefixIcon: Icon(
                   Icons.person_outline_rounded,
                   size: isDesktop ? 20 : 20.r,
@@ -90,8 +100,12 @@ class WebPendingProfileForm extends StatelessWidget {
                   borderRadius: BorderRadius.circular(isDesktop ? 12 : 12.r),
                 ),
               ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? tr.servantNameRequired : null,
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return tr.servantNameRequired;
+                final parts = v.trim().split(RegExp(r'\s+'));
+                if (parts.length < 2) return 'يرجى كتابة الاسم ثنائياً أو ثلاثياً على الأقل';
+                return null;
+              },
             ),
             SizedBox(height: isDesktop ? 14 : 12.h),
 
@@ -101,7 +115,8 @@ class WebPendingProfileForm extends StatelessWidget {
               keyboardType: TextInputType.phone,
               textDirection: TextDirection.ltr,
               decoration: InputDecoration(
-                labelText: tr.servantPhoneLabel,
+                labelText: 'رقم الهاتف للتواصل *',
+                hintText: '01xxxxxxxxx',
                 prefixIcon: Icon(
                   Icons.phone_outlined,
                   size: isDesktop ? 20 : 20.r,
@@ -112,19 +127,63 @@ class WebPendingProfileForm extends StatelessWidget {
                   borderRadius: BorderRadius.circular(isDesktop ? 12 : 12.r),
                 ),
               ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? tr.servantPhoneRequired : null,
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return tr.servantPhoneRequired;
+                final clean = v.replaceAll(RegExp(r'[^0-9]'), '');
+                if (clean.length < 10) return 'يرجى إدخال رقم هاتف صحيح (11 رقم)';
+                return null;
+              },
             ),
-            SizedBox(height: isDesktop ? 16 : 14.h),
+            SizedBox(height: isDesktop ? 14 : 12.h),
 
-            // Save Button
+            // Service Selector Dropdown
+            DropdownButtonFormField<String?>(
+              initialValue: (selectedServiceId != null &&
+                      services.any((s) => s.id == selectedServiceId))
+                  ? selectedServiceId
+                  : null,
+              isExpanded: true,
+              decoration: InputDecoration(
+                labelText: 'الخدمة التابع لها *',
+                hintText: 'اختر الخدمة (ابتدائي، إعدادي، ثانوي...)',
+                prefixIcon: Icon(
+                  Icons.church_outlined,
+                  size: isDesktop ? 20 : 20.r,
+                ),
+                filled: true,
+                fillColor: theme.cardColor,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(isDesktop ? 12 : 12.r),
+                ),
+              ),
+              items: services.map((s) {
+                return DropdownMenuItem<String?>(
+                  value: s.id,
+                  child: Text(
+                    s.name,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                );
+              }).toList(),
+              validator: (val) {
+                if (val == null || val.isEmpty) {
+                  return 'يرجى اختيار الخدمة التي تخدم بها';
+                }
+                return null;
+              },
+              onChanged: onServiceChanged,
+            ),
+            SizedBox(height: isDesktop ? 18 : 16.h),
+
+            // Save / Resubmit Button
             ElevatedButton.icon(
               onPressed: isSaving ? null : onSave,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryLight,
+                backgroundColor: isRejected ? AppColors.warningColor : AppColors.primaryLight,
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(
-                  vertical: isDesktop ? 13 : 13.h,
+                  vertical: isDesktop ? 14 : 14.h,
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(isDesktop ? 12 : 12.r),
@@ -139,11 +198,14 @@ class WebPendingProfileForm extends StatelessWidget {
                         color: Colors.white,
                       ),
                     )
-                  : Icon(Icons.save_outlined, size: isDesktop ? 18 : 18.r),
+                  : Icon(isRejected ? Icons.replay_rounded : Icons.save_outlined, size: isDesktop ? 18 : 18.r),
               label: Text(
-                tr.updateAndSave,
+                isSaving
+                    ? 'جاري حفظ البيانات...'
+                    : (isRejected ? 'تعديل وإعادة تقديم الطلب' : 'حفظ وإرسال الطلب'),
                 style: TextStyle(
                   fontSize: isDesktop ? 14 : 14.sp,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),

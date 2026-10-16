@@ -365,12 +365,50 @@ class FirestoreService {
           final list = snapshot.docs
               .map((doc) => KhademModel.fromMap(doc.data(), doc.id))
               .where((k) {
+                if (k.isRejected) return false;
                 if (serviceId != null) {
-                  final kService = k.serviceId ?? 'thanawy';
-                  if (serviceId == 'thanawy') {
-                    return kService == 'thanawy' || kService.isEmpty;
+                  final kService = k.serviceId;
+                  if (kService == serviceId || k.serviceIds.contains(serviceId)) {
+                    return true;
                   }
-                  return kService == serviceId || k.serviceIds.contains(serviceId);
+                  if (serviceId == 'thanawy' &&
+                      (kService == 'thanawy' || kService == null || kService.isEmpty)) {
+                    return true;
+                  }
+                  return false;
+                }
+                return true;
+              })
+              .toList();
+          list.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+          return SnapshotList(
+            list,
+            isFromCache: snapshot.metadata.isFromCache,
+            hasPendingWrites: snapshot.metadata.hasPendingWrites,
+          );
+        });
+  }
+
+  /// جلب قائمة الخدام المرفوضين (Rejected) مع فلترة الخدمة اختيارياً
+  Stream<List<KhademModel>> getRejectedKhodamStream({String? serviceId}) {
+    return _firestore
+        .collection(AppConstants.colKhodam)
+        .where('status', isEqualTo: 'rejected')
+        .snapshots(includeMetadataChanges: true)
+        .map((snapshot) {
+          final list = snapshot.docs
+              .map((doc) => KhademModel.fromMap(doc.data(), doc.id))
+              .where((k) {
+                if (serviceId != null) {
+                  final kService = k.serviceId;
+                  if (kService == serviceId || k.serviceIds.contains(serviceId)) {
+                    return true;
+                  }
+                  if (serviceId == 'thanawy' &&
+                      (kService == 'thanawy' || kService == null || kService.isEmpty)) {
+                    return true;
+                  }
+                  return false;
                 }
                 return true;
               })
@@ -426,15 +464,55 @@ class FirestoreService {
     }
   }
 
-  /// تحديث الملف الشخصي للخادم (الاسم ورقم التليفون) وتحديث اسمه لدى مخدوميه
+  /// تحديث الملف الشخصي للخادم (الاسم ورقم التليفون واختيار الخدمة)
   Future<void> updateKhademProfile({
     required String id,
     required String name,
     required String phone,
-  }) => _firestore.collection(AppConstants.colKhodam).doc(id).update({
-    'name': name,
-    'phone': phone,
-  });
+    String? serviceId,
+    bool resubmitPending = false,
+  }) async {
+    final Map<String, dynamic> data = {
+      'name': name.trim(),
+      'phone': phone.trim(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    if (serviceId != null && serviceId.isNotEmpty) {
+      data['serviceId'] = serviceId;
+      data['serviceIds'] = [serviceId];
+    }
+    if (resubmitPending) {
+      data['status'] = 'pending';
+      data['role'] = 'pending';
+      data['rejectionReason'] = FieldValue.delete();
+    }
+    await _firestore.collection(AppConstants.colKhodam).doc(id).update(data);
+  }
+
+  /// رفض طلب انضمام خادم مع سبب الرفض
+  Future<void> rejectKhademApplication({
+    required String khademId,
+    String? reason,
+  }) async {
+    await _firestore.collection(AppConstants.colKhodam).doc(khademId).update({
+      'status': 'rejected',
+      'role': 'pending',
+      'rejectionReason': reason?.trim() ?? '',
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// إعادة فتح طلب خادم مرفوض وإعادته لقائمة الانتظار
+  Future<void> reopenKhademApplication({
+    required String khademId,
+  }) async {
+    await _firestore.collection(AppConstants.colKhodam).doc(khademId).update({
+      'status': 'pending',
+      'role': 'pending',
+      'rejectionReason': FieldValue.delete(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
 
   /// حذف حساب الخادم وفك ارتباط أولاده
   Future<void> deleteKhademAccount(String khademId) async {
@@ -1353,11 +1431,46 @@ class FirestoreService {
 
   /// جلب كافة الخدمات المتاحة
   Stream<List<ServiceModel>> watchAllServices() {
-    return _firestore
-        .collection(AppConstants.colServices)
-        .where('active', isEqualTo: true)
-        .snapshots(includeMetadataChanges: true)
-        .map((snap) => snap.docs.map((d) => ServiceModel.fromMap(d.data(), d.id)).toList());
+    try {
+      return _firestore
+          .collection(AppConstants.colServices)
+          .where('active', isEqualTo: true)
+          .snapshots(includeMetadataChanges: true)
+          .map((snap) {
+            final list = snap.docs.map((d) => ServiceModel.fromMap(d.data(), d.id)).toList();
+            if (!list.any((s) => s.id == 'thanawy')) {
+              list.insert(
+                0,
+                ServiceModel(
+                  id: 'thanawy',
+                  name: 'المرحلة الثانوية',
+                  gradesCount: 3,
+                  grades: const [
+                    ServiceGrade(id: AppConstants.grade1st, name: 'الصف الأول الثانوي', order: 1),
+                    ServiceGrade(id: AppConstants.grade2nd, name: 'الصف الثاني الثانوي', order: 2),
+                    ServiceGrade(id: AppConstants.grade3rd, name: 'الصف الثالث الثانوي', order: 3),
+                  ],
+                  createdAt: DateTime(2025, 1, 1),
+                ),
+              );
+            }
+            return list;
+          });
+    } catch (_) {
+      return Stream.value([
+        ServiceModel(
+          id: 'thanawy',
+          name: 'المرحلة الثانوية',
+          gradesCount: 3,
+          grades: const [
+            ServiceGrade(id: AppConstants.grade1st, name: 'الصف الأول الثانوي', order: 1),
+            ServiceGrade(id: AppConstants.grade2nd, name: 'الصف الثاني الثانوي', order: 2),
+            ServiceGrade(id: AppConstants.grade3rd, name: 'الصف الثالث الثانوي', order: 3),
+          ],
+          createdAt: DateTime(2025, 1, 1),
+        ),
+      ]);
+    }
   }
 
   // ===================== إدارة الفصول (Classes) =====================
