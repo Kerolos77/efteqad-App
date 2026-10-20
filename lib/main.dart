@@ -67,7 +67,7 @@ void main() async {
     profileRepository: profileRepository,
     minimumSplashDuration: kIsWeb
         ? const Duration(milliseconds: 300)
-        : const Duration(milliseconds: 8000),
+        : const Duration(milliseconds: 1500),
   );
 
   // تهيئة الإشعارات و FCM مع منسق نوايا الإشعارات دون تعطيل ظهور الاسبلاش اسكرين (على الموبايل فقط)

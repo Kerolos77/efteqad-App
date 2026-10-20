@@ -1,14 +1,12 @@
 import 'package:efteqad/core/localization/app_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/constants.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/khadem_model.dart';
 import '../../../../core/models/makhdom_model.dart';
 import '../../../../core/models/service_model.dart';
-import '../../../../core/router/app_routes.dart';
 import '../../../../core/services/firestore_service.dart';
 import 'appoint_head_dialog.dart';
 import 'pending_khadem_card.dart';
@@ -577,7 +575,7 @@ class _StagePeopleTabState extends State<StagePeopleTab> {
               gradeKhodam: gradeKhodam,
               color: _getGradeColor(g.order),
               isDark: isDark,
-              onTapGrade: () => context.go(AppRoutes.gradeMakhdomeen(g.id)),
+              onTapGrade: () {},
               onAppointHead: () => _openAppointHeadDialog(
                 gradeKey: g.id,
                 gradeTitle: g.name,
