@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart' show DateFormat;
+import 'package:url_launcher/url_launcher.dart';
 import '../../../features/common/widgets/notifications_sheet.dart';
 import '../../constants/constants.dart';
 import '../../localization/app_localizations.dart';
@@ -172,6 +173,16 @@ class WebScaffold extends StatelessWidget {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.android_rounded, color: AppColors.sacredGold),
+            tooltip: 'تحميل تطبيق الأندرويد (APK)',
+            onPressed: () async {
+              final uri = Uri.parse(AppConstants.appDownloadPageUrl);
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
+          ),
           ...?actions,
           if (!(actions?.any((w) => w is NotificationBellButton) ?? false)) ...[
             Padding(
@@ -373,6 +384,63 @@ class _WebHeader extends StatelessWidget {
             ),
             const SizedBox(width: 12),
           ],
+          // Download Android App APK Shortcut
+          Tooltip(
+            message: 'تحميل تطبيق الأندرويد (APK)',
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
+              child: InkWell(
+                onTap: () async {
+                  final uri = Uri.parse(AppConstants.appDownloadPageUrl);
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                },
+                borderRadius: BorderRadius.circular(10),
+                hoverColor: isDark
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.black.withValues(alpha: 0.04),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.04)
+                        : Colors.grey.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isDark
+                          ? AppColors.sacredGold.withValues(alpha: 0.3)
+                          : AppColors.sacredGold.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.android_rounded,
+                        size: 15,
+                        color: AppColors.sacredGold,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'تطبيق الموبايل',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: isDark
+                              ? Colors.grey[200]
+                              : AppColors.primaryNavy,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
           // Additional Actions
           if (actions != null) ...actions!,
           // Notifications Bell Button
@@ -1004,8 +1072,68 @@ class _SidebarFooter extends StatelessWidget {
           ),
         ),
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
+          // Download Android App Link
+          Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            child: InkWell(
+              onTap: () async {
+                final uri = Uri.parse(AppConstants.appDownloadPageUrl);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
+              },
+              borderRadius: BorderRadius.circular(10),
+              hoverColor: AppColors.sacredGold.withValues(alpha: 0.08),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.03)
+                      : Colors.grey.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.sacredGold.withValues(alpha: 0.25),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.android_rounded,
+                      size: 16,
+                      color: AppColors.sacredGold,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'تحميل تطبيق الأندرويد (APK)',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.grey[300] : Colors.grey[800],
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const Icon(
+                      Icons.open_in_new_rounded,
+                      size: 13,
+                      color: AppColors.sacredGold,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Theme Switcher & Logout Row
+          Row(
+            children: [
           // Theme Mode Toggle Button
           Material(
             color: Colors.transparent,
@@ -1105,7 +1233,9 @@ class _SidebarFooter extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ],
+  ),
+);
   }
 
   Future<void> _confirmSignOut(BuildContext context) async {

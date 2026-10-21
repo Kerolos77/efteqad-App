@@ -1439,40 +1439,9 @@ class FirestoreService {
           .collection(AppConstants.colServices)
           .where('active', isEqualTo: true)
           .snapshots(includeMetadataChanges: true)
-          .map((snap) {
-            final list = snap.docs.map((d) => ServiceModel.fromMap(d.data(), d.id)).toList();
-            if (!list.any((s) => s.id == 'thanawy')) {
-              list.insert(
-                0,
-                ServiceModel(
-                  id: 'thanawy',
-                  name: 'المرحلة الثانوية',
-                  gradesCount: 3,
-                  grades: const [
-                    ServiceGrade(id: AppConstants.grade1st, name: 'الصف الأول الثانوي', order: 1),
-                    ServiceGrade(id: AppConstants.grade2nd, name: 'الصف الثاني الثانوي', order: 2),
-                    ServiceGrade(id: AppConstants.grade3rd, name: 'الصف الثالث الثانوي', order: 3),
-                  ],
-                  createdAt: DateTime(2025, 1, 1),
-                ),
-              );
-            }
-            return list;
-          });
+          .map((snap) => snap.docs.map((d) => ServiceModel.fromMap(d.data(), d.id)).toList());
     } catch (_) {
-      return Stream.value([
-        ServiceModel(
-          id: 'thanawy',
-          name: 'المرحلة الثانوية',
-          gradesCount: 3,
-          grades: const [
-            ServiceGrade(id: AppConstants.grade1st, name: 'الصف الأول الثانوي', order: 1),
-            ServiceGrade(id: AppConstants.grade2nd, name: 'الصف الثاني الثانوي', order: 2),
-            ServiceGrade(id: AppConstants.grade3rd, name: 'الصف الثالث الثانوي', order: 3),
-          ],
-          createdAt: DateTime(2025, 1, 1),
-        ),
-      ]);
+      return Stream.value(const []);
     }
   }
 
